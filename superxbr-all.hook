@@ -1,0 +1,143 @@
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!HOOK XYZ
+//!BIND HOOKED
+//!WIDTH 2 HOOKED.w *
+//!HEIGHT 2 HOOKED.h *
+//!OFFSET -0.500000 -0.500000
+float superxbr(int comp) {
+float i[4*4];
+float res;
+#define i(x,y) i[(x)*4+(y)]
+vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
+dir = transpose(HOOKED_rot) * dir;
+vec2 dist = HOOKED_size * min(HOOKED_pos, vec2(1.0) - HOOKED_pos);
+if (dir.x * dir.y < 0.0 && dist.x > 1.0 && dist.y > 1.0)
+    return 0.0;
+if (dir.x < 0.0 || dir.y < 0.0 || dist.x < 1.0 || dist.y < 1.0)
+    return HOOKED_texOff(-dir)[comp];
+for (int x = 0; x < 4; x++)
+for (int y = 0; y < 4; y++)
+i(x,y) = HOOKED_texOff(vec2(float(x)-1.25, float(y)-1.25))[comp];
+{ // step
+vec4 d1 = vec4( i(0,0), i(1,1), i(2,2), i(3,3) );
+vec4 d2 = vec4( i(0,3), i(1,2), i(2,1), i(3,0) );
+vec4 h1 = vec4( i(0,1), i(1,1), i(2,1), i(3,1) );
+vec4 h2 = vec4( i(0,2), i(1,2), i(2,2), i(3,2) );
+vec4 v1 = vec4( i(1,0), i(1,1), i(1,2), i(1,3) );
+vec4 v2 = vec4( i(2,0), i(2,1), i(2,2), i(2,3) );
+float dw = 0.129633;
+float ow = 0.175068;
+vec4 dk = vec4(-dw, dw+0.5, dw+0.5, -dw);
+vec4 ok = vec4(-ow, ow+0.5, ow+0.5, -ow);
+float d1c = dot(d1, dk);
+float d2c = dot(d2, dk);
+float vc = dot(v1+v2, ok)/2.0;
+float hc = dot(h1+h2, ok)/2.0;
+float d_edge = 0.0;
+d_edge += -1.0 * abs(i(2,0) - i(0,2));
+d_edge -= -1.0 * abs(i(3,2) - i(1,0));
+d_edge += 1.0 * abs(i(1,1) - i(0,2));
+d_edge -= 1.0 * abs(i(2,1) - i(1,0));
+d_edge += 1.0 * abs(i(2,0) - i(1,1));
+d_edge -= 1.0 * abs(i(3,2) - i(2,1));
+d_edge += 2.0 * abs(i(2,1) - i(1,2));
+d_edge -= 2.0 * abs(i(2,2) - i(1,1));
+d_edge += -1.0 * abs(i(3,1) - i(1,3));
+d_edge -= -1.0 * abs(i(2,3) - i(0,1));
+d_edge += 1.0 * abs(i(2,2) - i(1,3));
+d_edge -= 1.0 * abs(i(1,2) - i(0,1));
+d_edge += 1.0 * abs(i(3,1) - i(2,2));
+d_edge -= 1.0 * abs(i(2,3) - i(1,2));
+float o_edge = 0.0;
+o_edge += 1.0 * abs(i(1,0) - i(1,1));
+o_edge -= 1.0 * abs(i(0,1) - i(1,1));
+o_edge += 2.0 * abs(i(1,1) - i(1,2));
+o_edge -= 2.0 * abs(i(1,1) - i(2,1));
+o_edge += 1.0 * abs(i(1,2) - i(1,3));
+o_edge -= 1.0 * abs(i(2,1) - i(3,1));
+o_edge += 1.0 * abs(i(2,0) - i(2,1));
+o_edge -= 1.0 * abs(i(0,2) - i(1,2));
+o_edge += 2.0 * abs(i(2,1) - i(2,2));
+o_edge -= 2.0 * abs(i(1,2) - i(2,2));
+o_edge += 1.0 * abs(i(2,2) - i(2,3));
+o_edge -= 1.0 * abs(i(2,2) - i(3,2));
+float str = smoothstep(0.0, 0.600000 + 1e-6, abs(d_edge));
+res = mix(mix(d2c, d1c, step(0.0, d_edge)),
+      mix(hc,   vc, step(0.0, o_edge)), 1.0 - str);
+float lo = min(min( i(1,1), i(2,1) ), min( i(1,2), i(2,2) ));
+float hi = max(max( i(1,1), i(2,1) ), max( i(1,2), i(2,2) ));
+res = clamp(res, lo, hi);
+} // step
+return res;
+}  // superxbr
+vec4 hook() {
+    return vec4(superxbr(0), superxbr(1), superxbr(2), superxbr(3));
+}
+//!HOOK LUMA
+//!HOOK CHROMA
+//!HOOK RGB
+//!HOOK XYZ
+//!BIND HOOKED
+float superxbr(int comp) {
+float i[4*4];
+float res;
+#define i(x,y) i[(x)*4+(y)]
+vec2 dir = fract(HOOKED_pos * HOOKED_size / 2.0) - 0.5;
+if (dir.x * dir.y > 0.0)
+    return HOOKED_texOff(0)[comp];
+for (int x = 0; x < 4; x++)
+for (int y = 0; y < 4; y++)
+i(x,y) = HOOKED_texOff(vec2(x+y-3, y-x))[comp];
+{ // step
+vec4 d1 = vec4( i(0,0), i(1,1), i(2,2), i(3,3) );
+vec4 d2 = vec4( i(0,3), i(1,2), i(2,1), i(3,0) );
+vec4 h1 = vec4( i(0,1), i(1,1), i(2,1), i(3,1) );
+vec4 h2 = vec4( i(0,2), i(1,2), i(2,2), i(3,2) );
+vec4 v1 = vec4( i(1,0), i(1,1), i(1,2), i(1,3) );
+vec4 v2 = vec4( i(2,0), i(2,1), i(2,2), i(2,3) );
+float dw = 0.175068;
+float ow = 0.129633;
+vec4 dk = vec4(-dw, dw+0.5, dw+0.5, -dw);
+vec4 ok = vec4(-ow, ow+0.5, ow+0.5, -ow);
+float d1c = dot(d1, dk);
+float d2c = dot(d2, dk);
+float vc = dot(v1+v2, ok)/2.0;
+float hc = dot(h1+h2, ok)/2.0;
+float d_edge = 0.0;
+d_edge += 1.0 * abs(i(1,1) - i(0,2));
+d_edge -= 1.0 * abs(i(2,1) - i(1,0));
+d_edge += 1.0 * abs(i(2,0) - i(1,1));
+d_edge -= 1.0 * abs(i(3,2) - i(2,1));
+d_edge += 4.0 * abs(i(2,1) - i(1,2));
+d_edge -= 4.0 * abs(i(2,2) - i(1,1));
+d_edge += 1.0 * abs(i(2,2) - i(1,3));
+d_edge -= 1.0 * abs(i(1,2) - i(0,1));
+d_edge += 1.0 * abs(i(3,1) - i(2,2));
+d_edge -= 1.0 * abs(i(2,3) - i(1,2));
+float o_edge = 0.0;
+o_edge += 1.0 * abs(i(1,0) - i(1,1));
+o_edge -= 1.0 * abs(i(0,1) - i(1,1));
+o_edge += 4.0 * abs(i(1,1) - i(1,2));
+o_edge -= 4.0 * abs(i(1,1) - i(2,1));
+o_edge += 1.0 * abs(i(1,2) - i(1,3));
+o_edge -= 1.0 * abs(i(2,1) - i(3,1));
+o_edge += 1.0 * abs(i(2,0) - i(2,1));
+o_edge -= 1.0 * abs(i(0,2) - i(1,2));
+o_edge += 4.0 * abs(i(2,1) - i(2,2));
+o_edge -= 4.0 * abs(i(1,2) - i(2,2));
+o_edge += 1.0 * abs(i(2,2) - i(2,3));
+o_edge -= 1.0 * abs(i(2,2) - i(3,2));
+float str = smoothstep(0.0, 0.600000 + 1e-6, abs(d_edge));
+res = mix(mix(d2c, d1c, step(0.0, d_edge)),
+      mix(hc,   vc, step(0.0, o_edge)), 1.0 - str);
+float lo = min(min( i(1,1), i(2,1) ), min( i(1,2), i(2,2) ));
+float hi = max(max( i(1,1), i(2,1) ), max( i(1,2), i(2,2) ));
+res = clamp(res, lo, hi);
+} // step
+return res;
+}  // superxbr
+vec4 hook() {
+    return vec4(superxbr(0), superxbr(1), superxbr(2), superxbr(3));
+}
