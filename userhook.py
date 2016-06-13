@@ -1,3 +1,5 @@
+from string import Template
+
 HOOK = "HOOK"
 BIND = "BIND"
 SAVE = "SAVE"
@@ -24,34 +26,45 @@ class UserHook:
         if HOOKED not in bind:
             bind.append(HOOKED)
 
-        self.cond = cond
-        self.target_tex = target_tex
-        self.max_downscaling_ratio = max_downscaling_ratio
-
         self.header = {}
         self.header[HOOK] = list(hook)
         self.header[BIND] = list(bind)
         self.header[SAVE] = list(save)
         if components:
             self.headers[COMPONENTS] = [str(components)]
-        self.clear_glsl()
+        self.cond = cond
+        self.target_tex = target_tex
+        self.max_downscaling_ratio = max_downscaling_ratio
+
+        self.reset()
 
     def add_glsl(self, line):
         self.glsl.append(line.strip())
 
-    def clear_glsl(self):
+    def reset(self):
         self.glsl = []
         self.header[WIDTH] = None
         self.header[HEIGHT] = None
         self.header[OFFSET] = None
         self.header[WHEN] = self.cond
+        self.mappings = None
+
+    def check_bind(self, used_tex):
+        if used_hook not in self.header[BIND]:
+            raise Exception('Texture %s is not binded' % used_tex)
+
+    def add_mappings(self, **mappings):
+        if self.mappings:
+            self.mappings.update(mappings)
+        else:
+            self.mappings = mappings
 
     def add_cond(self, cond_str):
-        if self.header[WHEN] == None:
-            self.header[WHEN] = cond_str
-        else:
+        if self.header[WHEN]:
             # Use boolean AND to apply multiple condition check.
             self.header[WHEN] = "%s %s *" % (self.header[WHEN], cond_str)
+        else:
+            self.header[WHEN] = cond_str
 
     def set_transform(self, mul_x, mul_y, offset_x, offset_y, skippable=False):
         if mul_x != 1:
@@ -81,7 +94,11 @@ class UserHook:
                 elif isinstance(value, str):
                     headers.append("//!%s %s" % (name, value.strip()))
 
-        return "\n".join(headers + self.glsl + [""])
+        hook = "\n".join(headers + self.glsl + [""])
+        if self.mappings:
+            hook = Template(hook).substitute(self.mappings)
+        return hook
+
 
     def max_components(self):
         s = set(self.header[HOOK])

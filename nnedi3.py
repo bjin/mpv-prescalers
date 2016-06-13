@@ -89,8 +89,8 @@ class NNEDI3(UserHook):
 
     def generate(self, step):
         self.load_weights()
-
-        self.clear_glsl()
+        self.reset()
+        GLSL = self.add_glsl
 
         width = self.window_width
         height = self.window_height
@@ -98,10 +98,7 @@ class NNEDI3(UserHook):
         assert width % 4 == 0
         sample_count = width * height // 4
 
-        GLSL = self.add_glsl
-
-        GLSL("""
-#pragma optionNV(fastprecision on))""")
+        GLSL('#pragma optionNV(fastprecision on))')
 
         GLSL("""
 float nnedi3(int comp) {""")

@@ -27,3 +27,8 @@ run(["LUMA"], "")
 run(["CHROMA"], "-chroma")
 run(["LUMA", "CHROMA"], "-yuv")
 run(["LUMA", "CHROMA", "RGB", "XYZ"], "-all")
+
+gen = superxbr.SuperxBR(hook=["MAIN"], target=superxbr.Target.rgb)
+with open("superxbr-native.hook", "w") as f:
+    for step in list(superxbr.Step):
+        f.write(gen.generate(step))
