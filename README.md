@@ -10,12 +10,12 @@ current directory.
 
 Alternatively, you could generate shaders with customized options:
 ```
-./nnedi3.py --target yuv --nns 32 --win 8x4 --max-downscaling-ratio 1.8 > ~/.mpv/shaders/nnedi3.hook
+./nnedi3.py --target yuv --nns 32 --win 8x4 --max-downscaling-ratio 1.8 > ~/.config/mpv/shaders/nnedi3.hook
 ```
 
-Or play directly with scripts
+Or play video directly with scripts
 ```
-mpv --vo opengl-hq:user-shaders=<(superxbr.py --target=native)
+mpv --vo opengl-hq:user-shaders=<(path/to/superxbr.py --target=native) video.mkv
 ```
 
 # License
