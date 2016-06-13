@@ -172,15 +172,21 @@ res = clamp(res, lo, hi);""")
         GLSL = self.add_glsl
 
         if self.target == Target.luma:
+            comps = self.max_components()
+            args = ", ".join("superxbr(%d)" % i if i < comps else "0.0"
+                             for i in range(4))
+
             self.add_mappings(sample_type="float",
                               sample_zero="0.0",
                               sample4_type="vec4",
-                              function_args="int comp")
+                              function_args="int comp",
+                              hook_return_value="vec4(%s)" % args)
         else:
             self.add_mappings(sample_type="vec4",
                               sample_zero="vec4(0.0)",
                               sample4_type="mat4",
-                              function_args="")
+                              function_args="",
+                              hook_return_value="superxbr()")
             # Assumes Rec. 709
             self.add_mappings(color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
 
@@ -243,18 +249,9 @@ if (dir.x * dir.y > 0.0)
 return res;
 }  // superxbr""")
 
-        comps = self.max_components()
-        if self.target == Target.luma:
-            args = ", ".join("superxbr(%d)" % i if i < comps else "0.0"
-                             for i in range(4))
-            GLSL("""
+        GLSL("""
 vec4 hook() {
-    return vec4(%s);
-}""" % args)
-        else:
-            GLSL("""
-vec4 hook() {
-    return superxbr();
+    return $hook_return_value;
 }""")
 
         return super().generate()
