@@ -1,5 +1,8 @@
-This gist contains user shaders for prescaling in [mpv](https://mpv.io/),
+This repo contains user shaders for prescaling in [mpv](https://mpv.io/),
 currently only `nnedi3` and `superxbr` is supported.
+
+For the scripts generating these user shaders, check the [source
+branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
 # Filenames
 
@@ -30,11 +33,7 @@ You only need to download shaders you actually use. The following part of this
 section assumes that they are in `shaders` directory in the `mpv` configure
 folder (usually `~/.config/mpv/shaders` on Linux).
 
-Unlike the `prescale-luma` option in `mpv`, these shaders will be triggered
-**regardless of the video size and screen resolution**. They are better guarded by
-profiles meant for different type of video (or with help from some lua script).
-
-Add `user-shaders="prescaler.hook"` suboption to `vo` settings:
+Add `user-shaders="prescaler.hook"` sub-option to `vo` settings:
 
 ```
 vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4.hook"
@@ -66,14 +65,14 @@ vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,nnedi3-nn
 
 # License
 
-Both shaders are ported from [MPDN
-project](https://github.com/zachsaw/MPDN_Extensions), and are originally
+Both shaders were ported from [MPDN
+project](https://github.com/zachsaw/MPDN_Extensions), and were originally
 licensed under terms of [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.en.html).
-`superxbr` shader in additon is licensed under terms of a more permissive
+`superxbr` shader in addition was licensed under terms of a more permissive
 license ([MIT](https://opensource.org/licenses/MIT)).
 
 The ported shaders (in mpv) also include contributions licensed under terms of
-LGPLv2 or later (particularly, major part of `superxbr` was refactored by
+LGPLv2 or later (particularly, major part of `superxbr` was rewritten by
 @haasn).
 
-As a whole, the shaders in this gist are licensed under terms of LGPLv3.
+As a whole, the shaders in this repo are licensed with LGPLv3.
