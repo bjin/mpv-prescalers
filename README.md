@@ -1,5 +1,5 @@
 This repo contains user shaders for prescaling in [mpv](https://mpv.io/),
-currently only `nnedi3` and `superxbr` is supported.
+currently only `nnedi3` and `superxbr` are supported.
 
 For the scripts generating these user shaders, check the [source
 branch](https://github.com/bjin/mpv-prescalers/tree/source).
@@ -20,12 +20,11 @@ In addition, `superxbr-native.hook` is a native implementation of `superxbr`
 which do the upscaling on RGB, and is most likely the one you want use.
 
 For example:
-* `nnedi3-nns32-win8x4.hook` is the user shader for luma `nnedi3` prescaling
-  with `32` neurons and a local sampling window size of `8x4`.
-* `superxbr-chroma.hook` is the user shader for chroma-only `superxbr`
-  prescaling.
-* `nnedi3-nns128-win8x6-all.hook` is the user shader for `nnedi3` prescaling
-  on all planes with `128` neurons and a local sampling window size of `8x6`.
+* `nnedi3-nns32-win8x4.hook`: user shader for luma `nnedi3` prescaling with `32`
+  neurons and a local sampling window size of `8x4`.
+* `superxbr-chroma.hook`: user shader for chroma-only `superxbr` prescaling.
+* `nnedi3-nns128-win8x6-all.hook`: user shader for `nnedi3` prescaling on all
+   planes with `128` neurons and a local sampling window size of `8x6`.
 
 # Usage
 
@@ -60,8 +59,7 @@ vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,nnedi3-nn
 * `nnedi3-nns32-win8x6-{chroma,yuv,all}.hook` are extremely slow with nvidia
   driver, avoid using these shaders for now.
 
-* `prescale-downscaling-threshold=1.6` is used, and cannot be customized other
-  than modifying the shader manually.
+* `prescale-downscaling-threshold=1.6` is hard-coded in the shaders.
 
 # License
 
