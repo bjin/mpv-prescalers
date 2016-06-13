@@ -13,6 +13,9 @@ Suffix in the filename indicates the type of planes shader is hooked on:
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
 
+In addition, `superxbr-native.hook` is a native implementation of `superxbr`
+which do the upscaling on RGB, and is most likely the one you want use.
+
 For example:
 * `nnedi3-nns32-win8x4.hook` is the user shader for luma `nnedi3` prescaling
   with `32` neurons and a local sampling window size of `8x4`.
