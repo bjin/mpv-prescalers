@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -255,3 +257,45 @@ vec4 hook() {
 }""")
 
         return super().generate()
+
+
+if __name__ == "__main__":
+    import argparse
+
+    hooks = {"luma": ["LUMA"],
+             "chroma": ["CHROMA"],
+             "yuv": ["LUMA", "CHROMA"],
+             "all": ["LUMA", "CHROMA", "RGB", "XYZ"],
+             "native": ["MAIN"]}
+
+    parser = argparse.ArgumentParser(
+        description="generate Super-xBR user shader for mpv")
+    parser.add_argument(
+        '-t',
+        '--target',
+        nargs=1,
+        choices=sorted(hooks.keys()),
+        default=["native"],
+        help='target that shader is hooked on (default: native)')
+    parser.add_argument('-s',
+                        '--sharpness',
+                        nargs=1,
+                        type=float,
+                        default=[1.0],
+                        help='[0.0, 2.0] (default: 1.0)')
+    parser.add_argument('-e',
+                        '--edge-strength',
+                        nargs=1,
+                        type=float,
+                        default=[0.6],
+                        help='[0.0, 1.0] (default: 0.6)')
+
+    args = parser.parse_args()
+    hook = hooks[args.target[0]]
+    target = Target.rgb if args.target[0] == "native" else Target.luma,
+    option = Option(sharpness=args.sharpness[0],
+                    edge_strength=args.edge_strength[0])
+
+    gen = SuperxBR(hook=hook, target=target, option=option)
+    for step in list(Step):
+        print(gen.generate(step))

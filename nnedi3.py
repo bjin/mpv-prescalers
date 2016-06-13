@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as published by
@@ -204,3 +206,63 @@ vec4 hook() {
 }""" % ", ".join("nnedi3(%d)" % i if i < comps else "0.0" for i in range(4)))
 
         return super().generate()
+
+
+if __name__ == "__main__":
+    import argparse
+
+    hooks = {"luma": ["LUMA"],
+             "chroma": ["CHROMA"],
+             "yuv": ["LUMA", "CHROMA"],
+             "all": ["LUMA", "CHROMA", "RGB", "XYZ"]}
+
+    neurons = {16: Neurons.nns16,
+               32: Neurons.nns32,
+               64: Neurons.nns64,
+               128: Neurons.nns128}
+
+    windows = {"8x4": Window.win8x4, "8x6": Window.win8x6}
+
+    parser = argparse.ArgumentParser(
+        description="generate NNEDI3 user shader for mpv")
+    parser.add_argument('-t',
+                        '--target',
+                        nargs=1,
+                        choices=sorted(hooks.keys()),
+                        default=["luma"],
+                        help='target that shader is hooked on (default: luma)')
+    parser.add_argument('-n',
+                        '--nns',
+                        nargs=1,
+                        type=int,
+                        choices=sorted(neurons.keys()),
+                        default=[32],
+                        help='neurons for NNEDI3 (default: 32)')
+    parser.add_argument('-w',
+                        '--win',
+                        nargs=1,
+                        choices=sorted(windows.keys()),
+                        default=["8x4"],
+                        help='sampling window size of NNEDI3 (default: 8x4)')
+    parser.add_argument('-r',
+                        '--max-downscaling-ratio',
+                        nargs=1,
+                        type=float,
+                        default=[None],
+                        help='allowed downscaling ratio (default: no limit)')
+
+    args = parser.parse_args()
+    hook = hooks[args.target[0]]
+    neuron = neurons[args.nns[0]]
+    window = windows[args.win[0]]
+    max_downscaling_ratio = args.max_downscaling_ratio[0]
+
+    target_tex = "LUMA" if hooks == ["CHROMA"] else "OUTPUT"
+    gen = NNEDI3(neuron,
+                 window,
+                 hook=hook,
+                 target_tex=target_tex,
+                 max_downscaling_ratio=max_downscaling_ratio)
+
+    for step in list(Step):
+        print(gen.generate(step))

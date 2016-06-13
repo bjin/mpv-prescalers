@@ -8,6 +8,16 @@ For the generated user shaders, check the [master branch](https://github.com/bji
 Python 3 is required. Running `gen.py` will generate all user shaders in
 current directory.
 
+Alternatively, you could generate shaders with customized options:
+```
+./nnedi3.py --target yuv --nns 32 --win 8x4 --max-downscaling-ratio 1.8 > ~/.mpv/shaders/nnedi3.hook
+```
+
+Or play directly with scripts
+```
+mpv --vo opengl-hq:user-shaders=<(superxbr.py --target=native)
+```
+
 # License
 
 Both shaders were ported from [MPDN
