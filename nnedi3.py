@@ -5,6 +5,10 @@ import struct
 from userhook import UserHook
 
 #
+# Copyright (c) 2016 mpv developers <mpv-team@googlegroups.com>
+#
+
+#
 # NNEDI3, an intra-field deinterlacer
 #
 # The original filter was authored by Kevin Stone (aka. tritical) and is

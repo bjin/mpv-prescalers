@@ -3,6 +3,10 @@ import enum
 import userhook
 
 #
+# Copyright (c) 2016 mpv developers <mpv-team@googlegroups.com>
+#
+
+#
 # *******  Super XBR Shader  *******
 #
 # Copyright (c) 2015 Hyllian - sergiogdb@gmail.com
