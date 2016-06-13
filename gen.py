@@ -17,11 +17,13 @@
 
 import nnedi3
 import superxbr
+import userhook
 
 
 def run(hooks, suffix):
     gen = superxbr.SuperxBR(hook=hooks)
     with open("superxbr%s.hook" % suffix, "w") as f:
+        f.write(userhook.LICENSE_HEADER)
         for step in list(superxbr.Step):
             f.write(gen.generate(step))
     for nns in list(nnedi3.Neurons):
@@ -36,6 +38,7 @@ def run(hooks, suffix):
             filename = "nnedi3-%s-%s%s.hook" % (nns.name, window.name, suffix)
 
             with open(filename, "w") as f:
+                f.write(userhook.LICENSE_HEADER)
                 for step in list(nnedi3.Step):
                     f.write(gen.generate(step))
 
@@ -47,5 +50,6 @@ run(["LUMA", "CHROMA", "RGB", "XYZ"], "-all")
 
 gen = superxbr.SuperxBR(hook=["MAIN"], target=superxbr.Target.rgb)
 with open("superxbr-native.hook", "w") as f:
+    f.write(userhook.LICENSE_HEADER)
     for step in list(superxbr.Step):
         f.write(gen.generate(step))

@@ -261,6 +261,7 @@ vec4 hook() {
 
 if __name__ == "__main__":
     import argparse
+    import sys
 
     hooks = {"luma": ["LUMA"],
              "chroma": ["CHROMA"],
@@ -297,5 +298,6 @@ if __name__ == "__main__":
                     edge_strength=args.edge_strength[0])
 
     gen = SuperxBR(hook=hook, target=target, option=option)
+    sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
-        print(gen.generate(step))
+        sys.stdout.write(gen.generate(step))

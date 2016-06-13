@@ -19,7 +19,7 @@ import enum
 import os
 import struct
 
-from userhook import UserHook
+import userhook
 
 #
 # Copyright (c) 2016 mpv developers <mpv-team@googlegroups.com>
@@ -67,7 +67,7 @@ class Step(enum.Enum):
     double_x = 1
 
 
-class NNEDI3(UserHook):
+class NNEDI3(userhook.UserHook):
 
     weight_offsets = [0, 1088, 3264, 7616, 16320, 17920, 21120, 27520]
     weights = None
@@ -210,6 +210,7 @@ vec4 hook() {
 
 if __name__ == "__main__":
     import argparse
+    import sys
 
     hooks = {"luma": ["LUMA"],
              "chroma": ["CHROMA"],
@@ -264,5 +265,6 @@ if __name__ == "__main__":
                  target_tex=target_tex,
                  max_downscaling_ratio=max_downscaling_ratio)
 
+    sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
-        print(gen.generate(step))
+        sys.stdout.write(gen.generate(step))
