@@ -63,7 +63,7 @@ class Step(enum.Enum):
 
 class Target(enum.Enum):
     luma = 0
-    rgb = 2
+    rgb = 1
 
 
 class SuperxBR(userhook.UserHook):
@@ -153,16 +153,16 @@ res = clamp(res, lo, hi);""")
         GLSL = self.add_glsl
 
         if self.target == Target.luma:
-            self.add_mappings(sample_type="float")
-            self.add_mappings(sample_zero="0.0")
-            self.add_mappings(sample4_type="vec4")
-            self.add_mappings(function_args="int comp")
+            self.add_mappings(sample_type="float",
+                              sample_zero="0.0",
+                              sample4_type="vec4",
+                              function_args="int comp")
         else:
-            self.add_mappings(sample_type="vec4")
-            self.add_mappings(sample_zero="vec4(0.0)")
-            self.add_mappings(sample4_type="mat4")
-            self.add_mappings(function_args="")
-            # Rec. 709
+            self.add_mappings(sample_type="vec4",
+                              sample_zero="vec4(0.0)",
+                              sample4_type="mat4",
+                              function_args="")
+            # Assumes Rec. 709
             self.add_mappings(color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
 
         GLSL("""
