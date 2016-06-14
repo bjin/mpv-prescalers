@@ -18,6 +18,8 @@ filename.
 
 In addition, `superxbr-native.hook` is a native implementation of `superxbr`
 which do the upscaling on RGB, and is most likely the one you want use.
+`superxbr-native-yuv.hook` is a similar shader but requires the original source
+to be YUV.
 
 For example:
 * `nnedi3-nns32-win8x4.hook`: user shader for luma `nnedi3` prescaling with `32`
