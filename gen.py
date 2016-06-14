@@ -48,12 +48,12 @@ run(["CHROMA"], "-chroma")
 run(["LUMA", "CHROMA"], "-yuv")
 run(["LUMA", "CHROMA", "RGB", "XYZ"], "-all")
 
-for target in list(superxbr.Target):
-    if target == superxbr.Target.luma:
+for profile in list(superxbr.Profile):
+    if profile == superxbr.Profile.luma:
         continue
-    hook = ["MAIN"] if target == superxbr.Target.rgb else ["NATIVE"]
-    suffix = "native" if target == superxbr.Target.rgb else "native-yuv"
-    gen = superxbr.SuperxBR(hook=hook, target=target)
+    hook = ["MAIN"] if profile == superxbr.Profile.rgb else ["NATIVE"]
+    suffix = "native" if profile == superxbr.Profile.rgb else "native-yuv"
+    gen = superxbr.SuperxBR(hook=hook, profile=profile)
     with open("superxbr-%s.hook" % suffix, "w") as f:
         f.write(userhook.LICENSE_HEADER)
         for step in list(superxbr.Step):

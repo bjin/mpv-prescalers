@@ -82,17 +82,17 @@ class Step(enum.Enum):
                       o2=[0, 0])
 
 
-class Target(enum.Enum):
+class Profile(enum.Enum):
     luma = 0
     rgb = 1
     yuv = 2
 
 
 class SuperxBR(userhook.UserHook):
-    def __init__(self, target=Target.luma, option=Option(), **args):
+    def __init__(self, profile=Profile.luma, option=Option(), **args):
         super().__init__(**args)
 
-        self.target = target
+        self.profile = profile
         self.option = option
 
     def _step_h(self, mask):
@@ -174,7 +174,7 @@ res = clamp(res, lo, hi);""")
         self.reset()
         GLSL = self.add_glsl
 
-        if self.target == Target.luma:
+        if self.profile == Profile.luma:
             comps = self.max_components()
             args = ", ".join("superxbr(%d)" % i if i < comps else "0.0"
                              for i in range(4))
@@ -190,11 +190,11 @@ res = clamp(res, lo, hi);""")
                               sample4_type="mat4",
                               function_args="",
                               hook_return_value="superxbr()")
-            if self.target == Target.rgb:
+            if self.profile == Profile.rgb:
                 # Assumes Rec. 709
                 self.add_mappings(
                     color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
-            elif self.target == Target.yuv:
+            elif self.profile == Profile.yuv:
                 # Add some no-op cond to assert LUMA texture exists, rather make
                 # the shader failed to run than getting some random output.
                 self.add_cond("LUMA.w 0 >")
@@ -205,15 +205,15 @@ $sample_type i[4*4];
 $sample_type res;
 #define i(x,y) i[(x)*4+(y)]""")
 
-        if self.target == Target.luma:
+        if self.profile == Profile.luma:
             GLSL('#define luma(x, y) i((x), (y))')
             GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)[comp]')
             GLSL('#define SAMPLE4_MUL(sample4, w) dot((sample4), (w))')
         else:
-            if self.target == Target.rgb:
+            if self.profile == Profile.rgb:
                 GLSL('float luma[4*4];')
                 GLSL('#define luma(x, y) luma[(x)*4+(y)]')
-            elif self.target == Target.yuv:
+            elif self.profile == Profile.yuv:
                 GLSL('#define luma(x, y) i(x,y)[0]')
             GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)')
             # samples are stored in columns, use right multiplication.
@@ -251,7 +251,7 @@ if (dir.x * dir.y > 0.0)
         GLSL('for (int x = 0; x < 4; x++)')
         GLSL('for (int y = 0; y < 4; y++) {')
         GLSL('i(x,y) = GET_SAMPLE(IDX(x,y));')
-        if self.target == Target.rgb:
+        if self.profile == Profile.rgb:
             GLSL('luma(x,y) = dot(i(x,y), $color_primary);')
         GLSL('}')
 
@@ -279,7 +279,7 @@ if __name__ == "__main__":
              "all": ["LUMA", "CHROMA", "RGB", "XYZ"],
              "native": ["MAIN"],
              "native-yuv": ["NATIVE"]}
-    native_targets = {"native": Target.rgb, "native-yuv": Target.yuv}
+    native_profiles = {"native": Profile.rgb, "native-yuv": Profile.yuv}
 
     parser = argparse.ArgumentParser(
         description="generate Super-xBR user shader for mpv")
@@ -304,14 +304,14 @@ if __name__ == "__main__":
                         help='[0.0, 1.0] (default: 0.6)')
 
     args = parser.parse_args()
-    hook = hooks[args.target[0]]
     target = args.target[0]
-    target = native_targets[
-        target] if target in native_targets else Target.luma
+    hook = hooks[target]
+    profile = native_profiles[
+        target] if target in native_profiles else Profile.luma
     option = Option(sharpness=args.sharpness[0],
                     edge_strength=args.edge_strength[0])
 
-    gen = SuperxBR(hook=hook, target=target, option=option)
+    gen = SuperxBR(hook=hook, profile=profile, option=option)
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
         sys.stdout.write(gen.generate(step))
