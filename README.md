@@ -19,7 +19,7 @@ filename.
 In addition, `superxbr-native.hook` is a native implementation of `superxbr`
 which do the upscaling on RGB, and is most likely the one you want use.
 `superxbr-native-yuv.hook` is a similar shader but requires the original source
-to be YUV.
+to be YUV, and thus should be considered as experimental.
 
 For example:
 * `nnedi3-nns32-win8x4.hook`: user shader for luma `nnedi3` prescaling with `32`
@@ -60,8 +60,6 @@ vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,nnedi3-nn
 
 * `nnedi3-nns32-win8x6-{chroma,yuv,all}.hook` are extremely slow with nvidia
   driver, avoid using these shaders for now.
-
-* `prescale-downscaling-threshold=1.6` is hard-coded in the shaders.
 
 # License
 
