@@ -85,6 +85,7 @@ class Step(enum.Enum):
 class Target(enum.Enum):
     luma = 0
     rgb = 1
+    yuv = 2
 
 
 class SuperxBR(userhook.UserHook):
@@ -189,8 +190,14 @@ res = clamp(res, lo, hi);""")
                               sample4_type="mat4",
                               function_args="",
                               hook_return_value="superxbr()")
-            # Assumes Rec. 709
-            self.add_mappings(color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
+            if self.target == Target.rgb:
+                # Assumes Rec. 709
+                self.add_mappings(
+                    color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
+            elif self.target == Target.yuv:
+                # Add some no-op cond to assert LUMA texture exists, rather make
+                # the shader failed to run than getting some random output.
+                self.add_cond("LUMA.w 0 >")
 
         GLSL("""
 $sample_type superxbr($function_args) {
@@ -203,8 +210,11 @@ $sample_type res;
             GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)[comp]')
             GLSL('#define SAMPLE4_MUL(sample4, w) dot((sample4), (w))')
         else:
-            GLSL('float luma[4*4];')
-            GLSL('#define luma(x, y) luma[(x)*4+(y)]')
+            if self.target == Target.rgb:
+                GLSL('float luma[4*4];')
+                GLSL('#define luma(x, y) luma[(x)*4+(y)]')
+            elif self.target == Target.yuv:
+                GLSL('#define luma(x, y) i(x,y)[0]')
             GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)')
             # samples are stored in columns, use right multiplication.
             GLSL('#define SAMPLE4_MUL(sample4, w) ((sample4)*(w))')
@@ -241,7 +251,7 @@ if (dir.x * dir.y > 0.0)
         GLSL('for (int x = 0; x < 4; x++)')
         GLSL('for (int y = 0; y < 4; y++) {')
         GLSL('i(x,y) = GET_SAMPLE(IDX(x,y));')
-        if self.target != Target.luma:
+        if self.target == Target.rgb:
             GLSL('luma(x,y) = dot(i(x,y), $color_primary);')
         GLSL('}')
 
@@ -267,7 +277,9 @@ if __name__ == "__main__":
              "chroma": ["CHROMA"],
              "yuv": ["LUMA", "CHROMA"],
              "all": ["LUMA", "CHROMA", "RGB", "XYZ"],
-             "native": ["MAIN"]}
+             "native": ["MAIN"],
+             "native-yuv": ["NATIVE"]}
+    native_targets = {"native": Target.rgb, "native-yuv": Target.yuv}
 
     parser = argparse.ArgumentParser(
         description="generate Super-xBR user shader for mpv")
@@ -293,7 +305,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     hook = hooks[args.target[0]]
-    target = Target.rgb if args.target[0] == "native" else Target.luma,
+    target = args.target[0]
+    target = native_targets[
+        target] if target in native_targets else Target.luma
     option = Option(sharpness=args.sharpness[0],
                     edge_strength=args.edge_strength[0])
 

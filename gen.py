@@ -48,8 +48,13 @@ run(["CHROMA"], "-chroma")
 run(["LUMA", "CHROMA"], "-yuv")
 run(["LUMA", "CHROMA", "RGB", "XYZ"], "-all")
 
-gen = superxbr.SuperxBR(hook=["MAIN"], target=superxbr.Target.rgb)
-with open("superxbr-native.hook", "w") as f:
-    f.write(userhook.LICENSE_HEADER)
-    for step in list(superxbr.Step):
-        f.write(gen.generate(step))
+for target in list(superxbr.Target):
+    if target == superxbr.Target.luma:
+        continue
+    hook = ["MAIN"] if target == superxbr.Target.rgb else ["NATIVE"]
+    suffix = "native" if target == superxbr.Target.rgb else "native-yuv"
+    gen = superxbr.SuperxBR(hook=hook, target=target)
+    with open("superxbr-%s.hook" % suffix, "w") as f:
+        f.write(userhook.LICENSE_HEADER)
+        for step in list(superxbr.Step):
+            f.write(gen.generate(step))
