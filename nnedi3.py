@@ -95,14 +95,14 @@ class NNEDI3(userhook.UserHook):
             return
         for weights_dir in NNEDI3.weights_dirs:
             try:
-                with open(weights_dir + os.sep + NNEDI3.weights_file,
-                          "rb") as f:
-                    NNEDI3.weights = f.read()
+                NNEDI3.weights = open(
+                    os.path.join(weights_dir, NNEDI3.weights_file),
+                    "rb").read()
                 assert len(NNEDI3.weights) == NNEDI3.weights_filesize
                 return
             except IOError:
                 pass
-        raise Exception("unable to load %s" % weights_file)
+        raise Exception("unable to load %s" % NNEDI3.weights_file)
 
     @staticmethod
     def weight_at(ptr):
@@ -164,12 +164,9 @@ float mstd2 = mix(0.0, inversesqrt(mstd1), mstd1 >= %s);
 mstd1 *= mstd2;""" % (width * height, width * height, "1.192092896e-7"))
 
         GLSL("""
-float vsum = 0.0, wsum = 0.0, sum1, sum2;""")
-        GLSL("""
-#define T(x) intBitsToFloat(x)""")
-        GLSL("""
-#define W(i,w0,w1,w2,w3) dot(samples[i],vec4(T(w0),T(w1),T(w2),T(w3)))""")
-        GLSL("""
+float vsum = 0.0, wsum = 0.0, sum1, sum2;
+#define T(x) intBitsToFloat(x)
+#define W(i,w0,w1,w2,w3) dot(samples[i],vec4(T(w0),T(w1),T(w2),T(w3)))
 #define WS(w0,w1) \
 sum1 = exp(sum1 * mstd2 + T(w0)); \
 sum2 = sum2 * mstd2 + T(w1); \
