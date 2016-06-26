@@ -44,7 +44,7 @@ All shaders are for one pass only. If you want to have `4x` upscaling, trigger
 the same shader twice. For `4x` luma prescaling:
 
 ```
-vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4.hook,nnedi3-nns32-win8x4.hook"
+vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4.hook,~~/shaders/nnedi3-nns32-win8x4.hook"
 ```
 
 Pay attention that for `4:2:0` sub-sampled `YUV` video, you need an additional
@@ -53,7 +53,7 @@ chroma planes (they are still not aligned though):
 
 ```
 vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
-vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,nnedi3-nns32-win8x4-chroma.hook"
+vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
 ```
 
 # Known Issue
