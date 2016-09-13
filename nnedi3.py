@@ -46,9 +46,10 @@ class Neurons(enum.Enum):
     nns32 = 1
     nns64 = 2
     nns128 = 3
+    nns256 = 4
 
     def get_neurons(self):
-        return [16, 32, 64, 128][self.value]
+        return [16, 32, 64, 128, 256][self.value]
 
 
 class Window(enum.Enum):
@@ -69,11 +70,11 @@ class Step(enum.Enum):
 
 class NNEDI3(userhook.UserHook):
 
-    weight_offsets = [0, 1088, 3264, 7616, 16320, 17920, 21120, 27520]
+    weight_offsets = [0, 1088, 3264, 7616, 16320, 33728, 35328, 38528, 44928, 57728]
     weights = None
 
     weights_file = "nnedi3_weights.bin"
-    weights_filesize = 40320 * 4
+    weights_filesize = 83328 * 4
     weights_dirs = [os.path.dirname(os.path.realpath(__file__)),
                     os.path.realpath(os.getcwd())]
 
@@ -217,7 +218,8 @@ if __name__ == "__main__":
     neurons = {16: Neurons.nns16,
                32: Neurons.nns32,
                64: Neurons.nns64,
-               128: Neurons.nns128}
+               128: Neurons.nns128,
+               256: Neurons.nns256}
 
     windows = {"8x4": Window.win8x4, "8x6": Window.win8x6}
 
