@@ -34,17 +34,17 @@ You only need to download shaders you actually use. The following part of this
 section assumes that they are in `shaders` directory in the `mpv` configure
 folder (usually `~/.config/mpv/shaders` on Linux).
 
-Add `user-shaders="prescaler.hook"` sub-option to `vo` settings:
+Use `opengl-shaders="prescaler.hook"` option to load those shaders.
 
 ```
-vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4.hook"
+opengl-shaders="~~/shaders/nnedi3-nns32-win8x4.hook"
 ```
 
 All shaders are for one pass only. If you want to have `4x` upscaling, trigger
 the same shader twice. For `4x` luma prescaling:
 
 ```
-vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4.hook,~~/shaders/nnedi3-nns32-win8x4.hook"
+opengl-shaders="~~/shaders/nnedi3-nns32-win8x4.hook,~~/shaders/nnedi3-nns32-win8x4.hook"
 ```
 
 Pay attention that for `4:2:0` sub-sampled `YUV` video, you need an additional
@@ -52,8 +52,8 @@ chroma-only prescaling pass to match the post-prescaling size of luma and
 chroma planes (they are still not aligned though):
 
 ```
-vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
-vo=opengl-hq:...:user-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
+opengl-shaders="~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
+opengl-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
 ```
 
 # Known Issue
