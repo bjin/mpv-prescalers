@@ -15,7 +15,7 @@ Alternatively, you could generate shaders with customized options:
 
 Or play video directly with scripts
 ```
-mpv --vo opengl-hq:user-shaders=<(path/to/superxbr.py --target=native) video.mkv
+mpv --opengl-shaders=<(path/to/superxbr.py --target=native) video.mkv
 ```
 
 # License
