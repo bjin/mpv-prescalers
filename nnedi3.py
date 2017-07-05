@@ -117,6 +117,9 @@ class NNEDI3(userhook.UserHook):
         width = self.window_width
         height = self.window_height
 
+        self.set_description("NNEDI3 (step=%s, window=%dx%d, neurons=%d)" %
+                             (step.name, width, height, self.neurons))
+
         assert width % 4 == 0
         sample_count = width * height // 4
 

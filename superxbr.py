@@ -174,6 +174,9 @@ res = clamp(res, lo, hi);""")
         self.reset()
         GLSL = self.add_glsl
 
+        self.set_description("Super-xBR (step=%s, profile=%s)" %
+                             (step.name, self.profile.name))
+
         if self.profile == Profile.luma:
             comps = self.max_components()
             args = ", ".join("superxbr(%d)" % i if i < comps else "0.0"

@@ -15,6 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from string import Template
 
+DESC = "DESC"
 HOOK = "HOOK"
 BIND = "BIND"
 SAVE = "SAVE"
@@ -24,7 +25,7 @@ OFFSET = "OFFSET"
 WHEN = "WHEN"
 COMPONENTS = "COMPONENTS"
 
-HEADERS = [HOOK, BIND, SAVE, WIDTH, HEIGHT, OFFSET, WHEN, COMPONENTS]
+HEADERS = [DESC, HOOK, BIND, SAVE, WIDTH, HEIGHT, OFFSET, WHEN, COMPONENTS]
 
 HOOKED = "HOOKED"
 
@@ -60,6 +61,7 @@ class UserHook:
 
     def reset(self):
         self.glsl = []
+        self.header[DESC] = None
         self.header[WIDTH] = None
         self.header[HEIGHT] = None
         self.header[OFFSET] = None
@@ -99,6 +101,9 @@ class UserHook:
                     "HOOKED.h %d * %s.h / %f <" %
                     (mul_y, self.target_tex, self.max_downscaling_ratio))
         self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
+
+    def set_description(self, desc):
+        self.header[DESC] = desc
 
     def generate(self):
         headers = []
