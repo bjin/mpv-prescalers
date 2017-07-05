@@ -12,6 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+//!DESC Super-xBR (step=step1, profile=luma)
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED
@@ -92,6 +93,7 @@ return res;
 vec4 hook() {
     return vec4(superxbr(0), superxbr(1), 0.0, 0.0);
 }
+//!DESC Super-xBR (step=step2, profile=luma)
 //!HOOK LUMA
 //!HOOK CHROMA
 //!BIND HOOKED

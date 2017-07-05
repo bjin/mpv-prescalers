@@ -12,6 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+//!DESC NNEDI3 (step=double_y, window=8x6, neurons=32)
 //!HOOK CHROMA
 //!BIND HOOKED
 //!HEIGHT 2 HOOKED.h *
@@ -85,6 +86,7 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 vec4 hook() {
     return vec4(nnedi3(0), nnedi3(1), 0.0, 0.0);
 }
+//!DESC NNEDI3 (step=double_x, window=8x6, neurons=32)
 //!HOOK CHROMA
 //!BIND HOOKED
 //!WIDTH 2 HOOKED.w *

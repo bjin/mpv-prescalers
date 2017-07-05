@@ -12,6 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+//!DESC Super-xBR (step=step1, profile=rgb)
 //!HOOK MAIN
 //!BIND HOOKED
 //!WIDTH 2 HOOKED.w *
@@ -93,6 +94,7 @@ return res;
 vec4 hook() {
     return superxbr();
 }
+//!DESC Super-xBR (step=step2, profile=rgb)
 //!HOOK MAIN
 //!BIND HOOKED
 vec4 superxbr() {
