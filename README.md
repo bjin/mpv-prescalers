@@ -4,6 +4,9 @@ currently only `nnedi3` and `superxbr` are supported.
 For the scripts generating these user shaders, check the [source
 branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
+`nnedi3` now requires OpenGL 4.0 (or above) and recent version of `mpv` (after
+July 2017).
+
 # Filenames
 
 Suffix in the filename indicates the type of planes shader is hooked on:
