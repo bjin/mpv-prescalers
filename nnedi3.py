@@ -201,16 +201,16 @@ vec4 hook() {""")
             GLSL("""
 if ((transpose(HOOKED_rot) * fract(HOOKED_pos * HOOKED_size)).y < 0.5)
     return HOOKED_texOff(vec2(0, 0.25));
-#define GET4(i, j, comp) textureGatherOffset(HOOKED_raw, \
-    HOOKED_pos + HOOKED_pt * vec2(-(%f),0.25-(%f)), ivec2(i, j), comp)""" %
+#define GET4(i, j, comp) (HOOKED_mul * textureGatherOffset(HOOKED_raw, \
+    HOOKED_pos + HOOKED_pt * vec2(-(%f),0.25-(%f)), ivec2(i, j), comp))""" %
                  (width / 2.0 - 1, (height - 1) / 2.0))
         elif step == Step.double_x:
             self.set_transform(2, 1, -0.5, 0, True)
             GLSL("""
 if (fract(HOOKED_pos.x * HOOKED_size.x) < 0.5)
     return HOOKED_texOff(vec2(0.25, 0));
-#define GET4(i, j, comp) textureGatherOffset(HOOKED_raw, \
-    HOOKED_pos + HOOKED_pt * vec2(0.25-(%f),-(%f)), ivec2(j, i), comp)""" %
+#define GET4(i, j, comp) (HOOKED_mul * textureGatherOffset(HOOKED_raw, \
+    HOOKED_pos + HOOKED_pt * vec2(0.25-(%f),-(%f)), ivec2(j, i), comp))""" %
                 ((height - 1) / 2.0, width / 2.0 - 1))
         else:
             raise Exception("unknown step: %s" % repr(step))
