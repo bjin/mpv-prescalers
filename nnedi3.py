@@ -120,40 +120,20 @@ class NNEDI3(userhook.UserHook):
         self.set_description("NNEDI3 (step=%s, window=%dx%d, neurons=%d)" %
                              (step.name, width, height, self.neurons))
 
-        assert width % 4 == 0
+        assert width % 2 == 0 and height % 2 == 0
         sample_count = width * height // 4
+
+        samples_pos = []
+        for y in range(0, height, 2):
+            for x in range(0, width, 2):
+                samples_pos.append((x, y))
 
         GLSL('#pragma optionNV(fastprecision on))')
 
         GLSL("""
-float nnedi3(int comp) {""")
+float nnedi3(vec4 samples[%d]) {""" % sample_count)
 
-        if step == Step.double_y:
-            self.set_transform(1, 2, 0, -0.5, True)
-            GLSL("""
-if ((transpose(HOOKED_rot) * fract(HOOKED_pos * HOOKED_size)).y < 0.5)
-    return HOOKED_texOff(vec2(0, 0.25))[comp];
-#define GET(i, j) HOOKED_texOff(vec2((i)-(%f),(j)-(%f)+0.25))[comp]""" %
-                 (width / 2.0 - 1, (height - 1) / 2.0))
-        elif step == Step.double_x:
-            self.set_transform(2, 1, -0.5, 0, True)
-            GLSL("""
-if (fract(HOOKED_pos.x * HOOKED_size.x) < 0.5)
-    return HOOKED_texOff(vec2(0.25, 0))[comp];
-#define GET(i, j) HOOKED_texOff(vec2((j)-(%f)+0.25,(i)-(%f)))[comp]""" % (
-                (height - 1) / 2.0, width / 2.0 - 1))
-        else:
-            raise Exception("unknown step: %s" % repr(step))
 
-        GLSL("""
-vec4 samples[%d];""" % sample_count)
-
-        for y in range(0, height):
-            for x in range(0, width, 4):
-                GLSL("""
-samples[%d] = vec4(GET(%d.0, %d.0), GET(%d.0, %d.0), \
-GET(%d.0, %d.0), GET(%d.0, %d.0));""" % ((y * width + x) / 4, x, y, x + 1, y,
-                                         x + 2, y, x + 3, y))
         GLSL("""
 float sum = 0.0, sumsq = 0.0;
 for (int i = 0; i < %d; i++) {
@@ -177,20 +157,33 @@ sum2 = sum2 * mstd2 + T(w1); \
 wsum += sum1; \
 vsum += sum1*(sum2/(1.0+abs(sum2)));""")
 
+        gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
+        if step == Step.double_x:
+            # X and Y axis are swapped in this step. Should be consistent with
+            # the GET4() definition below.
+            for i in range(4):
+                x, y = gather_offsets[i]
+                gather_offsets[i] = y, x
+
         for n in range(self.neurons):
-            ptr = self.offset + (sample_count * 2 + 1) * 4 * n
             line = []
+            ptr = self.offset + (sample_count * 2 + 1) * n * 4
             for s in range(2):
                 line.append("sum%d" % (s + 1))
                 for i in range(sample_count):
+                    x, y = samples_pos[i]
+                    weights_offset = []
+                    for j in range(4):
+                        weights_offset.append(x + gather_offsets[j][0] + 
+                                (y + gather_offsets[j][1]) * width)
                     line.append("%sW(%d,%d,%d,%d,%d)" % (
                         "=" if i == 0 else "+",
                         i,
-                        self.weight_at(ptr),
-                        self.weight_at(ptr + 1),
-                        self.weight_at(ptr + 2),
-                        self.weight_at(ptr + 3))) # yapf: disable
-                    ptr += 4
+                        self.weight_at(ptr + weights_offset[0]),
+                        self.weight_at(ptr + weights_offset[1]),
+                        self.weight_at(ptr + weights_offset[2]),
+                        self.weight_at(ptr + weights_offset[3]))) # yapf: disable
+                ptr += 4 * sample_count
                 line.append(";")
             line.append("WS(%d,%d);" %
                         (self.weight_at(ptr), self.weight_at(ptr + 1)))
@@ -200,11 +193,40 @@ vsum += sum1*(sum2/(1.0+abs(sum2)));""")
 return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 }  // nnedi3""")
 
-        comps = self.max_components()
         GLSL("""
-vec4 hook() {
-    return vec4(%s);
-}""" % ", ".join("nnedi3(%d)" % i if i < comps else "0.0" for i in range(4)))
+vec4 hook() {""")
+
+        if step == Step.double_y:
+            self.set_transform(1, 2, 0, -0.5, True)
+            GLSL("""
+if ((transpose(HOOKED_rot) * fract(HOOKED_pos * HOOKED_size)).y < 0.5)
+    return HOOKED_texOff(vec2(0, 0.25));
+#define GET4(i, j, comp) textureGatherOffset(HOOKED_raw, \
+    HOOKED_pos + HOOKED_pt * vec2(-(%f),0.25-(%f)), ivec2(i, j), comp)""" %
+                 (width / 2.0 - 1, (height - 1) / 2.0))
+        elif step == Step.double_x:
+            self.set_transform(2, 1, -0.5, 0, True)
+            GLSL("""
+if (fract(HOOKED_pos.x * HOOKED_size.x) < 0.5)
+    return HOOKED_texOff(vec2(0.25, 0));
+#define GET4(i, j, comp) textureGatherOffset(HOOKED_raw, \
+    HOOKED_pos + HOOKED_pt * vec2(0.25-(%f),-(%f)), ivec2(j, i), comp)""" %
+                ((height - 1) / 2.0, width / 2.0 - 1))
+        else:
+            raise Exception("unknown step: %s" % repr(step))
+
+        GLSL("""vec4 ret = vec4(0.0);""")
+
+        for comp in range(self.max_components()):
+            GLSL("""vec4 samples_%d[%d];""" % (comp, sample_count))
+            for i in range(sample_count):
+                GLSL("samples_%d[%d] = GET4(%d, %d, %d);" %
+                        (comp, i, samples_pos[i][0], samples_pos[i][1], comp))
+            GLSL("ret[%d] = nnedi3(samples_%d);" % (comp, comp))
+
+        GLSL("""
+    return ret;
+}  // hook""")
 
         return super().generate()
 
