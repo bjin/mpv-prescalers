@@ -54,9 +54,26 @@ class RAVU(userhook.UserHook):
         self.gaussian = locals()['gaussian']
         self.lr_weights = locals()['lr_weights']
 
+        # XXX
+        weights = []
+        for h in range(self.radius * self.radius):
+            for i in range(self.quant_angle):
+                for j in range(self.quant_strength):
+                    for k in range(self.quant_coherence):
+                        weights.extend(self.lr_weights[i][j][k][h*4:h*4+4])
+        self.weights_bin = "/tmp/ravu.bin"
+        import struct
+        open(self.weights_bin, "wb").write(struct.pack('<%df' % len(weights), *weights))
+
     def generate(self, step):
         self.reset()
         GLSL = self.add_glsl
+
+        # XXX
+        GLSL('//!LOAD NEAREST %d %d 1 4 %s' %
+                (self.quant_angle * self.quant_strength * self.quant_coherence,
+                 self.radius * self.radius,
+                 self.weights_bin))
 
         self.set_description("RAVU (step=%s, profile=%s, radius=%d, gradient_radius=%d)" %
                              (step.name, self.profile.name, self.radius, self.gradient_radius))
@@ -163,7 +180,6 @@ if (dir.x * dir.y > 0.0)
 
         # Eigenanalysis of gradient matrix
         eps = "1e-9"
-        pi = str(math.pi)
         GLSL("""
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
@@ -174,49 +190,35 @@ float sqrtL1 = sqrt(L1), sqrtL2 = sqrt(L2);
 float theta = mod(atan(V1y, V1x) + %s, %s);
 float lambda = sqrtL1;
 float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %s);
-""" % (eps, pi, pi, eps))
+""" % (eps, math.pi, math.pi, eps))
 
-        # Extract weights based on quantization of (angle, strength, coherence)
-        GLSL("float ws[%d];" % (n * n))
-
-        min_angle = [float(i) / float(self.quant_angle) * math.pi
-                     for i in range(1, self.quant_angle)]
-
-        def extract_weights(ws, *dims):
-            if len(dims) == 0:
-                GLSL("".join("ws[%d]=%s;" % (i, ws[i]) for i in range(len(ws))))
+        # Extract convolution kernel based on quantization of (angle, strength, coherence)
+        GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle, math.pi))
+        GLSL("float strength, coherence;")
+        def quantize(target_name, var_name, seps, l, r):
+            if l == r:
+                GLSL("%s = %d.0;\n" % (target_name, l))
                 return
-            var_name, seps = dims[0]
-            st = [(0, len(seps))]
-            while len(st):
-                e = st.pop()
-                if isinstance(e, str):
-                    GLSL(e)
-                else:
-                    l, r = e
-                    if l == r:
-                        extract_weights(ws[l], *dims[1:])
-                    else:
-                        mid = (l + r) // 2
-                        st.extend([ "if (%s < %s) {" % (var_name, seps[mid])
-                                  , (l, mid)
-                                  , "} else {"
-                                  , (mid + 1, r)
-                                  , "}"
-                                  ][::-1])
+            m = (l + r) // 2
+            GLSL("if (%s < %s) {" % (var_name, seps[m]))
+            quantize(target_name, var_name, seps, l, m)
+            GLSL("} else {")
+            quantize(target_name, var_name, seps, m + 1, r)
+            GLSL("}")
+        quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
+        quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
+        GLSL("float coord_x = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
+                (self.quant_strength,
+                 self.quant_coherence,
+                 self.quant_angle * self.quant_strength * self.quant_coherence))
 
-        extract_weights(self.lr_weights,
-                        ("theta", min_angle),
-                        ("lambda", self.min_strength),
-                        ("mu", self.min_coherence))
-
-        # Convolution kernel
-        GLSL("""
-$sample_type res = $sample_zero;
-for (int x = 0; x < %d; x++)
-res += i[x] * ws[x];
-""" % (n * n))
-
+        GLSL("$sample_type res = $sample_zero;")
+        GLSL("vec4 w;")
+        for i in range(n * n // 4):
+            coord_y = (float(i) + 0.5) / float(n * n // 4)
+            GLSL("w = texture(user_tex, vec2(coord_x, %s));" % coord_y)
+            for j in range(4):
+                GLSL("res += i[%d] * w[%d];" % (i * 4 + j, j))
 
         GLSL("""
 return res;
@@ -249,8 +251,8 @@ if __name__ == "__main__":
         '--target',
         nargs=1,
         choices=sorted(hooks.keys()),
-        default=["native"],
-        help='target that shader is hooked on (default: native)')
+        default=["luma"],
+        help='target that shader is hooked on (default: luma)')
     parser.add_argument('-w',
                         '--weights-file',
                         nargs=1,
