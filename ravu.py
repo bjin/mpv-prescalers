@@ -37,12 +37,13 @@ class RAVU(userhook.UserHook):
     An experimental prescaler inspired by RAISR (Rapid and Accurate Image Super
     Resolution).
     """
+
     def __init__(self, profile=Profile.luma, weights_file=None, **args):
         super().__init__(**args)
 
         self.profile = profile
 
-        exec(open(weights_file).read())
+        exec (open(weights_file).read())
 
         self.radius = locals()['radius']
         self.gradient_radius = locals()['gradient_radius']
@@ -60,10 +61,12 @@ class RAVU(userhook.UserHook):
             for i in range(self.quant_angle):
                 for j in range(self.quant_strength):
                     for k in range(self.quant_coherence):
-                        weights.extend(self.lr_weights[i][j][k][h*4:h*4+4])
+                        weights.extend(
+                            self.lr_weights[i][j][k][h * 4:h * 4 + 4])
         self.weights_bin = "/tmp/ravu.bin"
         import struct
-        open(self.weights_bin, "wb").write(struct.pack('<%df' % len(weights), *weights))
+        open(self.weights_bin,
+             "wb").write(struct.pack('<%df' % len(weights), *weights))
 
     def generate(self, step):
         self.reset()
@@ -71,27 +74,29 @@ class RAVU(userhook.UserHook):
 
         # XXX
         GLSL('//!LOAD NEAREST %d %d 1 4 %s' %
-                (self.quant_angle * self.quant_strength * self.quant_coherence,
-                 self.radius * self.radius,
-                 self.weights_bin))
+             (self.quant_angle * self.quant_strength * self.quant_coherence,
+              self.radius * self.radius, self.weights_bin))
 
-        self.set_description("RAVU (step=%s, profile=%s, radius=%d, gradient_radius=%d)" %
-                             (step.name, self.profile.name, self.radius, self.gradient_radius))
+        self.set_description(
+            "RAVU (step=%s, profile=%s, radius=%d, gradient_radius=%d)" %
+            (step.name, self.profile.name, self.radius, self.gradient_radius))
 
         if self.profile == Profile.luma:
             comps = self.max_components()
             args = ", ".join("ravu(%d)" % i if i < comps else "0.0"
                              for i in range(4))
 
-            self.add_mappings(sample_type="float",
-                              sample_zero="0.0",
-                              function_args="int comp",
-                              hook_return_value="vec4(%s)" % args)
+            self.add_mappings(
+                sample_type="float",
+                sample_zero="0.0",
+                function_args="int comp",
+                hook_return_value="vec4(%s)" % args)
         else:
-            self.add_mappings(sample_type="vec4",
-                              sample_zero="vec4(0.0)",
-                              function_args="",
-                              hook_return_value="ravu()")
+            self.add_mappings(
+                sample_type="vec4",
+                sample_zero="vec4(0.0)",
+                function_args="",
+                hook_return_value="ravu()")
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
                 self.add_mappings(
@@ -110,13 +115,13 @@ $sample_type ravu($function_args) {""")
 
         if self.profile == Profile.luma:
             luma = sample
-            GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)[comp]')
+            comps_suffix = "[comp]"
         else:
             if self.profile == Profile.rgb:
                 luma = lambda x, y: "luma%d" % (x * n + y)
             elif self.profile == Profile.yuv:
-                luma = lambda x, y: sample(x, y) + "[0]";
-            GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)')
+                luma = lambda x, y: sample(x, y) + "[0]"
+            comps_suffix = ""
 
         if step == Step.step1:
             self.set_transform(2, 2, -0.5, -0.5)
@@ -133,25 +138,27 @@ if (dir.x * dir.y < 0.0 && dist.x > 1.0 && dist.y > 1.0)
 
             GLSL("""
 if (dir.x < 0.0 || dir.y < 0.0 || dist.x < 1.0 || dist.y < 1.0)
-    return GET_SAMPLE(-dir);""")
+    return HOOKED_texOff(-dir)%s;""" % comps_suffix)
 
-            get_position = lambda x, y: "vec2(%s,%s)" % (x-0.25-(n/2-1), y-0.25-(n/2-1))
+            get_position = lambda x, y: "vec2(%s,%s)" % (x - 0.25 - (n / 2 - 1), y - 0.25 - (n / 2 - 1))
 
         else:
             # This is the second pass, so it will never be rotated
             GLSL("""
 vec2 dir = fract(HOOKED_pos * HOOKED_size / 2.0) - 0.5;
 if (dir.x * dir.y > 0.0)
-    return GET_SAMPLE(0);""")
+    return HOOKED_texOff(0)%s;""" % comps_suffix)
 
-            get_position = lambda x, y: "vec2(%s,%s)" % (x+y-(n-1),y-x)
+            get_position = lambda x, y: "vec2(%s,%s)" % (x + y - (n - 1), y - x)
 
         # Load the input samples
         for i in range(n):
             for j in range(n):
-                GLSL('$sample_type %s = GET_SAMPLE(%s);' % (sample(i, j), get_position(i, j)))
+                GLSL('$sample_type %s = HOOKED_texOff(%s)%s;' %
+                     (sample(i, j), get_position(i, j), comps_suffix))
                 if self.profile == Profile.rgb:
-                    GLSL('float %s = dot(%s, $color_primary);' % (luma(i, j), sample(i, j)))
+                    GLSL('float %s = dot(%s, $color_primary);' %
+                         (luma(i, j), sample(i, j)))
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
@@ -160,6 +167,7 @@ if (dir.x * dir.y > 0.0)
         GLSL('float a = 0, b = 0, d = 0, gx, gy;')
         for i in range(gradient_left, gradient_right):
             for j in range(gradient_left, gradient_right):
+
                 def numerial_differential(f, x):
                     if x == 0:
                         return "(%s-%s)" % (f(x + 1), f(x))
@@ -167,13 +175,17 @@ if (dir.x * dir.y > 0.0)
                         return "(%s-%s)" % (f(x), f(x - 1))
                     if x == 1 or x == n - 2:
                         return "(%s-%s)/2.0" % (f(x + 1), f(x - 1))
-                    return "(-%s+8.0*%s-8.0*%s+%s)/12.0" % (f(x + 2), f(x + 1), f(x - 1), f(x - 2))
-                GLSL("gx = %s;" % numerial_differential(lambda i2: luma(i2, j), i))
-                GLSL("gy = %s;" % numerial_differential(lambda j2: luma(i, j2), j))
+                    return "(-%s+8.0*%s-8.0*%s+%s)/12.0" % (f(x + 2), f(x + 1),
+                                                            f(x - 1), f(x - 2))
+
+                GLSL("gx = %s;" % numerial_differential(
+                    lambda i2: luma(i2, j), i))
+                GLSL("gy = %s;" % numerial_differential(
+                    lambda j2: luma(i, j2), j))
                 gw = self.gaussian[i - gradient_left][j - gradient_left]
-                GLSL("a += gx * gx * %s;" % gw);
-                GLSL("b += gx * gy * %s;" % gw);
-                GLSL("d += gy * gy * %s;" % gw);
+                GLSL("a += gx * gx * %s;" % gw)
+                GLSL("b += gx * gy * %s;" % gw)
+                GLSL("d += gy * gy * %s;" % gw)
 
         # Eigenanalysis of gradient matrix
         eps = "1e-9"
@@ -190,8 +202,10 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
 """ % (eps, math.pi, math.pi, eps))
 
         # Extract convolution kernel based on quantization of (angle, strength, coherence)
-        GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle, math.pi))
+        GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle,
+                                                          math.pi))
         GLSL("float strength, coherence;")
+
         def quantize(target_name, var_name, seps, l, r):
             if l == r:
                 GLSL("%s = %d.0;\n" % (target_name, l))
@@ -202,12 +216,15 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
             GLSL("} else {")
             quantize(target_name, var_name, seps, m + 1, r)
             GLSL("}")
-        quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
-        quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
-        GLSL("float coord_x = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
-                (self.quant_strength,
-                 self.quant_coherence,
-                 self.quant_angle * self.quant_strength * self.quant_coherence))
+
+        quantize("strength", "lambda", self.min_strength, 0,
+                 self.quant_strength - 1)
+        quantize("coherence", "mu", self.min_coherence, 0,
+                 self.quant_coherence - 1)
+        GLSL(
+            "float coord_x = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;"
+            % (self.quant_strength, self.quant_coherence,
+               self.quant_angle * self.quant_strength * self.quant_coherence))
 
         GLSL("$sample_type res = $sample_zero;")
         GLSL("vec4 w;")
@@ -233,12 +250,14 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    hooks = {"luma": ["LUMA"],
-             "chroma": ["CHROMA"],
-             "yuv": ["LUMA", "CHROMA"],
-             "all": ["LUMA", "CHROMA", "RGB", "XYZ"],
-             "native": ["MAIN"],
-             "native-yuv": ["NATIVE"]}
+    hooks = {
+        "luma": ["LUMA"],
+        "chroma": ["CHROMA"],
+        "yuv": ["LUMA", "CHROMA"],
+        "all": ["LUMA", "CHROMA", "RGB", "XYZ"],
+        "native": ["MAIN"],
+        "native-yuv": ["NATIVE"]
+    }
     native_profiles = {"native": Profile.rgb, "native-yuv": Profile.yuv}
 
     parser = argparse.ArgumentParser(
@@ -250,19 +269,21 @@ if __name__ == "__main__":
         choices=sorted(hooks.keys()),
         default=["luma"],
         help='target that shader is hooked on (default: luma)')
-    parser.add_argument('-w',
-                        '--weights-file',
-                        nargs=1,
-                        required=True,
-                        type=str,
-                        help='weights file name')
+    parser.add_argument(
+        '-w',
+        '--weights-file',
+        nargs=1,
+        required=True,
+        type=str,
+        help='weights file name')
 
     args = parser.parse_args()
     target = args.target[0]
     hook = hooks[target]
-    profile = native_profiles[target] if target in native_profiles else Profile.luma
+    profile = native_profiles[
+        target] if target in native_profiles else Profile.luma
 
-    gen = RAVU(hook=hook, profile=profile, weights_file = args.weights_file[0])
+    gen = RAVU(hook=hook, profile=profile, weights_file=args.weights_file[0])
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
         sys.stdout.write(gen.generate(step))
