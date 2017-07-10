@@ -101,22 +101,21 @@ class RAVU(userhook.UserHook):
                 # the shader failed to run than getting some random output.
                 self.add_cond("LUMA.w 0 >")
 
-        n = self.radius * 2
-
         GLSL("""
-$sample_type ravu($function_args) {
-$sample_type i[%d];
-#define i(x,y) i[(x)*%d+(y)]""" % (n * n, n))
+$sample_type ravu($function_args) {""")
+
+        n = self.radius * 2
+        sample = lambda x, y: "sample%d" % (x * n + y)
+        samples = [sample(i, j) for i in range(n) for j in range(n)]
 
         if self.profile == Profile.luma:
-            GLSL('#define luma(x, y) i((x), (y))')
+            luma = sample
             GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)[comp]')
         else:
             if self.profile == Profile.rgb:
-                GLSL('float luma[%d];' % (n * n))
-                GLSL('#define luma(x, y) luma[(x)*%d+(y)]' % n)
+                luma = lambda x, y: "luma%d" % (x * n + y)
             elif self.profile == Profile.yuv:
-                GLSL('#define luma(x, y) i(x,y)[0]')
+                luma = lambda x, y: sample(x, y) + "[0]";
             GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)')
 
         if step == Step.step1:
@@ -136,8 +135,7 @@ if (dir.x * dir.y < 0.0 && dist.x > 1.0 && dist.y > 1.0)
 if (dir.x < 0.0 || dir.y < 0.0 || dist.x < 1.0 || dist.y < 1.0)
     return GET_SAMPLE(-dir);""")
 
-            GLSL('#define IDX(x, y) vec2(float(x)-0.25-%d.0,float(y)-0.25-%d.0)'
-                    % (n / 2 - 1, n / 2 - 1))
+            get_position = lambda x, y: "vec2(%s,%s)" % (x-0.25-(n/2-1), y-0.25-(n/2-1))
 
         else:
             # This is the second pass, so it will never be rotated
@@ -146,15 +144,14 @@ vec2 dir = fract(HOOKED_pos * HOOKED_size / 2.0) - 0.5;
 if (dir.x * dir.y > 0.0)
     return GET_SAMPLE(0);""")
 
-            GLSL('#define IDX(x, y) vec2(x+y-%d.0,y-x)' % (n - 1))
+            get_position = lambda x, y: "vec2(%s,%s)" % (x+y-(n-1),y-x)
 
         # Load the input samples
-        GLSL('for (int x = 0; x < %d; x++)' % n)
-        GLSL('for (int y = 0; y < %d; y++) {' % n)
-        GLSL('i(x,y) = GET_SAMPLE(IDX(x,y));')
-        if self.profile == Profile.rgb:
-            GLSL('luma(x,y) = dot(i(x,y), $color_primary);')
-        GLSL('}')
+        for i in range(n):
+            for j in range(n):
+                GLSL('$sample_type %s = GET_SAMPLE(%s);' % (sample(i, j), get_position(i, j)))
+                if self.profile == Profile.rgb:
+                    GLSL('float %s = dot(%s, $color_primary);' % (luma(i, j), sample(i, j)))
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
@@ -163,16 +160,16 @@ if (dir.x * dir.y > 0.0)
         GLSL('float a = 0, b = 0, d = 0, gx, gy;')
         for i in range(gradient_left, gradient_right):
             for j in range(gradient_left, gradient_right):
-                def numerial_differential(fx, x):
+                def numerial_differential(f, x):
                     if x == 0:
-                        return "(%s-%s)" % (fx % (x + 1), fx % x)
+                        return "(%s-%s)" % (f(x + 1), f(x))
                     if x == n - 1:
-                        return "(%s-%s)" % (fx % x, fx % (x - 1))
+                        return "(%s-%s)" % (f(x), f(x - 1))
                     if x == 1 or x == n - 2:
-                        return "(%s-%s)/2.0" % (fx % (x + 1), fx % (x - 1))
-                    return "(-%s+8.0*%s-8.0*%s+%s)/12.0" % (fx % (x + 2), fx % (x + 1), fx % (x - 1), fx % (x - 2))
-                GLSL("gx = %s;" % numerial_differential("luma(%%d, %d)" % j, i))
-                GLSL("gy = %s;" % numerial_differential("luma(%d, %%d)" % i, j))
+                        return "(%s-%s)/2.0" % (f(x + 1), f(x - 1))
+                    return "(-%s+8.0*%s-8.0*%s+%s)/12.0" % (f(x + 2), f(x + 1), f(x - 1), f(x - 2))
+                GLSL("gx = %s;" % numerial_differential(lambda i2: luma(i2, j), i))
+                GLSL("gy = %s;" % numerial_differential(lambda j2: luma(i, j2), j))
                 gw = self.gaussian[i - gradient_left][j - gradient_left]
                 GLSL("a += gx * gx * %s;" % gw);
                 GLSL("b += gx * gy * %s;" % gw);
@@ -218,7 +215,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
             coord_y = (float(i) + 0.5) / float(n * n // 4)
             GLSL("w = texture(user_tex, vec2(coord_x, %s));" % coord_y)
             for j in range(4):
-                GLSL("res += i[%d] * w[%d];" % (i * 4 + j, j))
+                GLSL("res += %s * w[%d];" % (samples[i * 4 + j], j))
 
         GLSL("""
 return res;
