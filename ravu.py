@@ -38,10 +38,16 @@ class RAVU(userhook.UserHook):
     Resolution).
     """
 
-    def __init__(self, profile=Profile.luma, weights_file=None, **args):
+    def __init__(self,
+                 profile=Profile.luma,
+                 weights_file=None,
+                 lut_name="ravu_lut",
+                 **args):
+        args.setdefault("bind", []).append(lut_name)
         super().__init__(**args)
 
         self.profile = profile
+        self.lut_name = lut_name
 
         exec (open(weights_file).read())
 
@@ -55,27 +61,41 @@ class RAVU(userhook.UserHook):
         self.gaussian = locals()['gaussian']
         self.lr_weights = locals()['lr_weights']
 
-        # XXX
-        weights = []
-        for h in range(self.radius * self.radius):
-            for i in range(self.quant_angle):
-                for j in range(self.quant_strength):
-                    for k in range(self.quant_coherence):
-                        weights.extend(
-                            self.lr_weights[i][j][k][h * 4:h * 4 + 4])
-        self.weights_bin = "/tmp/ravu.bin"
+        assert len(self.min_strength) + 1 == self.quant_strength
+        assert len(self.min_coherence) + 1 == self.quant_coherence
+
+    def generate_tex(self):
         import struct
-        open(self.weights_bin,
-             "wb").write(struct.pack('<%df' % len(weights), *weights))
+
+        height = self.quant_angle * self.quant_strength * self.quant_coherence
+        width = self.radius * self.radius
+
+        weights = []
+        for i in range(self.quant_angle):
+            for j in range(self.quant_strength):
+                for k in range(self.quant_coherence):
+                    assert len(self.lr_weights[i][j][k]) == width * 4
+                    weights.extend(self.lr_weights[i][j][k])
+        weights_raw = struct.pack('<%df' % len(weights), *weights).hex()
+        chunk_size = 80
+        weights_chunked = [
+            weights_raw[i:i + chunk_size]
+            for i in range(0, len(weights_raw), chunk_size)
+        ]
+
+        headers = [
+            "//!TEXTURE %s" % self.lut_name,
+            "//!SIZE %d %d" % (width, height),
+            "//!COMPONENTS 4",
+            "//!FORMAT 32f",
+            "//!FILTER NEAREST"
+        ] # yapf: disable
+
+        return "\n".join(headers + weights_chunked + [""])
 
     def generate(self, step):
         self.reset()
         GLSL = self.add_glsl
-
-        # XXX
-        GLSL('//!LOAD NEAREST %d %d 1 4 %s' %
-             (self.quant_angle * self.quant_strength * self.quant_coherence,
-              self.radius * self.radius, self.weights_bin))
 
         self.set_description(
             "RAVU (step=%s, profile=%s, radius=%d, gradient_radius=%d)" %
@@ -222,15 +242,16 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
         quantize("coherence", "mu", self.min_coherence, 0,
                  self.quant_coherence - 1)
         GLSL(
-            "float coord_x = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;"
+            "float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;"
             % (self.quant_strength, self.quant_coherence,
                self.quant_angle * self.quant_strength * self.quant_coherence))
 
         GLSL("$sample_type res = $sample_zero;")
         GLSL("vec4 w;")
         for i in range(n * n // 4):
-            coord_y = (float(i) + 0.5) / float(n * n // 4)
-            GLSL("w = texture(user_tex, vec2(coord_x, %s));" % coord_y)
+            coord_x = (float(i) + 0.5) / float(n * n // 4)
+            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name,
+                                                          coord_x))
             for j in range(4):
                 GLSL("res += %s * w[%d];" % (samples[i * 4 + j], j))
 
@@ -285,5 +306,6 @@ if __name__ == "__main__":
 
     gen = RAVU(hook=hook, profile=profile, weights_file=args.weights_file[0])
     sys.stdout.write(userhook.LICENSE_HEADER)
+    sys.stdout.write(gen.generate_tex())
     for step in list(Step):
         sys.stdout.write(gen.generate(step))
