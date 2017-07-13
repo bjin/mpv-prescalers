@@ -84,11 +84,6 @@ class RAVU(userhook.UserHook):
                     assert len(self.model_weights[i][j][k]) == width * 4
                     weights.extend(self.model_weights[i][j][k])
         weights_raw = struct.pack('<%df' % len(weights), *weights).hex()
-        chunk_size = 80
-        weights_chunked = [
-            weights_raw[i:i + chunk_size]
-            for i in range(0, len(weights_raw), chunk_size)
-        ]
 
         headers = [
             "//!TEXTURE %s" % self.lut_name,
@@ -98,7 +93,7 @@ class RAVU(userhook.UserHook):
             "//!FILTER NEAREST"
         ] # yapf: disable
 
-        return "\n".join(headers + weights_chunked + [""])
+        return "\n".join(headers + [weights_raw, ""])
 
     def generate(self, step):
         self.reset()
@@ -331,6 +326,6 @@ if __name__ == "__main__":
 
     gen = RAVU(hook=hook, profile=profile, weights_file=args.weights_file[0])
     sys.stdout.write(userhook.LICENSE_HEADER)
-    sys.stdout.write(gen.generate_tex())
     for step in list(Step):
         sys.stdout.write(gen.generate(step))
+    sys.stdout.write(gen.generate_tex())
