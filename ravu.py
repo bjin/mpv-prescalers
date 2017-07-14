@@ -173,13 +173,25 @@ if (dir.x * dir.y > 0.0)
             get_position = lambda x, y: "vec2(%s,%s)" % (x + y - (n - 1), y - x)
 
         # Load the input samples
-        for i in range(n):
-            for j in range(n):
-                GLSL('$sample_type %s = HOOKED_texOff(%s)%s;' %
-                     (sample(i, j), get_position(i, j), comps_suffix))
-                if self.profile == Profile.rgb:
-                    GLSL('float %s = dot(%s, $color_primary);' %
-                         (luma(i, j), sample(i, j)))
+        if comps_suffix == "[0]" and step == Step.step1:
+            gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
+            GLSL("vec2 base = HOOKED_pos + HOOKED_pt * %s;" % get_position(0, 0))
+            GLSL("vec4 gathered;")
+            for i in range(0, n, 2):
+                for j in range(0, n, 2):
+                    GLSL("gathered = HOOKED_mul * textureGatherOffset(HOOKED_raw, base, ivec2(%d, %d), 0);" % (i, j))
+                    for k in range(4):
+                        x = i + gather_offsets[k][0]
+                        y = j + gather_offsets[k][1]
+                        GLSL('$sample_type %s = gathered[%d];' % (sample(x, y), k))
+        else:
+            for i in range(n):
+                for j in range(n):
+                    GLSL('$sample_type %s = HOOKED_texOff(%s)%s;' %
+                         (sample(i, j), get_position(i, j), comps_suffix))
+                    if self.profile == Profile.rgb:
+                        GLSL('float %s = dot(%s, $color_primary);' %
+                             (luma(i, j), sample(i, j)))
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
