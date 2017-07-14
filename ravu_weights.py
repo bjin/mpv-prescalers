@@ -1,4 +1,3 @@
-model = "linear"
 radius = 3
 gradient_radius = 2
 quant_angle = 24

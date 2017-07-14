@@ -17,7 +17,6 @@
 
 import enum
 import math
-from string import Template
 
 import userhook
 
@@ -31,11 +30,6 @@ class Profile(enum.Enum):
     luma = 0
     rgb = 1
     yuv = 2
-
-
-class Model(enum.Enum):
-    linear = 1
-    hermite = 3
 
 
 class RAVU(userhook.UserHook):
@@ -57,7 +51,6 @@ class RAVU(userhook.UserHook):
 
         exec (open(weights_file).read())
 
-        self.model = Model[locals()['model']]
         self.radius = locals()['radius']
         self.gradient_radius = locals()['gradient_radius']
         self.quant_angle = locals()['quant_angle']
@@ -75,7 +68,7 @@ class RAVU(userhook.UserHook):
         import struct
 
         height = self.quant_angle * self.quant_strength * self.quant_coherence
-        width = self.radius * self.radius * self.model.value
+        width = self.radius * self.radius
 
         weights = []
         for i in range(self.quant_angle):
@@ -100,9 +93,8 @@ class RAVU(userhook.UserHook):
         GLSL = self.add_glsl
 
         self.set_description(
-            "RAVU (step=%s, profile=%s, model=%s, radius=%d, gradient_radius=%d)"
-            % (step.name, self.profile.name, self.model.name, self.radius,
-               self.gradient_radius))
+            "RAVU (step=%s, profile=%s, radius=%d, gradient_radius=%d)"
+            % (step.name, self.profile.name, self.radius, self.gradient_radius))
 
         if self.profile == Profile.luma:
             comps = self.max_components()
@@ -250,30 +242,14 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
                self.quant_angle * self.quant_strength * self.quant_coherence))
 
         GLSL("$sample_type res = $sample_zero;")
-        if self.model == Model.linear:
-            GLSL("vec4 w;")
-        elif self.model == Model.hermite:
-            GLSL("vec4 w1, w3, w5;")
+        GLSL("vec4 w;")
         blocks = n * n // 4
         for i in range(blocks):
-            if self.model == Model.linear:
-                coord_x = (float(i) + 0.5) / float(blocks)
-                GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name,
-                                                              coord_x))
-                for j in range(4):
-                    GLSL("res += %s * w[%d];" % (samples[i * 4 + j], j))
-            elif self.model == Model.hermite:
-                for offset, degree in enumerate([1, 3, 5]):
-                    coord_x = (
-                        float(i + blocks * offset) + 0.5) / float(blocks * 3)
-                    GLSL("w%d = texture(%s, vec2(%s, coord_y));" %
-                         (degree, self.lut_name, coord_x))
-                for j in range(4):
-                    # 1st degree: x * w1
-                    # 3rd degree: x*x*(3-2*x) * w3
-                    # 5th degree: x*x*x*(x*(x*6-15)+10) * w5
-                    templ = "res += $x*(w1[$j]+$x*((3-2*$x)*w3[$j]+$x*($x*($x*6-15)+10)*w5[$j]));"
-                    GLSL(Template(templ).substitute(x=samples[i * 4 + j], j=j))
+            coord_x = (float(i) + 0.5) / float(blocks)
+            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name,
+                                                          coord_x))
+            for j in range(4):
+                GLSL("res += %s * w[%d];" % (samples[i * 4 + j], j))
 
         GLSL("""
 return clamp(res, 0.0, 1.0);
