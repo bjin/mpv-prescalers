@@ -98,20 +98,29 @@ class RAVU(userhook.UserHook):
 
         if self.profile == Profile.luma:
             comps = self.max_components()
-            args = ", ".join("ravu(%d)" % i if i < comps else "0.0"
-                             for i in range(4))
-
-            self.add_mappings(
-                sample_type="float",
-                sample_zero="0.0",
-                function_args="int comp",
-                hook_return_value="vec4(%s)" % args)
+            if comps > 1:
+                args = ", ".join("ravu(%d)" % i if i < comps else "0.0"
+                                 for i in range(4))
+                self.add_mappings(
+                    sample_type="float",
+                    sample_zero="0.0",
+                    function_args="int comp",
+                    hook_return_value="vec4(%s)" % args)
+                comps_suffix = "[comp]"
+            else:
+                self.add_mappings(
+                    sample_type="float",
+                    sample_zero="0.0",
+                    function_args="",
+                    hook_return_value="vec4(ravu(), 0.0, 0.0, 0.0)")
+                comps_suffix = "[0]"
         else:
             self.add_mappings(
                 sample_type="vec4",
                 sample_zero="vec4(0.0)",
                 function_args="",
                 hook_return_value="ravu()")
+            comps_suffix = ""
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
                 self.add_mappings(
@@ -130,13 +139,10 @@ $sample_type ravu($function_args) {""")
 
         if self.profile == Profile.luma:
             luma = sample
-            comps_suffix = "[comp]"
-        else:
-            if self.profile == Profile.rgb:
-                luma = lambda x, y: "luma%d" % (x * n + y)
-            elif self.profile == Profile.yuv:
-                luma = lambda x, y: sample(x, y) + "[0]"
-            comps_suffix = ""
+        elif self.profile == Profile.rgb:
+            luma = lambda x, y: "luma%d" % (x * n + y)
+        elif self.profile == Profile.yuv:
+            luma = lambda x, y: sample(x, y) + "[0]"
 
         if step == Step.step1:
             self.set_transform(2, 2, -0.5, -0.5)
