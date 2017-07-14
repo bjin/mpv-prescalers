@@ -61,8 +61,11 @@ opengl-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,~~/shaders/nnedi3-nns32-
 
 # Known Issue
 
-* `nnedi3-nns32-win8x6-{chroma,yuv,all}.hook` are extremely slow with nvidia
-  driver, avoid using these shaders for now.
+* `nnedi3-nns32-win8x6-{chroma,yuv,all}.hook` are extremely slow with certain
+  version of nvidia driver.
+* Some setup (macOS with AMD driver) are known to have buggy
+  `textureGatherOffset` implementation, which might break `nnedi3` shaders for
+  chroma (`-chroma`, `-yuv` and `-all`).
 
 # License
 
