@@ -49,7 +49,7 @@ class RAVU(userhook.UserHook):
         self.profile = profile
         self.lut_name = lut_name
 
-        exec (open(weights_file).read())
+        exec(open(weights_file).read())
 
         self.radius = locals()['radius']
         self.gradient_radius = locals()['gradient_radius']
@@ -88,13 +88,12 @@ class RAVU(userhook.UserHook):
 
         return "\n".join(headers + [weights_raw, ""])
 
-    def generate(self, step):
+    def generate(self, step, use_gather=False):
         self.reset()
         GLSL = self.add_glsl
 
-        self.set_description(
-            "RAVU (step=%s, profile=%s, radius=%d)"
-            % (step.name, self.profile.name, self.radius))
+        self.set_description("RAVU (step=%s, profile=%s, radius=%d)" %
+                             (step.name, self.profile.name, self.radius))
 
         if self.profile == Profile.luma:
             comps = self.max_components()
@@ -173,17 +172,21 @@ if (dir.x * dir.y > 0.0)
             get_position = lambda x, y: "vec2(%s,%s)" % (x + y - (n - 1), y - x)
 
         # Load the input samples
-        if comps_suffix == "[0]" and step == Step.step1:
+        if use_gather and comps_suffix == "[0]" and step == Step.step1:
             gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
-            GLSL("vec2 base = HOOKED_pos + HOOKED_pt * %s;" % get_position(0, 0))
+            GLSL("vec2 base = HOOKED_pos + HOOKED_pt * %s;" % get_position(
+                0, 0))
             GLSL("vec4 gathered;")
             for i in range(0, n, 2):
                 for j in range(0, n, 2):
-                    GLSL("gathered = HOOKED_mul * textureGatherOffset(HOOKED_raw, base, ivec2(%d, %d), 0);" % (i, j))
+                    GLSL(
+                        "gathered = HOOKED_mul * textureGatherOffset(HOOKED_raw, base, ivec2(%d, %d), 0);"
+                        % (i, j))
                     for k in range(4):
                         x = i + gather_offsets[k][0]
                         y = j + gather_offsets[k][1]
-                        GLSL('$sample_type %s = gathered[%d];' % (sample(x, y), k))
+                        GLSL('$sample_type %s = gathered[%d];' % (sample(x, y),
+                                                                  k))
         else:
             for i in range(n):
                 for j in range(n):
@@ -302,8 +305,8 @@ if __name__ == "__main__":
         '--target',
         nargs=1,
         choices=sorted(hooks.keys()),
-        default=["luma"],
-        help='target that shader is hooked on (default: luma)')
+        default=["native"],
+        help='target that shader is hooked on (default: native)')
     parser.add_argument(
         '-w',
         '--weights-file',
@@ -311,15 +314,20 @@ if __name__ == "__main__":
         required=True,
         type=str,
         help='weights file name')
+    parser.add_argument(
+        '--use-gather',
+        action='store_true',
+        help="enable use of textureGatherOffset (requires OpenGL 4.0)")
 
     args = parser.parse_args()
     target = args.target[0]
     hook = hooks[target]
-    profile = native_profiles[
-        target] if target in native_profiles else Profile.luma
+    profile = native_profiles.get(target, Profile.luma)
+    weights_file = args.weights_file[0]
+    use_gather = args.use_gather
 
-    gen = RAVU(hook=hook, profile=profile, weights_file=args.weights_file[0])
+    gen = RAVU(hook=hook, profile=profile, weights_file=weights_file)
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
-        sys.stdout.write(gen.generate(step))
+        sys.stdout.write(gen.generate(step, use_gather))
     sys.stdout.write(gen.generate_tex())
