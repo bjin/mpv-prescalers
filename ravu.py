@@ -93,8 +93,8 @@ class RAVU(userhook.UserHook):
         GLSL = self.add_glsl
 
         self.set_description(
-            "RAVU (step=%s, profile=%s, radius=%d, gradient_radius=%d)"
-            % (step.name, self.profile.name, self.radius, self.gradient_radius))
+            "RAVU (step=%s, profile=%s, radius=%d)"
+            % (step.name, self.profile.name, self.radius))
 
         if self.profile == Profile.luma:
             comps = self.max_components()
