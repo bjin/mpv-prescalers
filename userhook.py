@@ -35,21 +35,12 @@ LICENSE_HEADER = "".join(map("// {}\n".format, __doc__.splitlines())) + "\n"
 class UserHook:
     def __init__(self,
                  hook=[],
-                 bind=[],
-                 save=[],
                  cond=None,
                  components=None,
                  target_tex=None,
                  max_downscaling_ratio=None):
-        if HOOKED not in bind:
-            bind.append(HOOKED)
-
-        self.header = {}
-        self.header[HOOK] = list(hook)
-        self.header[BIND] = list(bind)
-        self.header[SAVE] = list(save)
-        if components:
-            self.headers[COMPONENTS] = [str(components)]
+        self.hook = list(hook)
+        self.components = components
         self.cond = cond
         self.target_tex = target_tex
         self.max_downscaling_ratio = max_downscaling_ratio
@@ -61,16 +52,24 @@ class UserHook:
 
     def reset(self):
         self.glsl = []
+        self.header = {}
+        self.header[HOOK] = self.hook
+        if self.components:
+            self.headers[COMPONENTS] = [str(self.components)]
         self.header[DESC] = None
+        self.header[BIND] = [HOOKED]
+        self.header[SAVE] = None
         self.header[WIDTH] = None
         self.header[HEIGHT] = None
         self.header[OFFSET] = None
         self.header[WHEN] = self.cond
         self.mappings = None
 
-    def check_bind(self, used_tex):
-        if used_hook not in self.header[BIND]:
-            raise Exception('Texture %s is not binded' % used_tex)
+    def bind_tex(self, tex):
+        self.header[BIND].append(tex)
+
+    def save_tex(self, tex):
+        self.header[SAVE] = tex
 
     def add_mappings(self, **mappings):
         if self.mappings:

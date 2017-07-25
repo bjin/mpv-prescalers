@@ -43,7 +43,6 @@ class RAVU(userhook.UserHook):
                  weights_file=None,
                  lut_name="ravu_lut",
                  **args):
-        args.setdefault("bind", []).append(lut_name)
         super().__init__(**args)
 
         self.profile = profile
@@ -94,6 +93,8 @@ class RAVU(userhook.UserHook):
 
         self.set_description("RAVU (step=%s, profile=%s, radius=%d)" %
                              (step.name, self.profile.name, self.radius))
+
+        self.bind_tex(self.lut_name)
 
         if self.profile == Profile.luma:
             comps = self.max_components()
