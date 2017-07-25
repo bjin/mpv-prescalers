@@ -4,8 +4,10 @@ currently only `nnedi3` and `superxbr` are supported.
 For the scripts generating these user shaders, check the [source
 branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
-`nnedi3` now requires OpenGL 4.0 (or above) and recent version of `mpv` (after
-July 2017).
+`nnedi3` now requires OpenGL 4.0 for `textureGatherOffset`. It could happen
+that your driver don't support it, or just have buggy implementation. In any case,
+if it doesn't work or has noticeable distortion, you can find older version of
+`nnedi3` [here](https://github.com/bjin/mpv-prescalers/tree/cd9742657732dbd8f8f27dee233f41190a7d9be1).
 
 # Filenames
 
@@ -63,9 +65,9 @@ opengl-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,~~/shaders/nnedi3-nns32-
 
 * `nnedi3-nns32-win8x6-{chroma,yuv,all}.hook` are extremely slow with certain
   version of nvidia driver.
-* Some setup (macOS with AMD driver) are known to have buggy
-  `textureGatherOffset` implementation, which might break `nnedi3` shaders for
-  chroma (`-chroma`, `-yuv` and `-all`).
+* Some setup (macOS with AMD driver, or Mesa with old Intel card) are known to
+  have buggy `textureGatherOffset` implementation, which might break `nnedi3`
+  shaders.
 
 # License
 
