@@ -24,6 +24,8 @@ import userhook
 class Step(enum.Enum):
     step1 = 0
     step2 = 1
+    step3 = 2
+    step4 = 3
 
 
 class Profile(enum.Enum):
@@ -42,11 +44,13 @@ class RAVU(userhook.UserHook):
                  profile=Profile.luma,
                  weights_file=None,
                  lut_name="ravu_lut",
+                 int_tex_name="ravu_int",
                  **args):
         super().__init__(**args)
 
         self.profile = profile
         self.lut_name = lut_name
+        self.int_tex_name = int_tex_name
 
         exec(open(weights_file).read())
 
@@ -83,7 +87,7 @@ class RAVU(userhook.UserHook):
             "//!COMPONENTS 4",
             "//!FORMAT 32f",
             "//!FILTER NEAREST"
-        ] # yapf: disable
+        ]
 
         return "\n".join(headers + [weights_raw, ""])
 
@@ -95,6 +99,32 @@ class RAVU(userhook.UserHook):
                              (step.name, self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
+        tex_name = [["HOOKED", self.int_tex_name + "01"],
+                    [self.int_tex_name + "10", self.int_tex_name + "11"]]
+
+        if step == Step.step4:
+            self.set_transform(2, 2, -0.5, -0.5)
+
+            self.bind_tex(tex_name[0][1])
+            self.bind_tex(tex_name[1][0])
+            self.bind_tex(tex_name[1][1])
+
+            GLSL("""
+vec4 hook() {
+    vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
+    if (dir.x < 0) {
+        if (dir.y < 0)
+            return %s_texOff(-dir);
+        return %s_texOff(-dir);
+    } else {
+        if (dir.y < 0)
+            return %s_texOff(-dir);
+        return %s_texOff(-dir);
+    }
+}
+""" % (tex_name[0][0], tex_name[0][1], tex_name[1][0], tex_name[1][1]))
+
+            return super().generate()
 
         if self.profile == Profile.luma:
             comps = self.max_components()
@@ -123,8 +153,7 @@ class RAVU(userhook.UserHook):
             comps_suffix = ""
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
-                self.add_mappings(
-                    color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
+                GLSL("vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);")
             elif self.profile == Profile.yuv:
                 # Add some no-op cond to assert LUMA texture exists, rather make
                 # the shader failed to run than getting some random output.
@@ -145,57 +174,58 @@ $sample_type ravu($function_args) {""")
             luma = lambda x, y: sample(x, y) + "[0]"
 
         if step == Step.step1:
-            self.set_transform(2, 2, -0.5, -0.5)
-            GLSL("""
-vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-dir = transpose(HOOKED_rot) * dir;""")
+            self.save_tex(tex_name[1][1])
 
-            # Optimization: Discard (skip drawing) unused pixels, except those
-            # at the edge.
-            GLSL("""
-vec2 dist = HOOKED_size * min(HOOKED_pos, vec2(1.0) - HOOKED_pos);
-if (dir.x * dir.y < 0.0 && dist.x > 1.0 && dist.y > 1.0)
-    return $sample_zero;""")
-
-            GLSL("""
-if (dir.x < 0.0 || dir.y < 0.0 || dist.x < 1.0 || dist.y < 1.0)
-    return HOOKED_texOff(-dir)%s;""" % comps_suffix)
-
-            get_position = lambda x, y: "vec2(%s,%s)" % (x - 0.25 - (n / 2 - 1), y - 0.25 - (n / 2 - 1))
-
+            get_position = lambda x, y: (tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
         else:
-            # This is the second pass, so it will never be rotated
-            GLSL("""
-vec2 dir = fract(HOOKED_pos * HOOKED_size / 2.0) - 0.5;
-if (dir.x * dir.y > 0.0)
-    return HOOKED_texOff(0)%s;""" % comps_suffix)
+            self.bind_tex(tex_name[1][1])
 
-            get_position = lambda x, y: "vec2(%s,%s)" % (x + y - (n - 1), y - x)
+            if step == Step.step2:
+                offset_x, offset_y = 1, 0
+            elif step == Step.step3:
+                offset_x, offset_y = 0, 1
 
-        # Load the input samples
-        if use_gather and comps_suffix == "[0]" and step == Step.step1:
+            self.save_tex(tex_name[offset_x][offset_y])
+
+            def get_position(x, y):
+                x, y = x + y - (n - 1), y - x
+                x += offset_x
+                y += offset_y
+                assert x % 2 == y % 2
+                return (tex_name[x % 2][y % 2], x // 2, y // 2)
+
+        sample_positions = {}
+        for i in range(n):
+            for j in range(n):
+                tex, x, y = get_position(i, j)
+                sample_positions.setdefault(tex, {}).setdefault((x, y), (i, j))
+
+        if use_gather and comps_suffix == "[0]":
             gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
-            GLSL("vec2 base = HOOKED_pos + HOOKED_pt * %s;" % get_position(
-                0, 0))
             GLSL("vec4 gathered;")
-            for i in range(0, n, 2):
-                for j in range(0, n, 2):
-                    GLSL(
-                        "gathered = HOOKED_mul * textureGatherOffset(HOOKED_raw, base, ivec2(%d, %d), 0);"
-                        % (i, j))
-                    for k in range(4):
-                        x = i + gather_offsets[k][0]
-                        y = j + gather_offsets[k][1]
-                        GLSL('$sample_type %s = gathered[%d];' % (sample(x, y),
-                                                                  k))
-        else:
-            for i in range(n):
-                for j in range(n):
-                    GLSL('$sample_type %s = HOOKED_texOff(%s)%s;' %
-                         (sample(i, j), get_position(i, j), comps_suffix))
-                    if self.profile == Profile.rgb:
-                        GLSL('float %s = dot(%s, $color_primary);' %
-                             (luma(i, j), sample(i, j)))
+            for tex in sorted(sample_positions.keys()):
+                mapping = sample_positions[tex]
+                used_keys = set()
+                for x, y in sorted(mapping.keys()):
+                    local_group = [(x + dx, y + dy) for dx, dy in gather_offsets]
+                    if all(key in mapping and key not in used_keys
+                           for key in local_group):
+                        used_keys |= set(local_group)
+                        GLSL("gathered = %s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), 0);" % (tex, tex, tex, x, y))
+                        for k, key in enumerate(local_group):
+                            nx, ny = mapping[key]
+                            GLSL('$sample_type %s = gathered[%d];' % (sample(nx, ny), k))
+                for key in used_keys:
+                    del mapping[key]
+
+        for tex in sorted(sample_positions.keys()):
+            mapping = sample_positions[tex]
+            for base_x, base_y in sorted(mapping.keys()):
+                i, j = mapping[base_x, base_y]
+                GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))%s;' %
+                     (sample(i, j), tex, base_x, base_y, comps_suffix))
+                if self.profile == Profile.rgb:
+                    GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), sample(i, j)))
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
@@ -212,8 +242,7 @@ if (dir.x * dir.y > 0.0)
                         return "(%s-%s)" % (f(x), f(x - 1))
                     if x == 1 or x == n - 2:
                         return "(%s-%s)/2.0" % (f(x + 1), f(x - 1))
-                    return "(-%s+8.0*%s-8.0*%s+%s)/12.0" % (f(x + 2), f(x + 1),
-                                                            f(x - 1), f(x - 2))
+                    return "(-%s+8.0*%s-8.0*%s+%s)/12.0" % (f(x + 2), f(x + 1), f(x - 1), f(x - 2))
 
                 GLSL("gx = %s;" % numerial_differential(
                     lambda i2: luma(i2, j), i))
@@ -239,8 +268,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
 """ % (eps, math.pi, math.pi, eps))
 
         # Extract convolution kernel based on quantization of (angle, strength, coherence)
-        GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle,
-                                                          math.pi))
+        GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle, math.pi))
         GLSL("float strength, coherence;")
 
         def quantize(target_name, var_name, seps, l, r):
@@ -254,22 +282,17 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
             quantize(target_name, var_name, seps, m + 1, r)
             GLSL("}")
 
-        quantize("strength", "lambda", self.min_strength, 0,
-                 self.quant_strength - 1)
-        quantize("coherence", "mu", self.min_coherence, 0,
-                 self.quant_coherence - 1)
-        GLSL(
-            "float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;"
-            % (self.quant_strength, self.quant_coherence,
-               self.quant_angle * self.quant_strength * self.quant_coherence))
+        quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
+        quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
+        GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
+             (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
 
         GLSL("$sample_type res = $sample_zero;")
         GLSL("vec4 w;")
         blocks = n * n // 4
         for i in range(blocks):
             coord_x = (float(i) + 0.5) / float(blocks)
-            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name,
-                                                          coord_x))
+            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
             for j in range(4):
                 GLSL("res += %s * w[%d];" % (samples[i * 4 + j], j))
 
