@@ -1,12 +1,12 @@
-This repo contains the scripts that generate user shader for prescaling in
+This repo contains scripts that generate user shader for prescaling in
 [mpv](https://mpv.io/), currently only `nnedi3` and `superxbr` are supported.
 
 For the generated user shaders, check the [master branch](https://github.com/bjin/mpv-prescalers/tree/master).
 
 # Usage
 
-Python 3 is required. Running `gen.sh` will generate all user shaders in
-current directory.
+Python 3 is required. `./gen.sh` will generate all user shaders in
+current work directory.
 
 Alternatively, you could generate shaders with customized options:
 ```
