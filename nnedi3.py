@@ -64,8 +64,10 @@ class Window(enum.Enum):
 
 
 class Step(enum.Enum):
-    double_y = 0
-    double_x = 1
+    step1 = 0
+    step2 = 1
+    step3 = 2
+    step4 = 3
 
 
 class NNEDI3(userhook.UserHook):
@@ -81,7 +83,7 @@ class NNEDI3(userhook.UserHook):
     weight_fmt = struct.Struct("<i")
     assert weight_fmt.size == 4
 
-    def __init__(self, neurons, window, **args):
+    def __init__(self, neurons, window, int_tex_name = "nnedi3_int", **args):
         super().__init__(**args)
 
         self.neurons = neurons.get_neurons()
@@ -89,6 +91,7 @@ class NNEDI3(userhook.UserHook):
         self.window_height = window.get_height()
         self.offset = NNEDI3.weight_offsets[window.value * len(Neurons) +
                                             neurons.value]
+        self.int_tex_name = int_tex_name
 
     @staticmethod
     def load_weights():
@@ -123,7 +126,7 @@ class NNEDI3(userhook.UserHook):
               i
         return self.weight_at(ptr)
 
-    def generate(self, step):
+    def generate(self, step, use_gather=False):
         self.load_weights()
         self.reset()
         GLSL = self.add_glsl
@@ -137,12 +140,80 @@ class NNEDI3(userhook.UserHook):
         assert width % 2 == 0 and height % 2 == 0
         sample_count = width * height // 4
 
-        samples_pos = []
-        for y in range(0, height, 2):
-            for x in range(0, width, 2):
-                samples_pos.append((x, y))
-
         GLSL('#pragma optionNV(fastprecision on))')
+
+        tex_name = [["HOOKED", self.int_tex_name + "01"],
+                    [self.int_tex_name + "10", self.int_tex_name + "11"]]
+
+        # This checks against all passes, and works since "HOOKED" is same for
+        # all of them.
+        self.set_skippable(2, 2)
+
+        if step == Step.step4:
+            self.set_transform(2, 2, -0.5, -0.5)
+
+            self.bind_tex(tex_name[0][1])
+            self.bind_tex(tex_name[1][0])
+            self.bind_tex(tex_name[1][1])
+
+            GLSL("""
+vec4 hook() {
+    vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
+    if (dir.x < 0) {
+        if (dir.y < 0)
+            return %s_texOff(-dir);
+        return %s_texOff(-dir);
+    } else {
+        if (dir.y < 0)
+            return %s_texOff(-dir);
+        return %s_texOff(-dir);
+    }
+}
+""" % (tex_name[0][0], tex_name[0][1], tex_name[1][0], tex_name[1][1]))
+
+            return super().generate()
+
+        center_x = (width // 2 - 1) * 2
+        center_y = (height // 2 - 1) * 2 + 1
+
+        if step == Step.step1:
+            offset_x, offset_y = 0, 1
+            get_position = lambda x, y: (x * 2 - center_x, y * 2 - center_y)
+        else:
+            self.bind_tex(tex_name[0][1])
+            if step == Step.step2:
+                offset_x, offset_y = 1, 0
+            elif step == Step.step3:
+                offset_x, offset_y = 1, 1
+            get_position = lambda x, y: (y * 2 - center_y, x - center_x // 2)
+
+        self.save_tex(tex_name[offset_x][offset_y])
+
+        sample_positions = {}
+        for y in range(height):
+            for x in range(width):
+                nx, ny = get_position(x, y)
+                nx += offset_x
+                ny += offset_y
+                tex = tex_name[nx % 2][ny % 2]
+                sample_positions.setdefault(tex, {})[nx // 2, ny // 2] = x, y
+
+        gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
+
+        sampling_info = []
+        for tex in sorted(sample_positions.keys()):
+            mapping = sample_positions[tex]
+            while len(mapping) > 0:
+                base = min(mapping.keys())
+                global_pos = []
+                window_pos = []
+                for dx, dy in gather_offsets:
+                    npos = base[0] + dx, base[1] + dy
+                    global_pos.append(npos)
+                    window_pos.append(mapping.pop(npos))
+                sampling_info.append((tex, global_pos, window_pos))
+
+        assert len(sampling_info) == sample_count
 
         GLSL("""
 float nnedi3(vec4 samples[%d]) {""" % sample_count)
@@ -171,25 +242,15 @@ sum2 = sum2 * mstd2 + T(w1); \
 wsum += sum1; \
 vsum += sum1*(sum2/(1.0+abs(sum2)));""")
 
-        gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
-        if step == Step.double_x:
-            # X and Y axis are swapped in this step. Should be consistent with
-            # the GET4() definition below.
-            for i in range(4):
-                x, y = gather_offsets[i]
-                gather_offsets[i] = y, x
-
         for n in range(self.neurons):
             line = []
             for s in range(2):
                 line.append("sum%d" % (s + 1))
                 for i in range(sample_count):
-                    x, y = samples_pos[i]
+                    tex, global_pos, window_pos = sampling_info[i]
                     weights = []
-                    for j in range(4):
-                        weights.append(self.weightW(n, s,
-                                                    x + gather_offsets[j][0],
-                                                    y + gather_offsets[j][1]))
+                    for x, y in window_pos:
+                        weights.append(self.weightW(n, s, x, y))
                     line.append("%sW(%d,%d,%d,%d,%d)" % (
                         "=" if i == 0 else "+",
                         i, weights[0], weights[1], weights[2], weights[3]))
@@ -205,37 +266,22 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
         GLSL("""
 vec4 hook() {""")
 
-        if step == Step.double_y:
-            self.set_transform(1, 2, 0, -0.5)
-            self.set_skippable(1, 2)
-
-            GLSL("""
-if ((transpose(HOOKED_rot) * fract(HOOKED_pos * HOOKED_size)).y < 0.5)
-    return HOOKED_texOff(vec2(0, 0.25));
-#define GET4(i, j, comp) (HOOKED_mul * textureGatherOffset(HOOKED_raw, \
-    HOOKED_pos + HOOKED_pt * vec2(-(%f),0.25-(%f)), ivec2(i, j), comp))""" %
-                 (width / 2.0 - 1, (height - 1) / 2.0))
-        elif step == Step.double_x:
-            self.set_transform(2, 1, -0.5, 0)
-            self.set_skippable(2, 1)
-
-            GLSL("""
-if (fract(HOOKED_pos.x * HOOKED_size.x) < 0.5)
-    return HOOKED_texOff(vec2(0.25, 0));
-#define GET4(i, j, comp) (HOOKED_mul * textureGatherOffset(HOOKED_raw, \
-    HOOKED_pos + HOOKED_pt * vec2(0.25-(%f),-(%f)), ivec2(j, i), comp))""" %
-                ((height - 1) / 2.0, width / 2.0 - 1))
-        else:
-            raise Exception("unknown step: %s" % repr(step))
-
         GLSL("vec4 ret = vec4(0.0);")
-
+        GLSL("vec4 samples[%d];" % sample_count)
         for comp in range(self.max_components()):
-            GLSL("vec4 samples_%d[%d];" % (comp, sample_count))
             for i in range(sample_count):
-                GLSL("samples_%d[%d] = GET4(%d, %d, %d);" %
-                        (comp, i, samples_pos[i][0], samples_pos[i][1], comp))
-            GLSL("ret[%d] = nnedi3(samples_%d);" % (comp, comp))
+                tex, global_pos, window_pos = sampling_info[i]
+                if use_gather:
+                    base = min(global_pos)
+                    to_fetch = "%s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), %d)"
+                    to_fetch = to_fetch % (tex, tex, tex, base[0], base[1], comp)
+                    GLSL("samples[%d] = %s;" % (i, to_fetch))
+                else:
+                    for j, pos in enumerate(global_pos):
+                        to_fetch = "%s_texOff(vec2(%d.0, %d.0))[%d]"
+                        to_fetch = to_fetch % (tex, pos[0], pos[1], comp)
+                        GLSL("samples[%d][%d] = %s;" % (i, j, to_fetch))
+            GLSL("ret[%d] = nnedi3(samples);" % comp)
 
         GLSL("""
     return ret;
@@ -288,12 +334,16 @@ if __name__ == "__main__":
                         type=float,
                         default=[None],
                         help='allowed downscaling ratio (default: no limit)')
+    parser.add_argument('--use-gather',
+                        action='store_true',
+                        help="enable use of textureGatherOffset (requires OpenGL 4.0)")
 
     args = parser.parse_args()
     hook = hooks[args.target[0]]
     neuron = neurons[args.nns[0]]
     window = windows[args.win[0]]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
+    use_gather = args.use_gather
 
     target_tex = "LUMA" if hooks == ["CHROMA"] else "OUTPUT"
     gen = NNEDI3(neuron,
@@ -304,4 +354,4 @@ if __name__ == "__main__":
 
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
-        sys.stdout.write(gen.generate(step))
+        sys.stdout.write(gen.generate(step, use_gather=use_gather))
