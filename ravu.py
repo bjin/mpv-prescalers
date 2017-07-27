@@ -102,6 +102,10 @@ class RAVU(userhook.UserHook):
         tex_name = [["HOOKED", self.int_tex_name + "01"],
                     [self.int_tex_name + "10", self.int_tex_name + "11"]]
 
+        # This checks against all passes, and works since "HOOKED" is same for
+        # all of them.
+        self.set_skippable(2, 2)
+
         if step == Step.step4:
             self.set_transform(2, 2, -0.5, -0.5)
 
@@ -339,6 +343,13 @@ if __name__ == "__main__":
         type=str,
         help='weights file name')
     parser.add_argument(
+        '-r',
+        '--max-downscaling-ratio',
+        nargs=1,
+        type=float,
+        default=[None],
+        help='allowed downscaling ratio (default: no limit)')
+    parser.add_argument(
         '--use-gather',
         action='store_true',
         help="enable use of textureGatherOffset (requires OpenGL 4.0)")
@@ -348,9 +359,16 @@ if __name__ == "__main__":
     hook = hooks[target]
     profile = native_profiles.get(target, Profile.luma)
     weights_file = args.weights_file[0]
+    max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
 
-    gen = RAVU(hook=hook, profile=profile, weights_file=weights_file)
+    target_tex = "LUMA" if hooks == ["CHROMA"] else "OUTPUT"
+    gen = RAVU(hook=hook,
+               profile=profile,
+               weights_file=weights_file,
+               target_tex=target_tex,
+               max_downscaling_ratio=max_downscaling_ratio)
+
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
         sys.stdout.write(gen.generate(step, use_gather))
