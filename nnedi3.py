@@ -197,7 +197,9 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 vec4 hook() {""")
 
         if step == Step.double_y:
-            self.set_transform(1, 2, 0, -0.5, True)
+            self.set_transform(1, 2, 0, -0.5)
+            self.set_skippable(1, 2)
+
             GLSL("""
 if ((transpose(HOOKED_rot) * fract(HOOKED_pos * HOOKED_size)).y < 0.5)
     return HOOKED_texOff(vec2(0, 0.25));
@@ -205,7 +207,9 @@ if ((transpose(HOOKED_rot) * fract(HOOKED_pos * HOOKED_size)).y < 0.5)
     HOOKED_pos + HOOKED_pt * vec2(-(%f),0.25-(%f)), ivec2(i, j), comp))""" %
                  (width / 2.0 - 1, (height - 1) / 2.0))
         elif step == Step.double_x:
-            self.set_transform(2, 1, -0.5, 0, True)
+            self.set_transform(2, 1, -0.5, 0)
+            self.set_skippable(2, 1)
+
             GLSL("""
 if (fract(HOOKED_pos.x * HOOKED_size.x) < 0.5)
     return HOOKED_texOff(vec2(0.25, 0));

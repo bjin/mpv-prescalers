@@ -84,22 +84,22 @@ class UserHook:
         else:
             self.header[WHEN] = cond_str
 
-    def set_transform(self, mul_x, mul_y, offset_x, offset_y, skippable=False):
+    def set_transform(self, mul_x, mul_y, offset_x, offset_y):
         if mul_x != 1:
             self.header[WIDTH] = "%d %s.w *" % (mul_x, HOOKED)
         if mul_y != 1:
             self.header[HEIGHT] = "%d %s.h *" % (mul_y, HOOKED)
-        if skippable and self.target_tex and self.max_downscaling_ratio:
-            # This step can be independently skipped, add WHEN condition.
-            if mul_x > 1:
-                self.add_cond(
-                    "HOOKED.w %d * %s.w / %f <" %
-                    (mul_x, self.target_tex, self.max_downscaling_ratio))
-            if mul_y > 1:
-                self.add_cond(
-                    "HOOKED.h %d * %s.h / %f <" %
-                    (mul_y, self.target_tex, self.max_downscaling_ratio))
         self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
+
+    # Use this with caution. This will skip only current step.
+    def set_skippable(self, mul_x, mul_y, source_tex=HOOKED):
+        if self.target_tex and self.max_downscaling_ratio:
+            if mul_x > 1:
+                self.add_cond("%s.w %d * %s.w / %f <" %
+                    (source_tex, mul_x, self.target_tex, self.max_downscaling_ratio))
+            if mul_y > 1:
+                self.add_cond("%s.h %d * %s.h / %f <" %
+                    (source_tex, mul_y, self.target_tex, self.max_downscaling_ratio))
 
     def set_description(self, desc):
         self.header[DESC] = desc
