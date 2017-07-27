@@ -17,7 +17,7 @@
 //!BIND HOOKED
 //!SAVE nnedi3_int01
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-#pragma optionNV(fastprecision on))
+#pragma optionNV(fastprecision on)
 float nnedi3(vec4 samples[12]) {
 float sum = 0.0, sumsq = 0.0;
 for (int i = 0; i < 12; i++) {
@@ -222,7 +222,7 @@ return ret;
 //!BIND nnedi3_int01
 //!SAVE nnedi3_int10
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-#pragma optionNV(fastprecision on))
+#pragma optionNV(fastprecision on)
 float nnedi3(vec4 samples[12]) {
 float sum = 0.0, sumsq = 0.0;
 for (int i = 0; i < 12; i++) {
@@ -427,7 +427,7 @@ return ret;
 //!BIND nnedi3_int01
 //!SAVE nnedi3_int11
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-#pragma optionNV(fastprecision on))
+#pragma optionNV(fastprecision on)
 float nnedi3(vec4 samples[12]) {
 float sum = 0.0, sumsq = 0.0;
 for (int i = 0; i < 12; i++) {
@@ -636,7 +636,7 @@ return ret;
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-#pragma optionNV(fastprecision on))
+#pragma optionNV(fastprecision on)
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0) {
