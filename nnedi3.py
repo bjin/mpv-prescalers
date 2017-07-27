@@ -109,6 +109,20 @@ class NNEDI3(userhook.UserHook):
     def weight_at(ptr):
         return NNEDI3.weight_fmt.unpack_from(NNEDI3.weights, ptr * 4)[0]
 
+    def weightW(self, n, s, x, y):
+        window_size = self.window_width * self.window_height
+        ptr = self.offset + \
+              (window_size * 2 + 4) * n + window_size * s + \
+              x + y * self.window_width
+        return self.weight_at(ptr)
+
+    def weightWS(self, n, s, i):
+        window_size = self.window_width * self.window_height
+        ptr = self.offset + \
+              (window_size * 2 + 4) * n + window_size * 2 + \
+              i
+        return self.weight_at(ptr)
+
     def generate(self, step):
         self.load_weights()
         self.reset()
@@ -167,26 +181,21 @@ vsum += sum1*(sum2/(1.0+abs(sum2)));""")
 
         for n in range(self.neurons):
             line = []
-            ptr = self.offset + (sample_count * 2 + 1) * n * 4
             for s in range(2):
                 line.append("sum%d" % (s + 1))
                 for i in range(sample_count):
                     x, y = samples_pos[i]
-                    weights_offset = []
+                    weights = []
                     for j in range(4):
-                        weights_offset.append(x + gather_offsets[j][0] + 
-                                (y + gather_offsets[j][1]) * width)
+                        weights.append(self.weightW(n, s,
+                                                    x + gather_offsets[j][0],
+                                                    y + gather_offsets[j][1]))
                     line.append("%sW(%d,%d,%d,%d,%d)" % (
                         "=" if i == 0 else "+",
-                        i,
-                        self.weight_at(ptr + weights_offset[0]),
-                        self.weight_at(ptr + weights_offset[1]),
-                        self.weight_at(ptr + weights_offset[2]),
-                        self.weight_at(ptr + weights_offset[3]))) # yapf: disable
-                ptr += 4 * sample_count
+                        i, weights[0], weights[1], weights[2], weights[3]))
                 line.append(";")
             line.append("WS(%d,%d);" %
-                        (self.weight_at(ptr), self.weight_at(ptr + 1)))
+                        (self.weightWS(n, s, 0), self.weightWS(n, s, 1)))
             GLSL("".join(line))
 
         GLSL("""
@@ -219,10 +228,10 @@ if (fract(HOOKED_pos.x * HOOKED_size.x) < 0.5)
         else:
             raise Exception("unknown step: %s" % repr(step))
 
-        GLSL("""vec4 ret = vec4(0.0);""")
+        GLSL("vec4 ret = vec4(0.0);")
 
         for comp in range(self.max_components()):
-            GLSL("""vec4 samples_%d[%d];""" % (comp, sample_count))
+            GLSL("vec4 samples_%d[%d];" % (comp, sample_count))
             for i in range(sample_count):
                 GLSL("samples_%d[%d] = GET4(%d, %d, %d);" %
                         (comp, i, samples_pos[i][0], samples_pos[i][1], comp))
