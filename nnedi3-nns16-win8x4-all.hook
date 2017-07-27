@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC NNEDI3 (step=step1, window=8x4, neurons=16)
+//!DESC NNEDI3 (step1, nns16, win8x4)
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
@@ -193,7 +193,7 @@ samples3[7][3] = HOOKED_texOff(vec2(3.0, 1.0))[3];
 ret[3] = nnedi3(samples3);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step=step2, window=8x4, neurons=16)
+//!DESC NNEDI3 (step2, nns16, win8x4)
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
@@ -375,7 +375,7 @@ samples3[7][3] = nnedi3_int01_texOff(vec2(1.0, 0.0))[3];
 ret[3] = nnedi3(samples3);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step=step3, window=8x4, neurons=16)
+//!DESC NNEDI3 (step3, nns16, win8x4)
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB
@@ -557,7 +557,7 @@ samples3[7][3] = nnedi3_int01_texOff(vec2(1.0, 1.0))[3];
 ret[3] = nnedi3(samples3);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step=step4, window=8x4, neurons=16)
+//!DESC NNEDI3 (step4, nns16, win8x4)
 //!HOOK LUMA
 //!HOOK CHROMA
 //!HOOK RGB

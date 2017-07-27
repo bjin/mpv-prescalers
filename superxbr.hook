@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC Super-xBR (step=step1, profile=luma)
+//!DESC Super-xBR (step1, luma)
 //!HOOK LUMA
 //!BIND HOOKED
 //!WIDTH 2 HOOKED.w *
@@ -92,7 +92,7 @@ return res;
 vec4 hook() {
     return vec4(superxbr(0), 0.0, 0.0, 0.0);
 }
-//!DESC Super-xBR (step=step2, profile=luma)
+//!DESC Super-xBR (step2, luma)
 //!HOOK LUMA
 //!BIND HOOKED
 float superxbr(int comp) {
