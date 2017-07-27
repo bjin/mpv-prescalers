@@ -5,7 +5,7 @@ For the generated user shaders, check the [master branch](https://github.com/bji
 
 # Usage
 
-Python 3 is required. Running `gen.py` will generate all user shaders in
+Python 3 is required. Running `gen.sh` will generate all user shaders in
 current directory.
 
 Alternatively, you could generate shaders with customized options:

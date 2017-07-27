@@ -13,6 +13,9 @@ for target in all chroma luma yuv; do
         for win in 8x4 8x6; do
             file_name="nnedi3-nns$nns-win$win$suffix.hook"
             "$DIR/nnedi3.py" --target "$target" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" > "$file_name"
+            if [ -d gather ]; then
+                "$DIR/nnedi3.py" --target "$target" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
+            fi
         done
     done
 done
