@@ -92,12 +92,12 @@ class UserHook:
         self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
 
     # Use this with caution. This will skip only current step.
-    def set_skippable(self, mul_x, mul_y, source_tex=HOOKED):
+    def set_skippable(self, mul_x=0, mul_y=0, source_tex=HOOKED):
         if self.target_tex and self.max_downscaling_ratio:
-            if mul_x > 1:
+            if mul_x:
                 self.add_cond("%s.w %d * %s.w / %f <" %
                     (source_tex, mul_x, self.target_tex, self.max_downscaling_ratio))
-            if mul_y > 1:
+            if mul_y:
                 self.add_cond("%s.h %d * %s.h / %f <" %
                     (source_tex, mul_y, self.target_tex, self.max_downscaling_ratio))
 
