@@ -267,21 +267,21 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 vec4 hook() {""")
 
         GLSL("vec4 ret = vec4(0.0);")
-        GLSL("vec4 samples[%d];" % sample_count)
         for comp in range(self.max_components()):
+            GLSL("vec4 samples%d[%d];" % (comp, sample_count))
             for i in range(sample_count):
                 tex, global_pos, window_pos = sampling_info[i]
                 if use_gather:
                     base = min(global_pos)
                     to_fetch = "%s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), %d)"
                     to_fetch = to_fetch % (tex, tex, tex, base[0], base[1], comp)
-                    GLSL("samples[%d] = %s;" % (i, to_fetch))
+                    GLSL("samples%d[%d] = %s;" % (comp, i, to_fetch))
                 else:
                     for j, pos in enumerate(global_pos):
                         to_fetch = "%s_texOff(vec2(%d.0, %d.0))[%d]"
                         to_fetch = to_fetch % (tex, pos[0], pos[1], comp)
-                        GLSL("samples[%d][%d] = %s;" % (i, j, to_fetch))
-            GLSL("ret[%d] = nnedi3(samples);" % comp)
+                        GLSL("samples%d[%d][%d] = %s;" % (comp, i, j, to_fetch))
+            GLSL("ret[%d] = nnedi3(samples%d);" % (comp, comp))
 
         GLSL("""
     return ret;
