@@ -98,7 +98,6 @@ class RAVU(userhook.UserHook):
         self.set_description("RAVU (%s, %s, r%d)" %
                              (step.name, self.profile.name, self.radius))
 
-        self.bind_tex(self.lut_name)
         tex_name = [["HOOKED", self.int_tex_name + "01"],
                     [self.int_tex_name + "10", self.int_tex_name + "11"]]
 
@@ -129,6 +128,8 @@ vec4 hook() {
 """ % (tex_name[0][0], tex_name[0][1], tex_name[1][0], tex_name[1][1]))
 
             return super().generate()
+
+        self.bind_tex(self.lut_name)
 
         if self.profile == Profile.luma:
             comps = self.max_components()
