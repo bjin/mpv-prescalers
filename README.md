@@ -4,11 +4,6 @@ currently only `nnedi3` and `superxbr` are supported.
 For the scripts generating these user shaders, check the [source
 branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
-`nnedi3` now requires OpenGL 4.0 for `textureGatherOffset`. It could happen
-that your driver don't support it, or just have buggy implementation. In any case,
-if it doesn't work or has noticeable distortion, you can find older version of
-`nnedi3` [here](https://github.com/bjin/mpv-prescalers/tree/cd9742657732dbd8f8f27dee233f41190a7d9be1).
-
 # Filenames
 
 Suffix in the filename indicates the type of planes shader is hooked on:
