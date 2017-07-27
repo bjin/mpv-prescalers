@@ -4,6 +4,11 @@ currently only `nnedi3` and `superxbr` are supported.
 For the scripts generating these user shaders, check the [source
 branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
+Shaders in `gather/` [directory](https://github.com/bjin/mpv-prescalers/tree/master/gather)
+use `textureGatherOffset` for fast texel lookup. They are generally faster but requires `OpenGL 4.0`.
+In addition, some driver has buggy implementation of `textureGatherOffset`.
+Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
+
 # Filenames
 
 Suffix in the filename indicates the type of planes shader is hooked on:
