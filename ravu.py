@@ -202,7 +202,7 @@ $sample_type ravu($function_args) {""")
         for i in range(n):
             for j in range(n):
                 tex, x, y = get_position(i, j)
-                sample_positions.setdefault(tex, {}).setdefault((x, y), (i, j))
+                sample_positions.setdefault(tex, {})[x, y] = i, j
 
         if use_gather and comps_suffix == "[0]":
             gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
