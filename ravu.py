@@ -95,7 +95,7 @@ class RAVU(userhook.UserHook):
         self.reset()
         GLSL = self.add_glsl
 
-        self.set_description("RAVU (step=%s, profile=%s, radius=%d)" %
+        self.set_description("RAVU (%s, %s, r%d)" %
                              (step.name, self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
