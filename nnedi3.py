@@ -345,7 +345,7 @@ if __name__ == "__main__":
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
 
-    target_tex = "LUMA" if hooks == ["CHROMA"] else "OUTPUT"
+    target_tex = "LUMA" if hook == ["CHROMA"] else "OUTPUT"
     gen = NNEDI3(neuron,
                  window,
                  hook=hook,
