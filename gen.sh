@@ -26,3 +26,16 @@ for target in all chroma luma native native-yuv yuv; do
     file_name="superxbr$suffix.hook"
     "$DIR/superxbr.py" --target "$target" > "$file_name"
 done
+
+for target in all chroma luma native native-yuv yuv; do
+    suffix="-$target"
+    [ "$target" = "luma" ] && suffix=""
+    for radius in 2 3 4; do
+        file_name="ravu-r$radius$suffix.hook"
+        weights_file="$DIR/ravu_weights-r$radius.py"
+        "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" > "$file_name"
+        if [ -d gather -a "$target" = "luma" ]; then
+            "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
+        fi
+    done
+done
