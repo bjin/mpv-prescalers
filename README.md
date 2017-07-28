@@ -4,7 +4,8 @@ For the scripts generating these user shaders, check the [source
 branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
 Shaders in `gather/` [directory](https://github.com/bjin/mpv-prescalers/tree/master/gather)
-use `textureGatherOffset` for fast texel lookup. They are generally faster but requires `OpenGL 4.0`.
+use `textureGatherOffset` for fast texel lookup. They are generally faster
+(especially for RAVU, could bring up to 50% performance boost) but requires `OpenGL 4.0`.
 In addition, some driver has buggy implementation of `textureGatherOffset`.
 Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
 
