@@ -25,19 +25,19 @@ Resolution). It adopts the core idea of RAISR for upscaling, without adopting
 any further refinement RAISR used for post-processing, including blending and
 sharpening.
 
-RAVU is a convolution kernel based upscaling algorithm. The kernel is trained
+RAVU is a convolution kernel based upscaling algorithm. The kernels are trained
 from large amount of pictures with a straightforward linear regression model.
 From a high level view, it's kind of similar to EWA scalers, but more adaptive
-to local gradient features, and probably would result in less aliasing. RAVU is
+to local gradient features, and probably would produce lesser aliasing. RAVU is
 **NOT** neural network based, it won't create details from thin air, and the
-upscaled image tends to be less sharp compared to ground truth.
+upscaled image tends to be have less sharpness compare to ground truth.
 
 Currently RAVU is still experimental. There are issues with `radius=4` kernel
 due to its large size. The model is also not well tuned, most parameters
-are taken from RAISR paper directly without actual evaluation. Initial results
+are taken from the RAISR paper directly without actual evaluation. Initial results
 shows that mixing different kind of sources in training set would hurt final
-results considerably, so the current model is only tuned for video that I
-actually care about. It's not properly trained against all kind of video.
+results considerably, so the current model is only tuned for videos that I
+actually care about. It's not properly trained against all kinds of video.
 
 # License
 
