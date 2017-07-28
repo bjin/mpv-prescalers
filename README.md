@@ -20,6 +20,10 @@ Suffix in the filename indicates the type of planes shader is hooked on:
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
 
+For `ravu` prescaler, `radius` settings are indicated in the filename. Note
+that evaluation results shows that improvement by `radius=4` is minimal (less
+than `0.1dB` in PSNR), `radius=3` should be enough for daily purpose.
+
 In addition, `{superxbr,ravu*}-native.hook` are native implementations of
 `superxbr` and `ravu`, that will do the upscaling on RGB, and is most likely the one
 you want use. `{superxbr,ravu*}-native-yuv.hook` are similar shaders but require
