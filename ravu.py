@@ -164,6 +164,9 @@ vec4 hook() {
                 # the shader failed to run than getting some random output.
                 self.add_cond("LUMA.w 0 >")
 
+        GLSL("""
+$sample_type ravu($function_args) {""")
+
         n = self.radius * 2
         sample = lambda x, y: "sample%d" % (x * n + y)
         samples = [sample(i, j) for i in range(n) for j in range(n)]
@@ -202,15 +205,6 @@ vec4 hook() {
                 tex, x, y = get_position(i, j)
                 sample_positions.setdefault(tex, {})[x, y] = i, j
 
-        function_start = "$sample_type ravu($function_args) {"
-
-        # Samples are floats, sampling is dynamic (based on comp, possibly with 
-        # textureGatherOffset group), define them in function body.
-        if self.profile == Profile.luma:
-            GLSL(function_start)
-
-        # Actual sampling with textureGatherOffset(), this must stay in
-        # function body.
         if use_gather and comps_suffix == "[0]":
             gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
             GLSL("vec4 gathered;")
@@ -229,7 +223,6 @@ vec4 hook() {
                 for key in used_keys:
                     del mapping[key]
 
-        # Actual sampling with texture().
         for tex in sorted(sample_positions.keys()):
             mapping = sample_positions[tex]
             for base_x, base_y in sorted(mapping.keys()):
@@ -238,10 +231,6 @@ vec4 hook() {
                      (sample(i, j), tex, base_x, base_y, comps_suffix))
                 if self.profile == Profile.rgb:
                     GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), sample(i, j)))
-
-        # Samples are vec4s, sampling is static, define them in global scope.
-        if self.profile != Profile.luma:
-            GLSL(function_start)
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
