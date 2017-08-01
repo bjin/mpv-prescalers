@@ -50,7 +50,9 @@ class RAVU(userhook.UserHook):
 
         self.profile = profile
         self.lut_name = lut_name
-        self.int_tex_name = int_tex_name
+
+        self.tex_name = [["HOOKED", int_tex_name + "01"],
+                         [int_tex_name + "10", int_tex_name + "11"]]
 
         exec(open(weights_file).read())
 
@@ -98,9 +100,6 @@ class RAVU(userhook.UserHook):
         self.set_description("RAVU (%s, %s, r%d)" %
                              (step.name, self.profile.name, self.radius))
 
-        tex_name = [["HOOKED", self.int_tex_name + "01"],
-                    [self.int_tex_name + "10", self.int_tex_name + "11"]]
-
         # This checks against all passes, and works since "HOOKED" is same for
         # all of them.
         self.set_skippable(2, 2)
@@ -108,9 +107,9 @@ class RAVU(userhook.UserHook):
         if step == Step.step4:
             self.set_transform(2, 2, -0.5, -0.5)
 
-            self.bind_tex(tex_name[0][1])
-            self.bind_tex(tex_name[1][0])
-            self.bind_tex(tex_name[1][1])
+            self.bind_tex(self.tex_name[0][1])
+            self.bind_tex(self.tex_name[1][0])
+            self.bind_tex(self.tex_name[1][1])
 
             GLSL("""
 vec4 hook() {
@@ -125,7 +124,8 @@ vec4 hook() {
         return %s_texOff(-dir);
     }
 }
-""" % (tex_name[0][0], tex_name[0][1], tex_name[1][0], tex_name[1][1]))
+""" % (self.tex_name[0][0], self.tex_name[0][1],
+       self.tex_name[1][0], self.tex_name[1][1]))
 
             return super().generate()
 
@@ -179,25 +179,25 @@ $sample_type ravu($function_args) {""")
             luma = lambda x, y: sample(x, y) + "[0]"
 
         if step == Step.step1:
-            self.save_tex(tex_name[1][1])
+            self.save_tex(self.tex_name[1][1])
 
-            get_position = lambda x, y: (tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
+            get_position = lambda x, y: (self.tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
         else:
-            self.bind_tex(tex_name[1][1])
+            self.bind_tex(self.tex_name[1][1])
 
             if step == Step.step2:
                 offset_x, offset_y = 1, 0
             elif step == Step.step3:
                 offset_x, offset_y = 0, 1
 
-            self.save_tex(tex_name[offset_x][offset_y])
+            self.save_tex(self.tex_name[offset_x][offset_y])
 
             def get_position(x, y):
                 x, y = x + y - (n - 1), y - x
                 x += offset_x
                 y += offset_y
                 assert x % 2 == y % 2
-                return (tex_name[x % 2][y % 2], x // 2, y // 2)
+                return (self.tex_name[x % 2][y % 2], x // 2, y // 2)
 
         sample_positions = {}
         for i in range(n):
