@@ -93,7 +93,9 @@ class RAVU(userhook.UserHook):
 
         return "\n".join(headers + [weights_raw, ""])
 
-    def get_sample_positions(self, n, offset, use_gather=False):
+    def get_sample_positions(self, offset, use_gather=False):
+        n = self.radius * 2
+
         if offset == (1, 1):
             pos_func = lambda x, y: (self.tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
         elif offset == (0, 1) or offset == (1, 0):
@@ -279,7 +281,7 @@ vec4 hook() {
         self.save_tex(self.tex_name[offset[0]][offset[1]])
 
         sample_positions, gathered_positions = self.get_sample_positions(
-                n, offset, use_gather and self.profile == Profile.luma)
+                offset, use_gather and self.profile == Profile.luma)
 
         gathered = 0
         for tex in sorted(gathered_positions.keys()):
@@ -328,6 +330,145 @@ return $hook_return_value;
 
         return super().generate()
 
+    def generate_compute(self, step, block_size):
+        # compute shader requires only two steps
+        if step == Step.step3 or step == Step.step4:
+            return ""
+
+        self.reset()
+        GLSL = self.add_glsl
+
+        self.set_description("RAVU (%s, %s, r%d, compute)" %
+                             (step.name, self.profile.name, self.radius))
+
+        block_width, block_height = block_size
+
+        self.set_skippable(2, 2)
+        self.bind_tex(self.lut_name)
+
+        self.setup_profile()
+
+        if step == Step.step1:
+            self.set_compute(block_width, block_height)
+
+            offsets = [(1, 1)]
+            self.save_tex(self.tex_name[1][1])
+        elif step == Step.step2:
+            self.set_compute(block_width * 2, block_height * 2,
+                             block_width, block_height)
+            self.set_transform(2, 2, -0.5, -0.5)
+
+            offsets = [(0, 1), (1, 0)]
+            self.bind_tex(self.tex_name[1][1])
+
+        n = self.radius * 2
+        sample_positions_list = [self.get_sample_positions(offset, False)[0] for offset in offsets]
+
+        # for each bound texture, declare global variables/shared arrays and
+        # prepare index/samples mapping
+        tex_names = list(sample_positions_list[0].keys())
+        tex_offset_base = []
+        tex_array_size = []
+        samples_mapping_list = [{} for sample_positions in sample_positions_list]
+        for idx, tex in enumerate(tex_names):
+            tex_offsets = set()
+            for sample_positions in sample_positions_list:
+                tex_offsets |= set(sample_positions[tex].keys())
+            minx = min(key[0] for key in tex_offsets)
+            maxx = max(key[0] for key in tex_offsets)
+            miny = min(key[1] for key in tex_offsets)
+            maxy = max(key[1] for key in tex_offsets)
+
+            tex_offset_base.append((minx, miny))
+            array_size = (maxx - minx + block_width, maxy - miny + block_height)
+            tex_array_size.append(array_size)
+
+            GLSL("shared $sample_type inp%d[%d][%d];" % (idx, array_size[0], array_size[1]))
+            if self.profile != Profile.luma:
+                GLSL("shared float luma%d[%d][%d];" % (idx, array_size[0], array_size[1]))
+
+            # Samples mapping are different for different sample_positions
+            for idx2, sample_positions in enumerate(sample_positions_list):
+                samples_mapping = samples_mapping_list[idx2]
+                mapping = sample_positions[tex]
+                for tex_offset in mapping.keys():
+                    logical_offset = mapping[tex_offset]
+                    samples_mapping[logical_offset] = "inp%d[gl_LocalInvocationID.x + (%d)][gl_LocalInvocationID.y + (%d)]" % \
+                                                      (idx, tex_offset[0] - minx, tex_offset[1] - miny)
+
+        GLSL("""
+void hook() {""")
+
+        # load all samples
+        GLSL("ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);")
+        for idx, tex in enumerate(tex_names):
+            offset_base = tex_offset_base[idx]
+            array_size = tex_array_size[idx]
+            GLSL("""
+for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
+    for (uint y = gl_LocalInvocationID.y; y < %d; y += gl_WorkGroupSize.y) {""" % (array_size[0], array_size[1]))
+
+            GLSL("inp%d[x][y] = %s_mul * texelFetch(%s_raw, group_base + ivec2(x+(%d),y+(%d)), 0)$comps_swizzle;" %
+                 (idx, tex, tex, offset_base[0], offset_base[1]))
+
+            if self.profile == Profile.yuv:
+                GLSL("luma%d[x][y] = inp%d[x][y][0];" % (idx, idx))
+            elif self.profile == Profile.rgb:
+                GLSL("luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (idx, idx))
+
+            GLSL("""
+    }
+}""")
+
+        GLSL("groupMemoryBarrier();")
+        GLSL("barrier();")
+
+        for idx, sample_positions in enumerate(sample_positions_list):
+            offset = offsets[idx]
+            samples_mapping = samples_mapping_list[idx]
+            if self.profile == Profile.luma:
+                luma = lambda x, y: samples_mapping[x, y]
+            else:
+                luma = lambda x, y: samples_mapping[x, y].replace("inp", "luma")
+
+            GLSL("{")
+            self.extract_key(luma)
+
+            GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
+                 (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
+            GLSL("$sample_type res = $sample_zero;")
+            GLSL("vec4 w;")
+            blocks = n * n // 4
+            samples_list = [samples_mapping[i, j] for i in range(n) for j in range(n)]
+            for i in range(blocks):
+                coord_x = (float(i) + 0.5) / float(blocks)
+                GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
+                for j in range(4):
+                    GLSL("res += %s * w[%d];" % (samples_list[i * 4 + j], j))
+
+            if step == Step.step1:
+                pos = "ivec2(gl_GlobalInvocationID)"
+            else:
+                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d, %d)" % (offset[0], offset[1])
+            GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
+
+            GLSL("}")
+
+        if step == Step.step2:
+            GLSL("$sample_type res;")
+            for idx, tex in enumerate(tex_names):
+                offset_base = tex_offset_base[idx]
+                offset_global = 0 if tex == self.tex_name[0][0] else 1
+                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d)" % offset_global
+                res = "inp%d[gl_LocalInvocationID.x + (%d)][gl_LocalInvocationID.y + (%d)]" % (idx, -offset_base[0], -offset_base[1])
+                GLSL("res = %s;" % res)
+                GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
+
+        GLSL("""
+}""")
+
+        return super().generate()
+
 
 if __name__ == "__main__":
     import argparse
@@ -366,6 +507,16 @@ if __name__ == "__main__":
         '--use-gather',
         action='store_true',
         help="enable use of textureGatherOffset (requires OpenGL 4.0)")
+    parser.add_argument(
+        '--use-compute-shader',
+        action='store_true',
+        help="enable use of compute shader (requires OpenGL 4.3)")
+    parser.add_argument(
+        '--compute-shader-block-size',
+        nargs=2,
+        default=[32, 8],
+        type=int,
+        help='specify the block size of compute shader (default: 32 8)')
 
     args = parser.parse_args()
     target = args.target[0]
@@ -373,6 +524,8 @@ if __name__ == "__main__":
     weights_file = args.weights_file[0]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
+    use_compute_shader = args.use_compute_shader
+    compute_shader_block_size = args.compute_shader_block_size
 
     gen = RAVU(hook=hook,
                profile=profile,
@@ -382,5 +535,9 @@ if __name__ == "__main__":
 
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
-        sys.stdout.write(gen.generate(step, use_gather))
+        if use_compute_shader:
+            shader = gen.generate_compute(step, compute_shader_block_size)
+        else:
+            shader = gen.generate(step, use_gather)
+        sys.stdout.write(shader)
     sys.stdout.write(gen.generate_tex())

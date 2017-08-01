@@ -24,8 +24,9 @@ HEIGHT = "HEIGHT"
 OFFSET = "OFFSET"
 WHEN = "WHEN"
 COMPONENTS = "COMPONENTS"
+COMPUTE = "COMPUTE"
 
-HEADERS = [DESC, HOOK, BIND, SAVE, WIDTH, HEIGHT, OFFSET, WHEN, COMPONENTS]
+HEADERS = [DESC, HOOK, BIND, SAVE, WIDTH, HEIGHT, OFFSET, WHEN, COMPONENTS, COMPUTE]
 
 HOOKED = "HOOKED"
 
@@ -63,6 +64,7 @@ class UserHook:
         self.header[HEIGHT] = None
         self.header[OFFSET] = None
         self.header[WHEN] = self.cond
+        self.header[COMPUTE] = None
         self.mappings = None
 
     def bind_tex(self, tex):
@@ -103,6 +105,12 @@ class UserHook:
 
     def set_description(self, desc):
         self.header[DESC] = desc
+
+    def set_compute(self, bw, bh, tw=None, th=None):
+        if tw and th:
+            self.header[COMPUTE] = "%d %d %d %d" % (bw, bh, tw, th)
+        else:
+            self.header[COMPUTE] = "%d %d" % (bw, bh)
 
     def generate(self):
         headers = []
