@@ -93,8 +93,19 @@ class RAVU(userhook.UserHook):
 
         return "\n".join(headers + [weights_raw, ""])
 
-    @staticmethod
-    def get_sample_positions(n, pos_func, use_gather=False):
+    def get_sample_positions(self, n, offset, use_gather=False):
+        if offset == (1, 1):
+            pos_func = lambda x, y: (self.tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
+        elif offset == (0, 1) or offset == (1, 0):
+            def pos_func(x, y):
+                x, y = x + y - (n - 1), y - x
+                x += offset[0]
+                y += offset[1]
+                assert x % 2 == y % 2
+                return (self.tex_name[x % 2][y % 2], x // 2, y // 2)
+        else:
+            raise Exception("invalid offset")
+
         sample_positions = {}
         for i in range(n):
             for j in range(n):
@@ -121,43 +132,8 @@ class RAVU(userhook.UserHook):
 
         return sample_positions, gathered_positions
 
-    def generate(self, step, use_gather=False):
-        self.reset()
+    def setup_profile(self):
         GLSL = self.add_glsl
-
-        self.set_description("RAVU (%s, %s, r%d)" %
-                             (step.name, self.profile.name, self.radius))
-
-        # This checks against all passes, and works since "HOOKED" is same for
-        # all of them.
-        self.set_skippable(2, 2)
-
-        if step == Step.step4:
-            self.set_transform(2, 2, -0.5, -0.5)
-
-            self.bind_tex(self.tex_name[0][1])
-            self.bind_tex(self.tex_name[1][0])
-            self.bind_tex(self.tex_name[1][1])
-
-            GLSL("""
-vec4 hook() {
-    vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-    if (dir.x < 0) {
-        if (dir.y < 0)
-            return %s_texOff(-dir);
-        return %s_texOff(-dir);
-    } else {
-        if (dir.y < 0)
-            return %s_texOff(-dir);
-        return %s_texOff(-dir);
-    }
-}
-""" % (self.tex_name[0][0], self.tex_name[0][1],
-       self.tex_name[1][0], self.tex_name[1][1]))
-
-            return super().generate()
-
-        self.bind_tex(self.lut_name)
 
         if self.profile == Profile.luma:
             self.add_mappings(
@@ -179,65 +155,9 @@ vec4 hook() {
                 # the shader failed to run than getting some random output.
                 self.add_cond("LUMA.w 0 >")
 
+    def extract_key(self, luma):
+        GLSL = self.add_glsl
         n = self.radius * 2
-        samples = {(x, y): "sample%d" % (x * n + y) for x in range(n) for y in range(n)}
-
-        if self.profile == Profile.luma:
-            luma = lambda x, y: samples[x, y]
-        elif self.profile == Profile.rgb:
-            luma = lambda x, y: "luma%d" % (x * n + y)
-        elif self.profile == Profile.yuv:
-            luma = lambda x, y: samples[x, y] + "[0]"
-
-        if step == Step.step1:
-            self.save_tex(self.tex_name[1][1])
-
-            pos_func = lambda x, y: (self.tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
-        else:
-            self.bind_tex(self.tex_name[1][1])
-
-            if step == Step.step2:
-                offset_x, offset_y = 1, 0
-            elif step == Step.step3:
-                offset_x, offset_y = 0, 1
-
-            self.save_tex(self.tex_name[offset_x][offset_y])
-
-            def pos_func(x, y):
-                x, y = x + y - (n - 1), y - x
-                x += offset_x
-                y += offset_y
-                assert x % 2 == y % 2
-                return (self.tex_name[x % 2][y % 2], x // 2, y // 2)
-
-        sample_positions, gathered_positions = self.get_sample_positions(
-                n, pos_func, use_gather and self.profile == Profile.luma)
-
-        gathered = 0
-        for tex in sorted(gathered_positions.keys()):
-            mapping = gathered_positions[tex]
-            for base_x, base_y in sorted(mapping.keys()):
-                logical_offsets = mapping[base_x, base_y]
-                gathered_name = "gathered%d" % gathered
-                gathered += 1
-                GLSL("vec4 %s = %s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), 0);" %
-                     (gathered_name, tex, tex, tex, base_x, base_y))
-                for idx in range(len(logical_offsets)):
-                    i, j = logical_offsets[idx]
-                    samples[i, j] = "%s[%d]" % (gathered_name, idx)
-
-        for tex in sorted(sample_positions.keys()):
-            mapping = sample_positions[tex]
-            for x, y in sorted(mapping.keys()):
-                i, j = mapping[x, y]
-                GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))$comps_swizzle;' %
-                     (samples[i, j], tex, x, y))
-                if self.profile == Profile.rgb:
-                    GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), samples[i, j]))
-
-
-        GLSL("""
-vec4 hook() {""")
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
@@ -296,6 +216,98 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
 
         quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
         quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
+
+    def generate(self, step, use_gather=False):
+        self.reset()
+        GLSL = self.add_glsl
+
+        self.set_description("RAVU (%s, %s, r%d)" %
+                             (step.name, self.profile.name, self.radius))
+
+        # This checks against all passes, and works since "HOOKED" is same for
+        # all of them.
+        self.set_skippable(2, 2)
+
+        if step == Step.step4:
+            self.set_transform(2, 2, -0.5, -0.5)
+
+            self.bind_tex(self.tex_name[0][1])
+            self.bind_tex(self.tex_name[1][0])
+            self.bind_tex(self.tex_name[1][1])
+
+            GLSL("""
+vec4 hook() {
+    vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
+    if (dir.x < 0) {
+        if (dir.y < 0)
+            return %s_texOff(-dir);
+        return %s_texOff(-dir);
+    } else {
+        if (dir.y < 0)
+            return %s_texOff(-dir);
+        return %s_texOff(-dir);
+    }
+}
+""" % (self.tex_name[0][0], self.tex_name[0][1],
+       self.tex_name[1][0], self.tex_name[1][1]))
+
+            return super().generate()
+
+        self.bind_tex(self.lut_name)
+
+        self.setup_profile()
+
+        n = self.radius * 2
+        samples = {(x, y): "sample%d" % (x * n + y) for x in range(n) for y in range(n)}
+
+        if self.profile == Profile.luma:
+            luma = lambda x, y: samples[x, y]
+        elif self.profile == Profile.rgb:
+            luma = lambda x, y: "luma%d" % (x * n + y)
+        elif self.profile == Profile.yuv:
+            luma = lambda x, y: samples[x, y] + "[0]"
+
+        if step == Step.step1:
+            offset = (1, 1)
+        else:
+            self.bind_tex(self.tex_name[1][1])
+            if step == Step.step2:
+                offset = (1, 0)
+            elif step == Step.step3:
+                offset = (0, 1)
+
+        self.save_tex(self.tex_name[offset[0]][offset[1]])
+
+        sample_positions, gathered_positions = self.get_sample_positions(
+                n, offset, use_gather and self.profile == Profile.luma)
+
+        gathered = 0
+        for tex in sorted(gathered_positions.keys()):
+            mapping = gathered_positions[tex]
+            for base_x, base_y in sorted(mapping.keys()):
+                logical_offsets = mapping[base_x, base_y]
+                gathered_name = "gathered%d" % gathered
+                gathered += 1
+                GLSL("vec4 %s = %s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), 0);" %
+                     (gathered_name, tex, tex, tex, base_x, base_y))
+                for idx in range(len(logical_offsets)):
+                    i, j = logical_offsets[idx]
+                    samples[i, j] = "%s[%d]" % (gathered_name, idx)
+
+        for tex in sorted(sample_positions.keys()):
+            mapping = sample_positions[tex]
+            for x, y in sorted(mapping.keys()):
+                i, j = mapping[x, y]
+                GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))$comps_swizzle;' %
+                     (samples[i, j], tex, x, y))
+                if self.profile == Profile.rgb:
+                    GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), samples[i, j]))
+
+        GLSL("""
+vec4 hook() {""")
+
+        self.extract_key(luma)
+
         GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
              (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
 
