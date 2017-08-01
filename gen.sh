@@ -27,7 +27,7 @@ for target in all chroma luma native native-yuv yuv; do
     "$DIR/superxbr.py" --target "$target" > "$file_name"
 done
 
-for target in all chroma luma native native-yuv yuv; do
+for target in luma native native-yuv; do
     suffix="-$target"
     [ "$target" = "luma" ] && suffix=""
     for radius in 2 3 4; do

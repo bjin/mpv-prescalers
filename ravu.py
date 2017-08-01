@@ -93,6 +93,34 @@ class RAVU(userhook.UserHook):
 
         return "\n".join(headers + [weights_raw, ""])
 
+    @staticmethod
+    def get_sample_positions(n, pos_func, use_gather=False):
+        sample_positions = {}
+        for i in range(n):
+            for j in range(n):
+                tex, x, y = pos_func(i, j)
+                # tex_name, tex_offset -> logical offset
+                sample_positions.setdefault(tex, {})[x, y] = i, j
+
+        gathered_positions = {}
+        if use_gather:
+            gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
+            for tex in sorted(sample_positions.keys()):
+                mapping = sample_positions[tex]
+                used_keys = set()
+                for x, y in sorted(mapping.keys()):
+                    # (x, y) should be the minimum among |tex_offsets|
+                    tex_offsets = [(x + dx, y + dy) for dx, dy in gather_offsets]
+                    if all(key in mapping and key not in used_keys for key in tex_offsets):
+                        used_keys |= set(tex_offsets)
+                        logical_offsets = [mapping[key] for key in tex_offsets]
+                        # tex_name, tex_offset_base -> logical offset
+                        gathered_positions.setdefault(tex, {})[x, y] = logical_offsets
+                for key in used_keys:
+                    del mapping[key]
+
+        return sample_positions, gathered_positions
+
     def generate(self, step, use_gather=False):
         self.reset()
         GLSL = self.add_glsl
@@ -132,56 +160,39 @@ vec4 hook() {
         self.bind_tex(self.lut_name)
 
         if self.profile == Profile.luma:
-            comps = self.max_components()
-            if comps > 1:
-                args = ", ".join("ravu(%d)" % i if i < comps else "0.0"
-                                 for i in range(4))
-                self.add_mappings(
-                    sample_type="float",
-                    sample_zero="0.0",
-                    function_args="int comp",
-                    hook_return_value="vec4(%s)" % args)
-                comps_suffix = "[comp]"
-            else:
-                self.add_mappings(
-                    sample_type="float",
-                    sample_zero="0.0",
-                    function_args="",
-                    hook_return_value="vec4(ravu(), 0.0, 0.0, 0.0)")
-                comps_suffix = "[0]"
+            self.add_mappings(
+                sample_type="float",
+                sample_zero="0.0",
+                hook_return_value="vec4(res, 0.0, 0.0, 0.0)",
+                comps_swizzle = "[0]")
         else:
             self.add_mappings(
                 sample_type="vec4",
                 sample_zero="vec4(0.0)",
-                function_args="",
-                hook_return_value="ravu()")
-            comps_suffix = ""
+                hook_return_value="res",
+                comps_swizzle = "")
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
-                GLSL("vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);")
+                GLSL("const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);")
             elif self.profile == Profile.yuv:
                 # Add some no-op cond to assert LUMA texture exists, rather make
                 # the shader failed to run than getting some random output.
                 self.add_cond("LUMA.w 0 >")
 
-        GLSL("""
-$sample_type ravu($function_args) {""")
-
         n = self.radius * 2
-        sample = lambda x, y: "sample%d" % (x * n + y)
-        samples = [sample(i, j) for i in range(n) for j in range(n)]
+        samples = {(x, y): "sample%d" % (x * n + y) for x in range(n) for y in range(n)}
 
         if self.profile == Profile.luma:
-            luma = sample
+            luma = lambda x, y: samples[x, y]
         elif self.profile == Profile.rgb:
             luma = lambda x, y: "luma%d" % (x * n + y)
         elif self.profile == Profile.yuv:
-            luma = lambda x, y: sample(x, y) + "[0]"
+            luma = lambda x, y: samples[x, y] + "[0]"
 
         if step == Step.step1:
             self.save_tex(self.tex_name[1][1])
 
-            get_position = lambda x, y: (self.tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
+            pos_func = lambda x, y: (self.tex_name[0][0], x - (n // 2 - 1), y - (n // 2 - 1))
         else:
             self.bind_tex(self.tex_name[1][1])
 
@@ -192,45 +203,41 @@ $sample_type ravu($function_args) {""")
 
             self.save_tex(self.tex_name[offset_x][offset_y])
 
-            def get_position(x, y):
+            def pos_func(x, y):
                 x, y = x + y - (n - 1), y - x
                 x += offset_x
                 y += offset_y
                 assert x % 2 == y % 2
                 return (self.tex_name[x % 2][y % 2], x // 2, y // 2)
 
-        sample_positions = {}
-        for i in range(n):
-            for j in range(n):
-                tex, x, y = get_position(i, j)
-                sample_positions.setdefault(tex, {})[x, y] = i, j
+        sample_positions, gathered_positions = self.get_sample_positions(
+                n, pos_func, use_gather and self.profile == Profile.luma)
 
-        if use_gather and comps_suffix == "[0]":
-            gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
-            GLSL("vec4 gathered;")
-            for tex in sorted(sample_positions.keys()):
-                mapping = sample_positions[tex]
-                used_keys = set()
-                for x, y in sorted(mapping.keys()):
-                    local_group = [(x + dx, y + dy) for dx, dy in gather_offsets]
-                    if all(key in mapping and key not in used_keys
-                           for key in local_group):
-                        used_keys |= set(local_group)
-                        GLSL("gathered = %s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), 0);" % (tex, tex, tex, x, y))
-                        for k, key in enumerate(local_group):
-                            nx, ny = mapping[key]
-                            GLSL('$sample_type %s = gathered[%d];' % (sample(nx, ny), k))
-                for key in used_keys:
-                    del mapping[key]
+        gathered = 0
+        for tex in sorted(gathered_positions.keys()):
+            mapping = gathered_positions[tex]
+            for base_x, base_y in sorted(mapping.keys()):
+                logical_offsets = mapping[base_x, base_y]
+                gathered_name = "gathered%d" % gathered
+                gathered += 1
+                GLSL("vec4 %s = %s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), 0);" %
+                     (gathered_name, tex, tex, tex, base_x, base_y))
+                for idx in range(len(logical_offsets)):
+                    i, j = logical_offsets[idx]
+                    samples[i, j] = "%s[%d]" % (gathered_name, idx)
 
         for tex in sorted(sample_positions.keys()):
             mapping = sample_positions[tex]
-            for base_x, base_y in sorted(mapping.keys()):
-                i, j = mapping[base_x, base_y]
-                GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))%s;' %
-                     (sample(i, j), tex, base_x, base_y, comps_suffix))
+            for x, y in sorted(mapping.keys()):
+                i, j = mapping[x, y]
+                GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))$comps_swizzle;' %
+                     (samples[i, j], tex, x, y))
                 if self.profile == Profile.rgb:
-                    GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), sample(i, j)))
+                    GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), samples[i, j]))
+
+
+        GLSL("""
+vec4 hook() {""")
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
@@ -295,19 +302,16 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
         GLSL("$sample_type res = $sample_zero;")
         GLSL("vec4 w;")
         blocks = n * n // 4
+        samples_list = [samples[i, j] for i in range(n) for j in range(n)]
         for i in range(blocks):
             coord_x = (float(i) + 0.5) / float(blocks)
             GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
             for j in range(4):
-                GLSL("res += %s * w[%d];" % (samples[i * 4 + j], j))
+                GLSL("res += %s * w[%d];" % (samples_list[i * 4 + j], j))
 
         GLSL("""
-return clamp(res, 0.0, 1.0);
-}  // ravu""")
-
-        GLSL("""
-vec4 hook() {
-    return $hook_return_value;
+res = clamp(res, 0.0, 1.0);
+return $hook_return_value;
 }""")
 
         return super().generate()
@@ -317,15 +321,11 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    hooks = {
-        "luma": ["LUMA"],
-        "chroma": ["CHROMA"],
-        "yuv": ["LUMA", "CHROMA"],
-        "all": ["LUMA", "CHROMA", "RGB", "XYZ"],
-        "native": ["MAIN"],
-        "native-yuv": ["NATIVE"]
+    profile_mapping = {
+        "luma": (["LUMA"], Profile.luma),
+        "native": (["MAIN"], Profile.rgb),
+        "native-yuv": (["NATIVE"], Profile.yuv)
     }
-    native_profiles = {"native": Profile.rgb, "native-yuv": Profile.yuv}
 
     parser = argparse.ArgumentParser(
         description="generate RAVU user shader for mpv")
@@ -333,7 +333,7 @@ if __name__ == "__main__":
         '-t',
         '--target',
         nargs=1,
-        choices=sorted(hooks.keys()),
+        choices=sorted(profile_mapping.keys()),
         default=["native"],
         help='target that shader is hooked on (default: native)')
     parser.add_argument(
@@ -357,17 +357,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     target = args.target[0]
-    hook = hooks[target]
-    profile = native_profiles.get(target, Profile.luma)
+    hook, profile = profile_mapping[target]
     weights_file = args.weights_file[0]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
 
-    target_tex = "LUMA" if hook == ["CHROMA"] else "OUTPUT"
     gen = RAVU(hook=hook,
                profile=profile,
                weights_file=weights_file,
-               target_tex=target_tex,
+               target_tex="OUTPUT",
                max_downscaling_ratio=max_downscaling_ratio)
 
     sys.stdout.write(userhook.LICENSE_HEADER)
