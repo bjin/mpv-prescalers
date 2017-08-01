@@ -18,7 +18,6 @@
 //!BIND ravu_lut
 //!SAVE ravu_int11
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-float ravu() {
 float sample0 = HOOKED_texOff(vec2(-1.0, -1.0))[0];
 float sample1 = HOOKED_texOff(vec2(-1.0, 0.0))[0];
 float sample2 = HOOKED_texOff(vec2(-1.0, 1.0))[0];
@@ -35,6 +34,7 @@ float sample12 = HOOKED_texOff(vec2(2.0, -1.0))[0];
 float sample13 = HOOKED_texOff(vec2(2.0, 0.0))[0];
 float sample14 = HOOKED_texOff(vec2(2.0, 1.0))[0];
 float sample15 = HOOKED_texOff(vec2(2.0, 2.0))[0];
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (sample4-sample0);
 gy = (sample1-sample0);
@@ -192,10 +192,8 @@ res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return vec4(ravu(), 0.0, 0.0, 0.0);
+res = clamp(res, 0.0, 1.0);
+return vec4(res, 0.0, 0.0, 0.0);
 }
 //!DESC RAVU (step2, luma, r2)
 //!HOOK LUMA
@@ -204,7 +202,6 @@ vec4 hook() {
 //!BIND ravu_int11
 //!SAVE ravu_int10
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-float ravu() {
 float sample0 = HOOKED_texOff(vec2(-1.0, 0.0))[0];
 float sample8 = HOOKED_texOff(vec2(0.0, -1.0))[0];
 float sample5 = HOOKED_texOff(vec2(0.0, 0.0))[0];
@@ -221,6 +218,7 @@ float sample6 = ravu_int11_texOff(vec2(0.0, 0.0))[0];
 float sample3 = ravu_int11_texOff(vec2(0.0, 1.0))[0];
 float sample14 = ravu_int11_texOff(vec2(1.0, -1.0))[0];
 float sample11 = ravu_int11_texOff(vec2(1.0, 0.0))[0];
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (sample4-sample0);
 gy = (sample1-sample0);
@@ -378,10 +376,8 @@ res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return vec4(ravu(), 0.0, 0.0, 0.0);
+res = clamp(res, 0.0, 1.0);
+return vec4(res, 0.0, 0.0, 0.0);
 }
 //!DESC RAVU (step3, luma, r2)
 //!HOOK LUMA
@@ -390,7 +386,6 @@ vec4 hook() {
 //!BIND ravu_int11
 //!SAVE ravu_int01
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-float ravu() {
 float sample4 = HOOKED_texOff(vec2(-1.0, 0.0))[0];
 float sample1 = HOOKED_texOff(vec2(-1.0, 1.0))[0];
 float sample12 = HOOKED_texOff(vec2(0.0, -1.0))[0];
@@ -407,6 +402,7 @@ float sample13 = ravu_int11_texOff(vec2(0.0, -1.0))[0];
 float sample10 = ravu_int11_texOff(vec2(0.0, 0.0))[0];
 float sample7 = ravu_int11_texOff(vec2(0.0, 1.0))[0];
 float sample15 = ravu_int11_texOff(vec2(1.0, 0.0))[0];
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (sample4-sample0);
 gy = (sample1-sample0);
@@ -564,10 +560,8 @@ res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return vec4(ravu(), 0.0, 0.0, 0.0);
+res = clamp(res, 0.0, 1.0);
+return vec4(res, 0.0, 0.0, 0.0);
 }
 //!DESC RAVU (step4, luma, r2)
 //!HOOK LUMA

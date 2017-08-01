@@ -11,7 +11,8 @@ Use these shaders only if they actually work (i.e. no blue screen and no noticea
 
 # Filenames
 
-Suffix in the filename indicates the type of planes shader is hooked on:
+Suffix in the filename indicates the type of planes shader is hooked on
+(`ravu` supports only luma plane):
 
 * Without any suffix: Triggered on luma plane only (like `prescale-luma=...` option in `mpv`).
 * `-chroma`: Triggered on chroma plane only.

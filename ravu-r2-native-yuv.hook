@@ -34,7 +34,7 @@ vec4 sample12 = HOOKED_texOff(vec2(2.0, -1.0));
 vec4 sample13 = HOOKED_texOff(vec2(2.0, 0.0));
 vec4 sample14 = HOOKED_texOff(vec2(2.0, 1.0));
 vec4 sample15 = HOOKED_texOff(vec2(2.0, 2.0));
-vec4 ravu() {
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (sample4[0]-sample0[0]);
 gy = (sample1[0]-sample0[0]);
@@ -192,10 +192,8 @@ res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step2, yuv, r2)
 //!HOOK NATIVE
@@ -220,7 +218,7 @@ vec4 sample6 = ravu_int11_texOff(vec2(0.0, 0.0));
 vec4 sample3 = ravu_int11_texOff(vec2(0.0, 1.0));
 vec4 sample14 = ravu_int11_texOff(vec2(1.0, -1.0));
 vec4 sample11 = ravu_int11_texOff(vec2(1.0, 0.0));
-vec4 ravu() {
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (sample4[0]-sample0[0]);
 gy = (sample1[0]-sample0[0]);
@@ -378,10 +376,8 @@ res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step3, yuv, r2)
 //!HOOK NATIVE
@@ -406,7 +402,7 @@ vec4 sample13 = ravu_int11_texOff(vec2(0.0, -1.0));
 vec4 sample10 = ravu_int11_texOff(vec2(0.0, 0.0));
 vec4 sample7 = ravu_int11_texOff(vec2(0.0, 1.0));
 vec4 sample15 = ravu_int11_texOff(vec2(1.0, 0.0));
-vec4 ravu() {
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (sample4[0]-sample0[0]);
 gy = (sample1[0]-sample0[0]);
@@ -564,10 +560,8 @@ res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step4, yuv, r2)
 //!HOOK NATIVE

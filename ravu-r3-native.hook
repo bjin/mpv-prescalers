@@ -18,7 +18,7 @@
 //!BIND ravu_lut
 //!SAVE ravu_int11
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
+const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
 vec4 sample0 = HOOKED_texOff(vec2(-2.0, -2.0));
 float luma0 = dot(sample0, color_primary);
 vec4 sample1 = HOOKED_texOff(vec2(-2.0, -1.0));
@@ -91,7 +91,7 @@ vec4 sample34 = HOOKED_texOff(vec2(3.0, 2.0));
 float luma34 = dot(sample34, color_primary);
 vec4 sample35 = HOOKED_texOff(vec2(3.0, 3.0));
 float luma35 = dot(sample35, color_primary);
-vec4 ravu() {
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (luma13-luma1)/2.0;
 gy = (luma8-luma6)/2.0;
@@ -274,10 +274,8 @@ res += sample32 * w[0];
 res += sample33 * w[1];
 res += sample34 * w[2];
 res += sample35 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step2, rgb, r3)
 //!HOOK MAIN
@@ -286,7 +284,7 @@ vec4 hook() {
 //!BIND ravu_int11
 //!SAVE ravu_int10
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
+const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
 vec4 sample0 = HOOKED_texOff(vec2(-2.0, 0.0));
 float luma0 = dot(sample0, color_primary);
 vec4 sample12 = HOOKED_texOff(vec2(-1.0, -1.0));
@@ -359,7 +357,7 @@ vec4 sample34 = ravu_int11_texOff(vec2(2.0, -1.0));
 float luma34 = dot(sample34, color_primary);
 vec4 sample29 = ravu_int11_texOff(vec2(2.0, 0.0));
 float luma29 = dot(sample29, color_primary);
-vec4 ravu() {
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (luma13-luma1)/2.0;
 gy = (luma8-luma6)/2.0;
@@ -542,10 +540,8 @@ res += sample32 * w[0];
 res += sample33 * w[1];
 res += sample34 * w[2];
 res += sample35 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step3, rgb, r3)
 //!HOOK MAIN
@@ -554,7 +550,7 @@ vec4 hook() {
 //!BIND ravu_int11
 //!SAVE ravu_int01
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
+const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
 vec4 sample6 = HOOKED_texOff(vec2(-2.0, 0.0));
 float luma6 = dot(sample6, color_primary);
 vec4 sample1 = HOOKED_texOff(vec2(-2.0, 1.0));
@@ -627,7 +623,7 @@ vec4 sample23 = ravu_int11_texOff(vec2(1.0, 1.0));
 float luma23 = dot(sample23, color_primary);
 vec4 sample35 = ravu_int11_texOff(vec2(2.0, 0.0));
 float luma35 = dot(sample35, color_primary);
-vec4 ravu() {
+vec4 hook() {
 float a = 0, b = 0, d = 0, gx, gy;
 gx = (luma13-luma1)/2.0;
 gy = (luma8-luma6)/2.0;
@@ -810,10 +806,8 @@ res += sample32 * w[0];
 res += sample33 * w[1];
 res += sample34 * w[2];
 res += sample35 * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step4, rgb, r3)
 //!HOOK MAIN
