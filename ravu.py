@@ -51,6 +51,7 @@ class RAVU(userhook.UserHook):
     def __init__(self,
                  profile=Profile.luma,
                  weights_file=None,
+                 smooth=False,
                  lut_name="ravu_lut",
                  int_tex_name="ravu_int",
                  **args):
@@ -68,6 +69,11 @@ class RAVU(userhook.UserHook):
         self.gaussian = locals()['gaussian']
         self.model_weights = locals()['model_weights']
 
+        self.smooth = smooth
+        if self.smooth:
+            self.model2_weights = locals()['model2_weights']
+            lut_name += "_ar1_"
+
         assert len(self.min_strength) + 1 == self.quant_strength
         assert len(self.min_coherence) + 1 == self.quant_coherence
 
@@ -78,7 +84,7 @@ class RAVU(userhook.UserHook):
                          [int_tex_name + "10", int_tex_name + "11"]]
 
         self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence
-        self.lut_width = ((self.radius * 2) ** 2 // 2 + 3) // 4
+        self.lut_width = ((self.radius * 2) ** 2 // 2 + 3) // 4 * [1, 2][self.smooth]
 
     def generate_tex(self, float_format=FloatFormat.float32):
         import struct
@@ -93,16 +99,19 @@ class RAVU(userhook.UserHook):
         for i in range(self.quant_angle):
             for j in range(self.quant_strength):
                 for k in range(self.quant_coherence):
-                    kernel = self.model_weights[i][j][k]
-                    assert len(kernel) == (self.radius * 2) ** 2
-                    kernel_sum = sum(kernel)
-                    kernel2 = []
-                    for idx in range(len(kernel) // 2):
-                        assert abs(kernel[idx] - kernel[~idx]) < 1e-6, "filter kernel is not symmetric"
-                        kernel2.append((kernel[idx] + kernel[~idx]) / kernel_sum / 2.0)
-                    while len(kernel2) % 4 != 0:
-                        kernel2.append(0.0)
-                    weights.extend(kernel2)
+                    kernels = [self.model_weights[i][j][k]]
+                    if self.smooth:
+                        kernels.append(self.model2_weights[i][j][k])
+                    for kernel in kernels:
+                        assert len(kernel) == (self.radius * 2) ** 2
+                        kernel_sum = sum(kernel)
+                        kernel2 = []
+                        for idx in range(len(kernel) // 2):
+                            assert abs(kernel[idx] - kernel[~idx]) < 1e-5, "filter kernel is not symmetric"
+                            kernel2.append((kernel[idx] + kernel[~idx]) / kernel_sum / 2.0)
+                        while len(kernel2) % 4 != 0:
+                            kernel2.append(0.0)
+                        weights.extend(kernel2)
         assert len(weights) == self.lut_width * self.lut_height * 4
         weights_raw = struct.pack('<%d%s' % (len(weights), item_format_str), *weights).hex()
 
@@ -291,6 +300,15 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                 coord_x = (float(i // 4) + 0.5) / float(self.lut_width)
                 GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
             GLSL("res += (%s + %s) * w[%d];" % (samples_list[i], samples_list[~i], i % 4))
+        if self.smooth:
+            GLSL("$sample_type res0 = res, diff;")
+            for i in range(len(samples_list) // 2):
+                if i % 4 == 0:
+                    coord_x = (float(i // 4 + self.lut_width // 2) + 0.5) / float(self.lut_width)
+                    GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
+                for x in samples_list[i], samples_list[~i]:
+                    GLSL("diff = %s - res0;" % x)
+                    GLSL("res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[%d];" % (i % 4))
         GLSL("res = clamp(res, 0.0, 1.0);")
 
 
@@ -623,6 +641,10 @@ if __name__ == "__main__":
         choices=FloatFormat.__members__,
         default=["float32"],
         help="specify the float format of LUT")
+    parser.add_argument(
+        '--smooth',
+        action='store_true',
+        help="use boosted smooth kernel")
 
     args = parser.parse_args()
     target = args.target[0]
@@ -633,11 +655,13 @@ if __name__ == "__main__":
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
     float_format = FloatFormat[args.float_format[0]]
+    smooth = args.smooth
 
     gen = RAVU(hook=hook,
                profile=profile,
                weights_file=weights_file,
                target_tex="OUTPUT",
+               smooth=smooth,
                max_downscaling_ratio=max_downscaling_ratio)
 
     sys.stdout.write(userhook.LICENSE_HEADER)
