@@ -165,7 +165,8 @@ class RAVU(userhook.UserHook):
         gradient_left = self.radius - self.gradient_radius
         gradient_right = n - gradient_left
 
-        GLSL('float a = 0, b = 0, d = 0, gx, gy;')
+        GLSL("vec3 abd = vec3(0.0);")
+        GLSL("float gx, gy;")
         for i in range(gradient_left, gradient_right):
             for j in range(gradient_left, gradient_right):
 
@@ -183,13 +184,12 @@ class RAVU(userhook.UserHook):
                 GLSL("gy = %s;" % numerial_differential(
                     lambda j2: luma(i, j2), j))
                 gw = self.gaussian[i - gradient_left][j - gradient_left]
-                GLSL("a += gx * gx * %s;" % gw)
-                GLSL("b += gx * gy * %s;" % gw)
-                GLSL("d += gy * gy * %s;" % gw)
+                GLSL("abd += vec3(gx * gx, gx * gy, gy * gy) * %s;" % gw)
 
         # Eigenanalysis of gradient matrix
         eps = "1e-9"
         GLSL("""
+float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
