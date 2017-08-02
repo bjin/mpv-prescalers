@@ -360,70 +360,70 @@ return $hook_return_value;
         if step == Step.step1:
             self.set_compute(block_width, block_height)
 
-            offsets = [(1, 1)]
+            target_offsets = [(1, 1)]
             self.save_tex(self.tex_name[1][1])
         elif step == Step.step2:
             self.set_compute(block_width * 2, block_height * 2,
                              block_width, block_height)
             self.set_transform(2, 2, -0.5, -0.5)
 
-            offsets = [(0, 1), (1, 0)]
+            target_offsets = [(0, 1), (1, 0)]
             self.bind_tex(self.tex_name[1][1])
 
         n = self.radius * 2
-        sample_positions_list = [self.get_sample_positions(offset, False)[0] for offset in offsets]
+        sample_positions_by_target = [self.get_sample_positions(target_offset, False)[0] for target_offset in target_offsets]
 
         # for each bound texture, declare global variables/shared arrays and
         # prepare index/samples mapping
-        tex_names = list(sample_positions_list[0].keys())
-        tex_offset_base = []
-        tex_array_size = []
-        samples_mapping_list = [{} for sample_positions in sample_positions_list]
-        for idx, tex in enumerate(tex_names):
+        bound_tex_names = list(sample_positions_by_target[0].keys())
+        offset_for_tex = []
+        array_size_for_tex = []
+        samples_mapping_for_target = [{} for sample_positions in sample_positions_by_target]
+        for tex_idx, tex in enumerate(bound_tex_names):
             tex_offsets = set()
-            for sample_positions in sample_positions_list:
+            for sample_positions in sample_positions_by_target:
                 tex_offsets |= set(sample_positions[tex].keys())
             minx = min(key[0] for key in tex_offsets)
             maxx = max(key[0] for key in tex_offsets)
             miny = min(key[1] for key in tex_offsets)
             maxy = max(key[1] for key in tex_offsets)
 
-            tex_offset_base.append((minx, miny))
+            offset_for_tex.append((minx, miny))
             array_size = (maxx - minx + block_width, maxy - miny + block_height)
-            tex_array_size.append(array_size)
+            array_size_for_tex.append(array_size)
 
-            GLSL("shared $sample_type inp%d[%d][%d];" % (idx, array_size[0], array_size[1]))
+            GLSL("shared $sample_type inp%d[%d][%d];" % (tex_idx, array_size[0], array_size[1]))
             if self.profile != Profile.luma:
-                GLSL("shared float luma%d[%d][%d];" % (idx, array_size[0], array_size[1]))
+                GLSL("shared float luma%d[%d][%d];" % (tex_idx, array_size[0], array_size[1]))
 
             # Samples mapping are different for different sample_positions
-            for idx2, sample_positions in enumerate(sample_positions_list):
-                samples_mapping = samples_mapping_list[idx2]
+            for target_idx, sample_positions in enumerate(sample_positions_by_target):
+                samples_mapping = samples_mapping_for_target[target_idx]
                 mapping = sample_positions[tex]
                 for tex_offset in mapping.keys():
                     logical_offset = mapping[tex_offset]
-                    samples_mapping[logical_offset] = "inp%d[gl_LocalInvocationID.x + (%d)][gl_LocalInvocationID.y + (%d)]" % \
-                                                      (idx, tex_offset[0] - minx, tex_offset[1] - miny)
+                    samples_mapping[logical_offset] = "inp%d[gl_LocalInvocationID.x+%d][gl_LocalInvocationID.y+%d]" % \
+                                                      (tex_idx, tex_offset[0] - minx, tex_offset[1] - miny)
 
         GLSL("""
 void hook() {""")
 
         # load all samples
         GLSL("ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);")
-        for idx, tex in enumerate(tex_names):
-            offset_base = tex_offset_base[idx]
-            array_size = tex_array_size[idx]
+        for tex_idx, tex in enumerate(bound_tex_names):
+            offset_base = offset_for_tex[tex_idx]
+            array_size = array_size_for_tex[tex_idx]
             GLSL("""
 for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
     for (uint y = gl_LocalInvocationID.y; y < %d; y += gl_WorkGroupSize.y) {""" % (array_size[0], array_size[1]))
 
             GLSL("inp%d[x][y] = %s_mul * texelFetch(%s_raw, group_base + ivec2(x+(%d),y+(%d)), 0)$comps_swizzle;" %
-                 (idx, tex, tex, offset_base[0], offset_base[1]))
+                 (tex_idx, tex, tex, offset_base[0], offset_base[1]))
 
             if self.profile == Profile.yuv:
-                GLSL("luma%d[x][y] = inp%d[x][y][0];" % (idx, idx))
+                GLSL("luma%d[x][y] = inp%d[x][y][0];" % (tex_idx, tex_idx))
             elif self.profile == Profile.rgb:
-                GLSL("luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (idx, idx))
+                GLSL("luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (tex_idx, tex_idx))
 
             GLSL("""
     }
@@ -432,9 +432,9 @@ for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
         GLSL("groupMemoryBarrier();")
         GLSL("barrier();")
 
-        for idx, sample_positions in enumerate(sample_positions_list):
-            offset = offsets[idx]
-            samples_mapping = samples_mapping_list[idx]
+        for target_idx, sample_positions in enumerate(sample_positions_by_target):
+            offset = target_offsets[target_idx]
+            samples_mapping = samples_mapping_for_target[target_idx]
             if self.profile == Profile.luma:
                 luma = lambda x, y: samples_mapping[x, y]
             else:
@@ -456,11 +456,11 @@ for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
 
         if step == Step.step2:
             GLSL("$sample_type res;")
-            for idx, tex in enumerate(tex_names):
-                offset_base = tex_offset_base[idx]
+            for tex_idx, tex in enumerate(bound_tex_names):
+                offset_base = offset_for_tex[tex_idx]
                 offset_global = 0 if tex == self.tex_name[0][0] else 1
                 pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d)" % offset_global
-                res = "inp%d[gl_LocalInvocationID.x + (%d)][gl_LocalInvocationID.y + (%d)]" % (idx, -offset_base[0], -offset_base[1])
+                res = "inp%d[gl_LocalInvocationID.x+%d][gl_LocalInvocationID.y+%d]" % (tex_idx, -offset_base[0], -offset_base[1])
                 GLSL("res = %s;" % res)
                 GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
 
