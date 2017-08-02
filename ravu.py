@@ -414,8 +414,8 @@ void hook() {""")
             offset_base = offset_for_tex[tex_idx]
             array_size = array_size_for_tex[tex_idx]
             GLSL("""
-for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x)
-for (uint y = gl_LocalInvocationID.y; y < %d; y += gl_WorkGroupSize.y) {""" % (array_size[0], array_size[1]))
+for (int x = int(gl_LocalInvocationID.x); x < %d; x += int(gl_WorkGroupSize.x))
+for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) {""" % (array_size[0], array_size[1]))
 
             GLSL("inp%d[x][y] = %s_mul * texelFetch(%s_raw, group_base + ivec2(x+(%d),y+(%d)), 0)$comps_swizzle;" %
                  (tex_idx, tex, tex, offset_base[0], offset_base[1]))
