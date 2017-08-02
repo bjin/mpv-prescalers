@@ -518,6 +518,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--compute-shader-block-size',
         nargs=2,
+        metavar=('block_width', 'block_height'),
         default=[32, 8],
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
