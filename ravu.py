@@ -219,6 +219,26 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
         quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
         quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
 
+    def apply_convolution_kernel(self, samples_list):
+        GLSL = self.add_glsl
+        n = self.radius * 2
+
+        assert len(samples_list) == n * n
+
+        GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
+             (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
+
+        GLSL("$sample_type res = $sample_zero;")
+        GLSL("vec4 w;")
+        blocks = n * n // 4
+        for i in range(blocks):
+            coord_x = (float(i) + 0.5) / float(blocks)
+            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
+            for j in range(4):
+                GLSL("res += %s * w[%d];" % (samples_list[i * 4 + j], j))
+        GLSL("res = clamp(res, 0.0, 1.0);")
+
+
     def generate(self, step, use_gather=False):
         self.reset()
         GLSL = self.add_glsl
@@ -310,21 +330,10 @@ vec4 hook() {""")
 
         self.extract_key(luma)
 
-        GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
-             (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
-
-        GLSL("$sample_type res = $sample_zero;")
-        GLSL("vec4 w;")
-        blocks = n * n // 4
         samples_list = [samples[i, j] for i in range(n) for j in range(n)]
-        for i in range(blocks):
-            coord_x = (float(i) + 0.5) / float(blocks)
-            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
-            for j in range(4):
-                GLSL("res += %s * w[%d];" % (samples_list[i * 4 + j], j))
+        self.apply_convolution_kernel(samples_list)
 
         GLSL("""
-res = clamp(res, 0.0, 1.0);
 return $hook_return_value;
 }""")
 
@@ -434,17 +443,8 @@ for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
             GLSL("{")
             self.extract_key(luma)
 
-            GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
-                 (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
-            GLSL("$sample_type res = $sample_zero;")
-            GLSL("vec4 w;")
-            blocks = n * n // 4
             samples_list = [samples_mapping[i, j] for i in range(n) for j in range(n)]
-            for i in range(blocks):
-                coord_x = (float(i) + 0.5) / float(blocks)
-                GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
-                for j in range(4):
-                    GLSL("res += %s * w[%d];" % (samples_list[i * 4 + j], j))
+            self.apply_convolution_kernel(samples_list)
 
             if step == Step.step1:
                 pos = "ivec2(gl_GlobalInvocationID)"
