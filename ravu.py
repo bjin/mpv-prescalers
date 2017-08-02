@@ -414,8 +414,8 @@ void hook() {""")
             offset_base = offset_for_tex[tex_idx]
             array_size = array_size_for_tex[tex_idx]
             GLSL("""
-for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
-    for (uint y = gl_LocalInvocationID.y; y < %d; y += gl_WorkGroupSize.y) {""" % (array_size[0], array_size[1]))
+for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x)
+for (uint y = gl_LocalInvocationID.y; y < %d; y += gl_WorkGroupSize.y) {""" % (array_size[0], array_size[1]))
 
             GLSL("inp%d[x][y] = %s_mul * texelFetch(%s_raw, group_base + ivec2(x+(%d),y+(%d)), 0)$comps_swizzle;" %
                  (tex_idx, tex, tex, offset_base[0], offset_base[1]))
@@ -426,7 +426,6 @@ for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
                 GLSL("inp_luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (tex_idx, tex_idx))
 
             GLSL("""
-    }
 }""")
 
         GLSL("groupMemoryBarrier();")
@@ -439,7 +438,7 @@ for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
             GLSL("{")
 
             luma = lambda x, y: "luma%d" % (x * n + y)
-            for sample_xy, (x,y) in sorted((samples_mapping[key], key) for key in samples_mapping.keys()):
+            for sample_xy, (x, y) in sorted((samples_mapping[key], key) for key in samples_mapping.keys()):
                 luma_xy = luma(x, y)
                 if self.profile == Profile.luma:
                     GLSL("float %s = %s;" % (luma_xy, sample_xy))
