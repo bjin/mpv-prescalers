@@ -394,7 +394,7 @@ return $hook_return_value;
 
             GLSL("shared $sample_type inp%d[%d][%d];" % (tex_idx, array_size[0], array_size[1]))
             if self.profile != Profile.luma:
-                GLSL("shared float luma%d[%d][%d];" % (tex_idx, array_size[0], array_size[1]))
+                GLSL("shared float inp_luma%d[%d][%d];" % (tex_idx, array_size[0], array_size[1]))
 
             # Samples mapping are different for different sample_positions
             for target_idx, sample_positions in enumerate(sample_positions_by_target):
@@ -421,9 +421,9 @@ for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
                  (tex_idx, tex, tex, offset_base[0], offset_base[1]))
 
             if self.profile == Profile.yuv:
-                GLSL("luma%d[x][y] = inp%d[x][y][0];" % (tex_idx, tex_idx))
+                GLSL("inp_luma%d[x][y] = inp%d[x][y][0];" % (tex_idx, tex_idx))
             elif self.profile == Profile.rgb:
-                GLSL("luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (tex_idx, tex_idx))
+                GLSL("inp_luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (tex_idx, tex_idx))
 
             GLSL("""
     }
@@ -435,12 +435,17 @@ for (uint x = gl_LocalInvocationID.x; x < %d; x += gl_WorkGroupSize.x) {
         for target_idx, sample_positions in enumerate(sample_positions_by_target):
             offset = target_offsets[target_idx]
             samples_mapping = samples_mapping_for_target[target_idx]
-            if self.profile == Profile.luma:
-                luma = lambda x, y: samples_mapping[x, y]
-            else:
-                luma = lambda x, y: samples_mapping[x, y].replace("inp", "luma")
 
             GLSL("{")
+
+            luma = lambda x, y: "luma%d" % (x * n + y)
+            for sample_xy, (x,y) in sorted((samples_mapping[key], key) for key in samples_mapping.keys()):
+                luma_xy = luma(x, y)
+                if self.profile == Profile.luma:
+                    GLSL("float %s = %s;" % (luma_xy, sample_xy))
+                else:
+                    GLSL("float %s = %s;" % (luma_xy, sample_xy.replace("inp", "inp_luma")))
+
             self.extract_key(luma)
 
             samples_list = [samples_mapping[i, j] for i in range(n) for j in range(n)]
