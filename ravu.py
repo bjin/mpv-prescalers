@@ -50,12 +50,6 @@ class RAVU(userhook.UserHook):
                  **args):
         super().__init__(**args)
 
-        self.profile = profile
-        self.lut_name = lut_name
-
-        self.tex_name = [["HOOKED", int_tex_name + "01"],
-                         [int_tex_name + "10", int_tex_name + "11"]]
-
         exec(open(weights_file).read())
 
         self.radius = locals()['radius']
@@ -70,6 +64,12 @@ class RAVU(userhook.UserHook):
 
         assert len(self.min_strength) + 1 == self.quant_strength
         assert len(self.min_coherence) + 1 == self.quant_coherence
+
+        self.profile = profile
+        self.lut_name = "%s%d" % (lut_name, self.radius)
+
+        self.tex_name = [["HOOKED", int_tex_name + "01"],
+                         [int_tex_name + "10", int_tex_name + "11"]]
 
     def generate_tex(self):
         import struct
