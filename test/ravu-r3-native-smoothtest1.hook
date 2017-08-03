@@ -17,8 +17,8 @@
 //!BIND HOOKED
 //!BIND ravu_lut
 //!SAVE ravu_int11
-vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
-vec4 ravu() {
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
 vec4 sample0 = HOOKED_texOff(vec2(-2.0, -2.0));
 float luma0 = dot(sample0, color_primary);
 vec4 sample1 = HOOKED_texOff(vec2(-2.0, -1.0));
@@ -91,87 +91,58 @@ vec4 sample34 = HOOKED_texOff(vec2(3.0, 2.0));
 float luma34 = dot(sample34, color_primary);
 vec4 sample35 = HOOKED_texOff(vec2(3.0, 3.0));
 float luma35 = dot(sample35, color_primary);
-float a = 0, b = 0, d = 0, gx, gy;
+vec4 hook() {
+vec3 abd = vec3(0.0);
+float gx, gy;
 gx = (luma13-luma1)/2.0;
 gy = (luma8-luma6)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (luma14-luma2)/2.0;
 gy = (-luma10+8.0*luma9-8.0*luma7+luma6)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma15-luma3)/2.0;
 gy = (-luma11+8.0*luma10-8.0*luma8+luma7)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma16-luma4)/2.0;
 gy = (luma11-luma9)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (-luma25+8.0*luma19-8.0*luma7+luma1)/12.0;
 gy = (luma14-luma12)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma26+8.0*luma20-8.0*luma8+luma2)/12.0;
 gy = (-luma16+8.0*luma15-8.0*luma13+luma12)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma27+8.0*luma21-8.0*luma9+luma3)/12.0;
 gy = (-luma17+8.0*luma16-8.0*luma14+luma13)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma28+8.0*luma22-8.0*luma10+luma4)/12.0;
 gy = (luma17-luma15)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma31+8.0*luma25-8.0*luma13+luma7)/12.0;
 gy = (luma20-luma18)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma32+8.0*luma26-8.0*luma14+luma8)/12.0;
 gy = (-luma22+8.0*luma21-8.0*luma19+luma18)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma33+8.0*luma27-8.0*luma15+luma9)/12.0;
 gy = (-luma23+8.0*luma22-8.0*luma20+luma19)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma34+8.0*luma28-8.0*luma16+luma10)/12.0;
 gy = (luma23-luma21)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma31-luma19)/2.0;
 gy = (luma26-luma24)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (luma32-luma20)/2.0;
 gy = (-luma28+8.0*luma27-8.0*luma25+luma24)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma33-luma21)/2.0;
 gy = (-luma29+8.0*luma28-8.0*luma26+luma25)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma34-luma22)/2.0;
 gy = (luma29-luma27)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
+float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
@@ -356,10 +327,8 @@ diff = sample34 - res0;
 res += (res0 + diff * (diff * diff - 2 * abs(diff) + 1.0)) * w[2];
 diff = sample35 - res0;
 res += (res0 + diff * (diff * diff - 2 * abs(diff) + 1.0)) * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step2, rgb, r3)
 //!HOOK MAIN
@@ -367,8 +336,8 @@ vec4 hook() {
 //!BIND ravu_lut
 //!BIND ravu_int11
 //!SAVE ravu_int10
-vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
-vec4 ravu() {
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
 vec4 sample0 = HOOKED_texOff(vec2(-2.0, 0.0));
 float luma0 = dot(sample0, color_primary);
 vec4 sample12 = HOOKED_texOff(vec2(-1.0, -1.0));
@@ -441,87 +410,58 @@ vec4 sample34 = ravu_int11_texOff(vec2(2.0, -1.0));
 float luma34 = dot(sample34, color_primary);
 vec4 sample29 = ravu_int11_texOff(vec2(2.0, 0.0));
 float luma29 = dot(sample29, color_primary);
-float a = 0, b = 0, d = 0, gx, gy;
+vec4 hook() {
+vec3 abd = vec3(0.0);
+float gx, gy;
 gx = (luma13-luma1)/2.0;
 gy = (luma8-luma6)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (luma14-luma2)/2.0;
 gy = (-luma10+8.0*luma9-8.0*luma7+luma6)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma15-luma3)/2.0;
 gy = (-luma11+8.0*luma10-8.0*luma8+luma7)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma16-luma4)/2.0;
 gy = (luma11-luma9)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (-luma25+8.0*luma19-8.0*luma7+luma1)/12.0;
 gy = (luma14-luma12)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma26+8.0*luma20-8.0*luma8+luma2)/12.0;
 gy = (-luma16+8.0*luma15-8.0*luma13+luma12)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma27+8.0*luma21-8.0*luma9+luma3)/12.0;
 gy = (-luma17+8.0*luma16-8.0*luma14+luma13)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma28+8.0*luma22-8.0*luma10+luma4)/12.0;
 gy = (luma17-luma15)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma31+8.0*luma25-8.0*luma13+luma7)/12.0;
 gy = (luma20-luma18)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma32+8.0*luma26-8.0*luma14+luma8)/12.0;
 gy = (-luma22+8.0*luma21-8.0*luma19+luma18)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma33+8.0*luma27-8.0*luma15+luma9)/12.0;
 gy = (-luma23+8.0*luma22-8.0*luma20+luma19)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma34+8.0*luma28-8.0*luma16+luma10)/12.0;
 gy = (luma23-luma21)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma31-luma19)/2.0;
 gy = (luma26-luma24)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (luma32-luma20)/2.0;
 gy = (-luma28+8.0*luma27-8.0*luma25+luma24)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma33-luma21)/2.0;
 gy = (-luma29+8.0*luma28-8.0*luma26+luma25)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma34-luma22)/2.0;
 gy = (luma29-luma27)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
+float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
@@ -706,10 +646,8 @@ diff = sample34 - res0;
 res += (res0 + diff * (diff * diff - 2 * abs(diff) + 1.0)) * w[2];
 diff = sample35 - res0;
 res += (res0 + diff * (diff * diff - 2 * abs(diff) + 1.0)) * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step3, rgb, r3)
 //!HOOK MAIN
@@ -717,8 +655,8 @@ vec4 hook() {
 //!BIND ravu_lut
 //!BIND ravu_int11
 //!SAVE ravu_int01
-vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
-vec4 ravu() {
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);
 vec4 sample6 = HOOKED_texOff(vec2(-2.0, 0.0));
 float luma6 = dot(sample6, color_primary);
 vec4 sample1 = HOOKED_texOff(vec2(-2.0, 1.0));
@@ -791,87 +729,58 @@ vec4 sample23 = ravu_int11_texOff(vec2(1.0, 1.0));
 float luma23 = dot(sample23, color_primary);
 vec4 sample35 = ravu_int11_texOff(vec2(2.0, 0.0));
 float luma35 = dot(sample35, color_primary);
-float a = 0, b = 0, d = 0, gx, gy;
+vec4 hook() {
+vec3 abd = vec3(0.0);
+float gx, gy;
 gx = (luma13-luma1)/2.0;
 gy = (luma8-luma6)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (luma14-luma2)/2.0;
 gy = (-luma10+8.0*luma9-8.0*luma7+luma6)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma15-luma3)/2.0;
 gy = (-luma11+8.0*luma10-8.0*luma8+luma7)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma16-luma4)/2.0;
 gy = (luma11-luma9)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (-luma25+8.0*luma19-8.0*luma7+luma1)/12.0;
 gy = (luma14-luma12)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma26+8.0*luma20-8.0*luma8+luma2)/12.0;
 gy = (-luma16+8.0*luma15-8.0*luma13+luma12)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma27+8.0*luma21-8.0*luma9+luma3)/12.0;
 gy = (-luma17+8.0*luma16-8.0*luma14+luma13)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma28+8.0*luma22-8.0*luma10+luma4)/12.0;
 gy = (luma17-luma15)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma31+8.0*luma25-8.0*luma13+luma7)/12.0;
 gy = (luma20-luma18)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (-luma32+8.0*luma26-8.0*luma14+luma8)/12.0;
 gy = (-luma22+8.0*luma21-8.0*luma19+luma18)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma33+8.0*luma27-8.0*luma15+luma9)/12.0;
 gy = (-luma23+8.0*luma22-8.0*luma20+luma19)/12.0;
-a += gx * gx * 0.07901060453704994;
-b += gx * gy * 0.07901060453704994;
-d += gy * gy * 0.07901060453704994;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
 gx = (-luma34+8.0*luma28-8.0*luma16+luma10)/12.0;
 gy = (luma23-luma21)/2.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma31-luma19)/2.0;
 gy = (luma26-luma24)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 gx = (luma32-luma20)/2.0;
 gy = (-luma28+8.0*luma27-8.0*luma25+luma24)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma33-luma21)/2.0;
 gy = (-luma29+8.0*luma28-8.0*luma26+luma25)/12.0;
-a += gx * gx * 0.06153352068439959;
-b += gx * gy * 0.06153352068439959;
-d += gy * gy * 0.06153352068439959;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
 gx = (luma34-luma22)/2.0;
 gy = (luma29-luma27)/2.0;
-a += gx * gx * 0.04792235409415088;
-b += gx * gy * 0.04792235409415088;
-d += gy * gy * 0.04792235409415088;
+abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
+float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
@@ -1056,10 +965,8 @@ diff = sample34 - res0;
 res += (res0 + diff * (diff * diff - 2 * abs(diff) + 1.0)) * w[2];
 diff = sample35 - res0;
 res += (res0 + diff * (diff * diff - 2 * abs(diff) + 1.0)) * w[3];
-return clamp(res, 0.0, 1.0);
-}  // ravu
-vec4 hook() {
-    return ravu();
+res = clamp(res, 0.0, 1.0);
+return res;
 }
 //!DESC RAVU (step4, rgb, r3)
 //!HOOK MAIN
@@ -1070,6 +977,7 @@ vec4 hook() {
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0) {
