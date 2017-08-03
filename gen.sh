@@ -37,5 +37,8 @@ for target in luma native native-yuv chroma-left chroma-center; do
         if [ -d gather -a \( "$target" = "luma" -o "$target" = "chroma-left" -o "$target" = "chroma-center" \) ]; then
             "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
         fi
+        if [ -d compute ]; then
+            "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-compute-shader > "compute/$file_name"
+        fi
     done
 done
