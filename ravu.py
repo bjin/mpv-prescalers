@@ -32,6 +32,8 @@ class Profile(enum.Enum):
     luma = 0
     rgb = 1
     yuv = 2
+    chroma_left = 3
+    chroma_center = 4
 
 
 class RAVU(userhook.UserHook):
@@ -93,6 +95,13 @@ class RAVU(userhook.UserHook):
 
         return "\n".join(headers + [weights_raw, ""])
 
+    def get_offset_from_texname(self, tex_name):
+        for i in range(2):
+            for j in range(2):
+                if self.tex_name[i][j] == tex_name:
+                    return (i, j)
+        raise Exception("unknown texture %s" % tex_name)
+
     def get_sample_positions(self, offset, use_gather=False):
         n = self.radius * 2
 
@@ -115,6 +124,7 @@ class RAVU(userhook.UserHook):
                 # tex_name, tex_offset -> logical offset
                 sample_positions.setdefault(tex, {})[x, y] = i, j
 
+        gathered_groups = {}
         gathered_positions = {}
         if use_gather:
             gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
@@ -128,11 +138,10 @@ class RAVU(userhook.UserHook):
                         used_keys |= set(tex_offsets)
                         logical_offsets = [mapping[key] for key in tex_offsets]
                         # tex_name, tex_offset_base -> logical offset
-                        gathered_positions.setdefault(tex, {})[x, y] = logical_offsets
-                for key in used_keys:
-                    del mapping[key]
+                        gathered_groups.setdefault(tex, {})[x, y] = logical_offsets
+                gathered_positions[tex] = used_keys
 
-        return sample_positions, gathered_positions
+        return sample_positions, gathered_positions, gathered_groups
 
     def setup_profile(self):
         GLSL = self.add_glsl
@@ -142,8 +151,8 @@ class RAVU(userhook.UserHook):
                 sample_type="float",
                 sample_zero="0.0",
                 hook_return_value="vec4(res, 0.0, 0.0, 0.0)",
-                comps_swizzle = "[0]")
-        else:
+                comps_swizzle = ".x")
+        elif self.profile in [Profile.rgb, Profile.yuv]:
             self.add_mappings(
                 sample_type="vec4",
                 sample_zero="vec4(0.0)",
@@ -156,6 +165,21 @@ class RAVU(userhook.UserHook):
                 # Add some no-op cond to assert LUMA texture exists, rather make
                 # the shader failed to run than getting some random output.
                 self.add_cond("LUMA.w 0 >")
+        else:
+            self.add_mappings(
+                sample_type="vec2",
+                sample_zero="vec2(0.0)",
+                hook_return_value="vec4(res, 0.0, 0.0)",
+                comps_swizzle = ".xy")
+            # Due to limitation of mpv's hook system, we don't know the
+            # texture offset between luma and chroma planes, as well as chroma
+            # offset and chroma subsampling method. Add condition to process
+            # only YUV 4:2:0 video. Ideally we also want to check that luma was
+            # not prescaled (luma plane will be prescaled first and will
+            # introduce offset), but there is no way to do so.
+            self.bind_tex("LUMA")
+            self.add_cond_eq("LUMA.w", "CHROMA.w 2 *")
+            self.add_cond_eq("LUMA.h", "CHROMA.h 2 *")
 
     def extract_key(self, luma):
         GLSL = self.add_glsl
@@ -246,9 +270,10 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
         self.set_description("RAVU (%s, %s, r%d)" %
                              (step.name, self.profile.name, self.radius))
 
-        # This checks against all passes, and works since "HOOKED" is same for
-        # all of them.
-        self.set_skippable(2, 2)
+        if self.profile not in [Profile.chroma_left, Profile.chroma_center]:
+            # This checks against all passes, and works since "HOOKED" is same for
+            # all of them.
+            self.set_skippable(2, 2)
 
         if step == Step.step4:
             self.set_transform(2, 2, -0.5, -0.5)
@@ -284,46 +309,63 @@ vec4 hook() {
 
         if self.profile == Profile.luma:
             luma = lambda x, y: samples[x, y]
-        elif self.profile == Profile.rgb:
-            luma = lambda x, y: "luma%d" % (x * n + y)
         elif self.profile == Profile.yuv:
-            luma = lambda x, y: samples[x, y] + "[0]"
+            luma = lambda x, y: samples[x, y] + ".x"
+        else:
+            luma = lambda x, y: "luma%d" % (x * n + y)
 
         if step == Step.step1:
-            offset = (1, 1)
+            target_offset = (1, 1)
         else:
             self.bind_tex(self.tex_name[1][1])
             if step == Step.step2:
-                offset = (1, 0)
+                target_offset = (1, 0)
             elif step == Step.step3:
-                offset = (0, 1)
+                target_offset = (0, 1)
 
-        self.save_tex(self.tex_name[offset[0]][offset[1]])
+        self.save_tex(self.tex_name[target_offset[0]][target_offset[1]])
 
-        sample_positions, gathered_positions = self.get_sample_positions(
-                offset, use_gather and self.profile == Profile.luma)
+        profiles_using_gather = [Profile.luma, Profile.chroma_left, Profile.chroma_center]
+        sample_positions, gathered_positions, gathered_groups = self.get_sample_positions(
+                target_offset, use_gather and self.profile in profiles_using_gather)
 
         gathered = 0
-        for tex in sorted(gathered_positions.keys()):
-            mapping = gathered_positions[tex]
+        for tex in sorted(gathered_groups.keys()):
+            mapping = gathered_groups[tex]
             for base_x, base_y in sorted(mapping.keys()):
                 logical_offsets = mapping[base_x, base_y]
-                gathered_name = "gathered%d" % gathered
+                if self.profile == Profile.luma:
+                    gathered_names = ["gathered%d" % gathered]
+                else:
+                    gathered_names = ["gathered%d_u" % gathered, "gathered%d_v" % gathered]
                 gathered += 1
-                GLSL("vec4 %s = %s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), 0);" %
-                     (gathered_name, tex, tex, tex, base_x, base_y))
+                for comp, gathered_name in enumerate(gathered_names):
+                    GLSL("vec4 %s = %s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), %d);" %
+                         (gathered_name, tex, tex, tex, base_x, base_y, comp))
                 for idx in range(len(logical_offsets)):
                     i, j = logical_offsets[idx]
-                    samples[i, j] = "%s[%d]" % (gathered_name, idx)
+                    if self.profile == Profile.luma:
+                        samples[i, j] = "%s[%d]" % (gathered_names[0], idx)
+                    else:
+                        samples[i, j] = "vec2(%s[%d], %s[%d])" % (gathered_names[0], idx, gathered_names[1], idx)
 
         for tex in sorted(sample_positions.keys()):
             mapping = sample_positions[tex]
+            already_gathered = gathered_positions.get(tex, set())
             for x, y in sorted(mapping.keys()):
                 i, j = mapping[x, y]
-                GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))$comps_swizzle;' %
-                     (samples[i, j], tex, x, y))
+                if (x, y) not in already_gathered:
+                    GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))$comps_swizzle;' %
+                         (samples[i, j], tex, x, y))
                 if self.profile == Profile.rgb:
                     GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), samples[i, j]))
+                elif self.profile in [Profile.chroma_left, Profile.chroma_center]:
+                    chroma_offset = (-0.5, 0.0) if self.profile == Profile.chroma_left else (0.0, 0.0)
+                    bound_tex_offset = self.get_offset_from_texname(tex)
+                    # use bilinear sampling for luma downscaling
+                    offset_x = x * 2 + bound_tex_offset[0] - 0.5 - chroma_offset[0]
+                    offset_y = y * 2 + bound_tex_offset[1] - 0.5 - chroma_offset[1]
+                    GLSL('float %s = LUMA_texOff(vec2(%s,%s)).x;' % (luma(i, j), offset_x, offset_y))
 
         GLSL("""
 vec4 hook() {""")
@@ -340,6 +382,9 @@ return $hook_return_value;
         return super().generate()
 
     def generate_compute(self, step, block_size):
+        if self.profile in [Profile.chroma_left, Profile.chroma_center]:
+            raise Exception("compute shader port doesn't support chroma profiles")
+
         # compute shader requires only two steps
         if step == Step.step3 or step == Step.step4:
             return ""
@@ -432,7 +477,7 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
         GLSL("barrier();")
 
         for target_idx, sample_positions in enumerate(sample_positions_by_target):
-            offset = target_offsets[target_idx]
+            target_offset = target_offsets[target_idx]
             samples_mapping = samples_mapping_for_target[target_idx]
 
             GLSL("{")
@@ -453,7 +498,7 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
             if step == Step.step1:
                 pos = "ivec2(gl_GlobalInvocationID)"
             else:
-                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d, %d)" % (offset[0], offset[1])
+                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d, %d)" % (target_offset[0], target_offset[1])
             GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
 
             GLSL("}")
@@ -462,8 +507,8 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
             GLSL("$sample_type res;")
             for tex_idx, tex in enumerate(bound_tex_names):
                 offset_base = offset_for_tex[tex_idx]
-                offset_global = 0 if tex == self.tex_name[0][0] else 1
-                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d)" % offset_global
+                bound_tex_offset = self.get_offset_from_texname(tex)
+                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d,%d)" % bound_tex_offset
                 res = "inp%d[gl_LocalInvocationID.x+%d][gl_LocalInvocationID.y+%d]" % (tex_idx, -offset_base[0], -offset_base[1])
                 GLSL("res = %s;" % res)
                 GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
@@ -481,7 +526,9 @@ if __name__ == "__main__":
     profile_mapping = {
         "luma": (["LUMA"], Profile.luma),
         "native": (["MAIN"], Profile.rgb),
-        "native-yuv": (["NATIVE"], Profile.yuv)
+        "native-yuv": (["NATIVE"], Profile.yuv),
+        "chroma-left": (["CHROMA"], Profile.chroma_left),
+        "chroma-center": (["CHROMA"], Profile.chroma_center)
     }
 
     parser = argparse.ArgumentParser(

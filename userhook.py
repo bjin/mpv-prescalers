@@ -86,6 +86,10 @@ class UserHook:
         else:
             self.header[WHEN] = cond_str
 
+    def add_cond_eq(self, lhs, rhs):
+        self.add_cond("%s %s > !" % (lhs, rhs))
+        self.add_cond("%s %s < !" % (lhs, rhs))
+
     def set_transform(self, mul_x, mul_y, offset_x, offset_y):
         if mul_x != 1:
             self.header[WIDTH] = "%d %s.w *" % (mul_x, HOOKED)
