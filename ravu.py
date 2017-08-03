@@ -171,15 +171,7 @@ class RAVU(userhook.UserHook):
                 sample_zero="vec2(0.0)",
                 hook_return_value="vec4(res, 0.0, 0.0)",
                 comps_swizzle = ".xy")
-            # Due to limitation of mpv's hook system, we don't know the
-            # texture offset between luma and chroma planes, as well as chroma
-            # offset and chroma subsampling method. Add condition to process
-            # only YUV 4:2:0 video. Ideally we also want to check that luma was
-            # not prescaled (luma plane will be prescaled first and will
-            # introduce offset), but there is no way to do so.
             self.bind_tex("LUMA")
-            self.add_cond_eq("LUMA.w", "CHROMA.w 2 *")
-            self.add_cond_eq("LUMA.h", "CHROMA.h 2 *")
 
     def extract_key(self, luma):
         GLSL = self.add_glsl
@@ -274,6 +266,15 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
             # This checks against all passes, and works since "HOOKED" is same for
             # all of them.
             self.set_skippable(2, 2)
+        else:
+            # Due to limitation of mpv's hook system, we don't know the
+            # texture offset between luma and chroma planes, as well as chroma
+            # offset and chroma subsampling method. Add condition to process
+            # only YUV 4:2:0 video. Ideally we also want to check that luma was
+            # not prescaled (luma plane will be prescaled first and will
+            # introduce offset), but there is no way to do so.
+            self.add_cond_eq("LUMA.w", "CHROMA.w 2 *")
+            self.add_cond_eq("LUMA.h", "CHROMA.h 2 *")
 
         if step == Step.step4:
             self.set_transform(2, 2, -0.5, -0.5)
