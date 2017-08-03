@@ -12,78 +12,95 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC RAVU (step1, yuv, r2)
-//!HOOK NATIVE
+//!DESC RAVU (step1, chroma_left, r2)
+//!HOOK CHROMA
 //!BIND HOOKED
 //!BIND ravu_lut
+//!BIND LUMA
 //!SAVE ravu_int11
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
-vec4 sample0 = HOOKED_texOff(vec2(-1.0, -1.0));
-vec4 sample1 = HOOKED_texOff(vec2(-1.0, 0.0));
-vec4 sample2 = HOOKED_texOff(vec2(-1.0, 1.0));
-vec4 sample3 = HOOKED_texOff(vec2(-1.0, 2.0));
-vec4 sample4 = HOOKED_texOff(vec2(0.0, -1.0));
-vec4 sample5 = HOOKED_texOff(vec2(0.0, 0.0));
-vec4 sample6 = HOOKED_texOff(vec2(0.0, 1.0));
-vec4 sample7 = HOOKED_texOff(vec2(0.0, 2.0));
-vec4 sample8 = HOOKED_texOff(vec2(1.0, -1.0));
-vec4 sample9 = HOOKED_texOff(vec2(1.0, 0.0));
-vec4 sample10 = HOOKED_texOff(vec2(1.0, 1.0));
-vec4 sample11 = HOOKED_texOff(vec2(1.0, 2.0));
-vec4 sample12 = HOOKED_texOff(vec2(2.0, -1.0));
-vec4 sample13 = HOOKED_texOff(vec2(2.0, 0.0));
-vec4 sample14 = HOOKED_texOff(vec2(2.0, 1.0));
-vec4 sample15 = HOOKED_texOff(vec2(2.0, 2.0));
+//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+vec2 sample0 = HOOKED_texOff(vec2(-1.0, -1.0)).xy;
+float luma0 = LUMA_texOff(vec2(-2.0,-2.5)).x;
+vec2 sample1 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
+float luma1 = LUMA_texOff(vec2(-2.0,-0.5)).x;
+vec2 sample2 = HOOKED_texOff(vec2(-1.0, 1.0)).xy;
+float luma2 = LUMA_texOff(vec2(-2.0,1.5)).x;
+vec2 sample3 = HOOKED_texOff(vec2(-1.0, 2.0)).xy;
+float luma3 = LUMA_texOff(vec2(-2.0,3.5)).x;
+vec2 sample4 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
+float luma4 = LUMA_texOff(vec2(0.0,-2.5)).x;
+vec2 sample5 = HOOKED_texOff(vec2(0.0, 0.0)).xy;
+float luma5 = LUMA_texOff(vec2(0.0,-0.5)).x;
+vec2 sample6 = HOOKED_texOff(vec2(0.0, 1.0)).xy;
+float luma6 = LUMA_texOff(vec2(0.0,1.5)).x;
+vec2 sample7 = HOOKED_texOff(vec2(0.0, 2.0)).xy;
+float luma7 = LUMA_texOff(vec2(0.0,3.5)).x;
+vec2 sample8 = HOOKED_texOff(vec2(1.0, -1.0)).xy;
+float luma8 = LUMA_texOff(vec2(2.0,-2.5)).x;
+vec2 sample9 = HOOKED_texOff(vec2(1.0, 0.0)).xy;
+float luma9 = LUMA_texOff(vec2(2.0,-0.5)).x;
+vec2 sample10 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
+float luma10 = LUMA_texOff(vec2(2.0,1.5)).x;
+vec2 sample11 = HOOKED_texOff(vec2(1.0, 2.0)).xy;
+float luma11 = LUMA_texOff(vec2(2.0,3.5)).x;
+vec2 sample12 = HOOKED_texOff(vec2(2.0, -1.0)).xy;
+float luma12 = LUMA_texOff(vec2(4.0,-2.5)).x;
+vec2 sample13 = HOOKED_texOff(vec2(2.0, 0.0)).xy;
+float luma13 = LUMA_texOff(vec2(4.0,-0.5)).x;
+vec2 sample14 = HOOKED_texOff(vec2(2.0, 1.0)).xy;
+float luma14 = LUMA_texOff(vec2(4.0,1.5)).x;
+vec2 sample15 = HOOKED_texOff(vec2(2.0, 2.0)).xy;
+float luma15 = LUMA_texOff(vec2(4.0,3.5)).x;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
-gx = (sample4.x-sample0.x);
-gy = (sample1.x-sample0.x);
+gx = (luma4-luma0);
+gy = (luma1-luma0);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample5.x-sample1.x);
-gy = (sample2.x-sample0.x)/2.0;
+gx = (luma5-luma1);
+gy = (luma2-luma0)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample6.x-sample2.x);
-gy = (sample3.x-sample1.x)/2.0;
+gx = (luma6-luma2);
+gy = (luma3-luma1)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample7.x-sample3.x);
-gy = (sample3.x-sample2.x);
+gx = (luma7-luma3);
+gy = (luma3-luma2);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample8.x-sample0.x)/2.0;
-gy = (sample5.x-sample4.x);
+gx = (luma8-luma0)/2.0;
+gy = (luma5-luma4);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample9.x-sample1.x)/2.0;
-gy = (sample6.x-sample4.x)/2.0;
+gx = (luma9-luma1)/2.0;
+gy = (luma6-luma4)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample10.x-sample2.x)/2.0;
-gy = (sample7.x-sample5.x)/2.0;
+gx = (luma10-luma2)/2.0;
+gy = (luma7-luma5)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample11.x-sample3.x)/2.0;
-gy = (sample7.x-sample6.x);
+gx = (luma11-luma3)/2.0;
+gy = (luma7-luma6);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample12.x-sample4.x)/2.0;
-gy = (sample9.x-sample8.x);
+gx = (luma12-luma4)/2.0;
+gy = (luma9-luma8);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample13.x-sample5.x)/2.0;
-gy = (sample10.x-sample8.x)/2.0;
+gx = (luma13-luma5)/2.0;
+gy = (luma10-luma8)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample14.x-sample6.x)/2.0;
-gy = (sample11.x-sample9.x)/2.0;
+gx = (luma14-luma6)/2.0;
+gy = (luma11-luma9)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample15.x-sample7.x)/2.0;
-gy = (sample11.x-sample10.x);
+gx = (luma15-luma7)/2.0;
+gy = (luma11-luma10);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample12.x-sample8.x);
-gy = (sample13.x-sample12.x);
+gx = (luma12-luma8);
+gy = (luma13-luma12);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample13.x-sample9.x);
-gy = (sample14.x-sample12.x)/2.0;
+gx = (luma13-luma9);
+gy = (luma14-luma12)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample14.x-sample10.x);
-gy = (sample15.x-sample13.x)/2.0;
+gx = (luma14-luma10);
+gy = (luma15-luma13)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample15.x-sample11.x);
-gy = (sample15.x-sample14.x);
+gx = (luma15-luma11);
+gy = (luma15-luma14);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
@@ -140,7 +157,7 @@ coherence = 1.0;
 coherence = 2.0;
 }
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
-vec4 res = vec4(0.0);
+vec2 res = vec2(0.0);
 vec4 w;
 w = texture(ravu_lut, vec2(0.125, coord_y));
 res += sample0 * w[0];
@@ -163,81 +180,98 @@ res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
 res = clamp(res, 0.0, 1.0);
-return res;
+return vec4(res, 0.0, 0.0);
 }
-//!DESC RAVU (step2, yuv, r2)
-//!HOOK NATIVE
+//!DESC RAVU (step2, chroma_left, r2)
+//!HOOK CHROMA
 //!BIND HOOKED
 //!BIND ravu_lut
+//!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int10
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
-vec4 sample0 = HOOKED_texOff(vec2(-1.0, 0.0));
-vec4 sample8 = HOOKED_texOff(vec2(0.0, -1.0));
-vec4 sample5 = HOOKED_texOff(vec2(0.0, 0.0));
-vec4 sample2 = HOOKED_texOff(vec2(0.0, 1.0));
-vec4 sample13 = HOOKED_texOff(vec2(1.0, -1.0));
-vec4 sample10 = HOOKED_texOff(vec2(1.0, 0.0));
-vec4 sample7 = HOOKED_texOff(vec2(1.0, 1.0));
-vec4 sample15 = HOOKED_texOff(vec2(2.0, 0.0));
-vec4 sample4 = ravu_int11_texOff(vec2(-1.0, -1.0));
-vec4 sample1 = ravu_int11_texOff(vec2(-1.0, 0.0));
-vec4 sample12 = ravu_int11_texOff(vec2(0.0, -2.0));
-vec4 sample9 = ravu_int11_texOff(vec2(0.0, -1.0));
-vec4 sample6 = ravu_int11_texOff(vec2(0.0, 0.0));
-vec4 sample3 = ravu_int11_texOff(vec2(0.0, 1.0));
-vec4 sample14 = ravu_int11_texOff(vec2(1.0, -1.0));
-vec4 sample11 = ravu_int11_texOff(vec2(1.0, 0.0));
+//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+vec2 sample0 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
+float luma0 = LUMA_texOff(vec2(-2.0,-0.5)).x;
+vec2 sample8 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
+float luma8 = LUMA_texOff(vec2(0.0,-2.5)).x;
+vec2 sample5 = HOOKED_texOff(vec2(0.0, 0.0)).xy;
+float luma5 = LUMA_texOff(vec2(0.0,-0.5)).x;
+vec2 sample2 = HOOKED_texOff(vec2(0.0, 1.0)).xy;
+float luma2 = LUMA_texOff(vec2(0.0,1.5)).x;
+vec2 sample13 = HOOKED_texOff(vec2(1.0, -1.0)).xy;
+float luma13 = LUMA_texOff(vec2(2.0,-2.5)).x;
+vec2 sample10 = HOOKED_texOff(vec2(1.0, 0.0)).xy;
+float luma10 = LUMA_texOff(vec2(2.0,-0.5)).x;
+vec2 sample7 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
+float luma7 = LUMA_texOff(vec2(2.0,1.5)).x;
+vec2 sample15 = HOOKED_texOff(vec2(2.0, 0.0)).xy;
+float luma15 = LUMA_texOff(vec2(4.0,-0.5)).x;
+vec2 sample4 = ravu_int11_texOff(vec2(-1.0, -1.0)).xy;
+float luma4 = LUMA_texOff(vec2(-1.0,-1.5)).x;
+vec2 sample1 = ravu_int11_texOff(vec2(-1.0, 0.0)).xy;
+float luma1 = LUMA_texOff(vec2(-1.0,0.5)).x;
+vec2 sample12 = ravu_int11_texOff(vec2(0.0, -2.0)).xy;
+float luma12 = LUMA_texOff(vec2(1.0,-3.5)).x;
+vec2 sample9 = ravu_int11_texOff(vec2(0.0, -1.0)).xy;
+float luma9 = LUMA_texOff(vec2(1.0,-1.5)).x;
+vec2 sample6 = ravu_int11_texOff(vec2(0.0, 0.0)).xy;
+float luma6 = LUMA_texOff(vec2(1.0,0.5)).x;
+vec2 sample3 = ravu_int11_texOff(vec2(0.0, 1.0)).xy;
+float luma3 = LUMA_texOff(vec2(1.0,2.5)).x;
+vec2 sample14 = ravu_int11_texOff(vec2(1.0, -1.0)).xy;
+float luma14 = LUMA_texOff(vec2(3.0,-1.5)).x;
+vec2 sample11 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
+float luma11 = LUMA_texOff(vec2(3.0,0.5)).x;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
-gx = (sample4.x-sample0.x);
-gy = (sample1.x-sample0.x);
+gx = (luma4-luma0);
+gy = (luma1-luma0);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample5.x-sample1.x);
-gy = (sample2.x-sample0.x)/2.0;
+gx = (luma5-luma1);
+gy = (luma2-luma0)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample6.x-sample2.x);
-gy = (sample3.x-sample1.x)/2.0;
+gx = (luma6-luma2);
+gy = (luma3-luma1)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample7.x-sample3.x);
-gy = (sample3.x-sample2.x);
+gx = (luma7-luma3);
+gy = (luma3-luma2);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample8.x-sample0.x)/2.0;
-gy = (sample5.x-sample4.x);
+gx = (luma8-luma0)/2.0;
+gy = (luma5-luma4);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample9.x-sample1.x)/2.0;
-gy = (sample6.x-sample4.x)/2.0;
+gx = (luma9-luma1)/2.0;
+gy = (luma6-luma4)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample10.x-sample2.x)/2.0;
-gy = (sample7.x-sample5.x)/2.0;
+gx = (luma10-luma2)/2.0;
+gy = (luma7-luma5)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample11.x-sample3.x)/2.0;
-gy = (sample7.x-sample6.x);
+gx = (luma11-luma3)/2.0;
+gy = (luma7-luma6);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample12.x-sample4.x)/2.0;
-gy = (sample9.x-sample8.x);
+gx = (luma12-luma4)/2.0;
+gy = (luma9-luma8);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample13.x-sample5.x)/2.0;
-gy = (sample10.x-sample8.x)/2.0;
+gx = (luma13-luma5)/2.0;
+gy = (luma10-luma8)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample14.x-sample6.x)/2.0;
-gy = (sample11.x-sample9.x)/2.0;
+gx = (luma14-luma6)/2.0;
+gy = (luma11-luma9)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample15.x-sample7.x)/2.0;
-gy = (sample11.x-sample10.x);
+gx = (luma15-luma7)/2.0;
+gy = (luma11-luma10);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample12.x-sample8.x);
-gy = (sample13.x-sample12.x);
+gx = (luma12-luma8);
+gy = (luma13-luma12);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample13.x-sample9.x);
-gy = (sample14.x-sample12.x)/2.0;
+gx = (luma13-luma9);
+gy = (luma14-luma12)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample14.x-sample10.x);
-gy = (sample15.x-sample13.x)/2.0;
+gx = (luma14-luma10);
+gy = (luma15-luma13)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample15.x-sample11.x);
-gy = (sample15.x-sample14.x);
+gx = (luma15-luma11);
+gy = (luma15-luma14);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
@@ -294,7 +328,7 @@ coherence = 1.0;
 coherence = 2.0;
 }
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
-vec4 res = vec4(0.0);
+vec2 res = vec2(0.0);
 vec4 w;
 w = texture(ravu_lut, vec2(0.125, coord_y));
 res += sample0 * w[0];
@@ -317,81 +351,98 @@ res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
 res = clamp(res, 0.0, 1.0);
-return res;
+return vec4(res, 0.0, 0.0);
 }
-//!DESC RAVU (step3, yuv, r2)
-//!HOOK NATIVE
+//!DESC RAVU (step3, chroma_left, r2)
+//!HOOK CHROMA
 //!BIND HOOKED
 //!BIND ravu_lut
+//!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int01
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
-vec4 sample4 = HOOKED_texOff(vec2(-1.0, 0.0));
-vec4 sample1 = HOOKED_texOff(vec2(-1.0, 1.0));
-vec4 sample12 = HOOKED_texOff(vec2(0.0, -1.0));
-vec4 sample9 = HOOKED_texOff(vec2(0.0, 0.0));
-vec4 sample6 = HOOKED_texOff(vec2(0.0, 1.0));
-vec4 sample3 = HOOKED_texOff(vec2(0.0, 2.0));
-vec4 sample14 = HOOKED_texOff(vec2(1.0, 0.0));
-vec4 sample11 = HOOKED_texOff(vec2(1.0, 1.0));
-vec4 sample0 = ravu_int11_texOff(vec2(-2.0, 0.0));
-vec4 sample8 = ravu_int11_texOff(vec2(-1.0, -1.0));
-vec4 sample5 = ravu_int11_texOff(vec2(-1.0, 0.0));
-vec4 sample2 = ravu_int11_texOff(vec2(-1.0, 1.0));
-vec4 sample13 = ravu_int11_texOff(vec2(0.0, -1.0));
-vec4 sample10 = ravu_int11_texOff(vec2(0.0, 0.0));
-vec4 sample7 = ravu_int11_texOff(vec2(0.0, 1.0));
-vec4 sample15 = ravu_int11_texOff(vec2(1.0, 0.0));
+//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+vec2 sample4 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
+float luma4 = LUMA_texOff(vec2(-2.0,-0.5)).x;
+vec2 sample1 = HOOKED_texOff(vec2(-1.0, 1.0)).xy;
+float luma1 = LUMA_texOff(vec2(-2.0,1.5)).x;
+vec2 sample12 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
+float luma12 = LUMA_texOff(vec2(0.0,-2.5)).x;
+vec2 sample9 = HOOKED_texOff(vec2(0.0, 0.0)).xy;
+float luma9 = LUMA_texOff(vec2(0.0,-0.5)).x;
+vec2 sample6 = HOOKED_texOff(vec2(0.0, 1.0)).xy;
+float luma6 = LUMA_texOff(vec2(0.0,1.5)).x;
+vec2 sample3 = HOOKED_texOff(vec2(0.0, 2.0)).xy;
+float luma3 = LUMA_texOff(vec2(0.0,3.5)).x;
+vec2 sample14 = HOOKED_texOff(vec2(1.0, 0.0)).xy;
+float luma14 = LUMA_texOff(vec2(2.0,-0.5)).x;
+vec2 sample11 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
+float luma11 = LUMA_texOff(vec2(2.0,1.5)).x;
+vec2 sample0 = ravu_int11_texOff(vec2(-2.0, 0.0)).xy;
+float luma0 = LUMA_texOff(vec2(-3.0,0.5)).x;
+vec2 sample8 = ravu_int11_texOff(vec2(-1.0, -1.0)).xy;
+float luma8 = LUMA_texOff(vec2(-1.0,-1.5)).x;
+vec2 sample5 = ravu_int11_texOff(vec2(-1.0, 0.0)).xy;
+float luma5 = LUMA_texOff(vec2(-1.0,0.5)).x;
+vec2 sample2 = ravu_int11_texOff(vec2(-1.0, 1.0)).xy;
+float luma2 = LUMA_texOff(vec2(-1.0,2.5)).x;
+vec2 sample13 = ravu_int11_texOff(vec2(0.0, -1.0)).xy;
+float luma13 = LUMA_texOff(vec2(1.0,-1.5)).x;
+vec2 sample10 = ravu_int11_texOff(vec2(0.0, 0.0)).xy;
+float luma10 = LUMA_texOff(vec2(1.0,0.5)).x;
+vec2 sample7 = ravu_int11_texOff(vec2(0.0, 1.0)).xy;
+float luma7 = LUMA_texOff(vec2(1.0,2.5)).x;
+vec2 sample15 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
+float luma15 = LUMA_texOff(vec2(3.0,0.5)).x;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
-gx = (sample4.x-sample0.x);
-gy = (sample1.x-sample0.x);
+gx = (luma4-luma0);
+gy = (luma1-luma0);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample5.x-sample1.x);
-gy = (sample2.x-sample0.x)/2.0;
+gx = (luma5-luma1);
+gy = (luma2-luma0)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample6.x-sample2.x);
-gy = (sample3.x-sample1.x)/2.0;
+gx = (luma6-luma2);
+gy = (luma3-luma1)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample7.x-sample3.x);
-gy = (sample3.x-sample2.x);
+gx = (luma7-luma3);
+gy = (luma3-luma2);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample8.x-sample0.x)/2.0;
-gy = (sample5.x-sample4.x);
+gx = (luma8-luma0)/2.0;
+gy = (luma5-luma4);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample9.x-sample1.x)/2.0;
-gy = (sample6.x-sample4.x)/2.0;
+gx = (luma9-luma1)/2.0;
+gy = (luma6-luma4)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample10.x-sample2.x)/2.0;
-gy = (sample7.x-sample5.x)/2.0;
+gx = (luma10-luma2)/2.0;
+gy = (luma7-luma5)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample11.x-sample3.x)/2.0;
-gy = (sample7.x-sample6.x);
+gx = (luma11-luma3)/2.0;
+gy = (luma7-luma6);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample12.x-sample4.x)/2.0;
-gy = (sample9.x-sample8.x);
+gx = (luma12-luma4)/2.0;
+gy = (luma9-luma8);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample13.x-sample5.x)/2.0;
-gy = (sample10.x-sample8.x)/2.0;
+gx = (luma13-luma5)/2.0;
+gy = (luma10-luma8)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample14.x-sample6.x)/2.0;
-gy = (sample11.x-sample9.x)/2.0;
+gx = (luma14-luma6)/2.0;
+gy = (luma11-luma9)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.07901060453704994;
-gx = (sample15.x-sample7.x)/2.0;
-gy = (sample11.x-sample10.x);
+gx = (luma15-luma7)/2.0;
+gy = (luma11-luma10);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample12.x-sample8.x);
-gy = (sample13.x-sample12.x);
+gx = (luma12-luma8);
+gy = (luma13-luma12);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
-gx = (sample13.x-sample9.x);
-gy = (sample14.x-sample12.x)/2.0;
+gx = (luma13-luma9);
+gy = (luma14-luma12)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample14.x-sample10.x);
-gy = (sample15.x-sample13.x)/2.0;
+gx = (luma14-luma10);
+gy = (luma15-luma13)/2.0;
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.06153352068439959;
-gx = (sample15.x-sample11.x);
-gy = (sample15.x-sample14.x);
+gx = (luma15-luma11);
+gy = (luma15-luma14);
 abd += vec3(gx * gx, gx * gy, gy * gy) * 0.04792235409415088;
 float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
@@ -448,7 +499,7 @@ coherence = 1.0;
 coherence = 2.0;
 }
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
-vec4 res = vec4(0.0);
+vec2 res = vec2(0.0);
 vec4 w;
 w = texture(ravu_lut, vec2(0.125, coord_y));
 res += sample0 * w[0];
@@ -471,10 +522,10 @@ res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
 res = clamp(res, 0.0, 1.0);
-return res;
+return vec4(res, 0.0, 0.0);
 }
-//!DESC RAVU (step4, yuv, r2)
-//!HOOK NATIVE
+//!DESC RAVU (step4, chroma_left, r2)
+//!HOOK CHROMA
 //!BIND HOOKED
 //!BIND ravu_int01
 //!BIND ravu_int10
@@ -482,7 +533,6 @@ return res;
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0) {

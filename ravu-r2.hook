@@ -18,22 +18,22 @@
 //!BIND ravu_lut
 //!SAVE ravu_int11
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-float sample0 = HOOKED_texOff(vec2(-1.0, -1.0))[0];
-float sample1 = HOOKED_texOff(vec2(-1.0, 0.0))[0];
-float sample2 = HOOKED_texOff(vec2(-1.0, 1.0))[0];
-float sample3 = HOOKED_texOff(vec2(-1.0, 2.0))[0];
-float sample4 = HOOKED_texOff(vec2(0.0, -1.0))[0];
-float sample5 = HOOKED_texOff(vec2(0.0, 0.0))[0];
-float sample6 = HOOKED_texOff(vec2(0.0, 1.0))[0];
-float sample7 = HOOKED_texOff(vec2(0.0, 2.0))[0];
-float sample8 = HOOKED_texOff(vec2(1.0, -1.0))[0];
-float sample9 = HOOKED_texOff(vec2(1.0, 0.0))[0];
-float sample10 = HOOKED_texOff(vec2(1.0, 1.0))[0];
-float sample11 = HOOKED_texOff(vec2(1.0, 2.0))[0];
-float sample12 = HOOKED_texOff(vec2(2.0, -1.0))[0];
-float sample13 = HOOKED_texOff(vec2(2.0, 0.0))[0];
-float sample14 = HOOKED_texOff(vec2(2.0, 1.0))[0];
-float sample15 = HOOKED_texOff(vec2(2.0, 2.0))[0];
+float sample0 = HOOKED_texOff(vec2(-1.0, -1.0)).x;
+float sample1 = HOOKED_texOff(vec2(-1.0, 0.0)).x;
+float sample2 = HOOKED_texOff(vec2(-1.0, 1.0)).x;
+float sample3 = HOOKED_texOff(vec2(-1.0, 2.0)).x;
+float sample4 = HOOKED_texOff(vec2(0.0, -1.0)).x;
+float sample5 = HOOKED_texOff(vec2(0.0, 0.0)).x;
+float sample6 = HOOKED_texOff(vec2(0.0, 1.0)).x;
+float sample7 = HOOKED_texOff(vec2(0.0, 2.0)).x;
+float sample8 = HOOKED_texOff(vec2(1.0, -1.0)).x;
+float sample9 = HOOKED_texOff(vec2(1.0, 0.0)).x;
+float sample10 = HOOKED_texOff(vec2(1.0, 1.0)).x;
+float sample11 = HOOKED_texOff(vec2(1.0, 2.0)).x;
+float sample12 = HOOKED_texOff(vec2(2.0, -1.0)).x;
+float sample13 = HOOKED_texOff(vec2(2.0, 0.0)).x;
+float sample14 = HOOKED_texOff(vec2(2.0, 1.0)).x;
+float sample15 = HOOKED_texOff(vec2(2.0, 2.0)).x;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
@@ -172,22 +172,22 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!BIND ravu_int11
 //!SAVE ravu_int10
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-float sample0 = HOOKED_texOff(vec2(-1.0, 0.0))[0];
-float sample8 = HOOKED_texOff(vec2(0.0, -1.0))[0];
-float sample5 = HOOKED_texOff(vec2(0.0, 0.0))[0];
-float sample2 = HOOKED_texOff(vec2(0.0, 1.0))[0];
-float sample13 = HOOKED_texOff(vec2(1.0, -1.0))[0];
-float sample10 = HOOKED_texOff(vec2(1.0, 0.0))[0];
-float sample7 = HOOKED_texOff(vec2(1.0, 1.0))[0];
-float sample15 = HOOKED_texOff(vec2(2.0, 0.0))[0];
-float sample4 = ravu_int11_texOff(vec2(-1.0, -1.0))[0];
-float sample1 = ravu_int11_texOff(vec2(-1.0, 0.0))[0];
-float sample12 = ravu_int11_texOff(vec2(0.0, -2.0))[0];
-float sample9 = ravu_int11_texOff(vec2(0.0, -1.0))[0];
-float sample6 = ravu_int11_texOff(vec2(0.0, 0.0))[0];
-float sample3 = ravu_int11_texOff(vec2(0.0, 1.0))[0];
-float sample14 = ravu_int11_texOff(vec2(1.0, -1.0))[0];
-float sample11 = ravu_int11_texOff(vec2(1.0, 0.0))[0];
+float sample0 = HOOKED_texOff(vec2(-1.0, 0.0)).x;
+float sample8 = HOOKED_texOff(vec2(0.0, -1.0)).x;
+float sample5 = HOOKED_texOff(vec2(0.0, 0.0)).x;
+float sample2 = HOOKED_texOff(vec2(0.0, 1.0)).x;
+float sample13 = HOOKED_texOff(vec2(1.0, -1.0)).x;
+float sample10 = HOOKED_texOff(vec2(1.0, 0.0)).x;
+float sample7 = HOOKED_texOff(vec2(1.0, 1.0)).x;
+float sample15 = HOOKED_texOff(vec2(2.0, 0.0)).x;
+float sample4 = ravu_int11_texOff(vec2(-1.0, -1.0)).x;
+float sample1 = ravu_int11_texOff(vec2(-1.0, 0.0)).x;
+float sample12 = ravu_int11_texOff(vec2(0.0, -2.0)).x;
+float sample9 = ravu_int11_texOff(vec2(0.0, -1.0)).x;
+float sample6 = ravu_int11_texOff(vec2(0.0, 0.0)).x;
+float sample3 = ravu_int11_texOff(vec2(0.0, 1.0)).x;
+float sample14 = ravu_int11_texOff(vec2(1.0, -1.0)).x;
+float sample11 = ravu_int11_texOff(vec2(1.0, 0.0)).x;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
@@ -326,22 +326,22 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!BIND ravu_int11
 //!SAVE ravu_int01
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
-float sample4 = HOOKED_texOff(vec2(-1.0, 0.0))[0];
-float sample1 = HOOKED_texOff(vec2(-1.0, 1.0))[0];
-float sample12 = HOOKED_texOff(vec2(0.0, -1.0))[0];
-float sample9 = HOOKED_texOff(vec2(0.0, 0.0))[0];
-float sample6 = HOOKED_texOff(vec2(0.0, 1.0))[0];
-float sample3 = HOOKED_texOff(vec2(0.0, 2.0))[0];
-float sample14 = HOOKED_texOff(vec2(1.0, 0.0))[0];
-float sample11 = HOOKED_texOff(vec2(1.0, 1.0))[0];
-float sample0 = ravu_int11_texOff(vec2(-2.0, 0.0))[0];
-float sample8 = ravu_int11_texOff(vec2(-1.0, -1.0))[0];
-float sample5 = ravu_int11_texOff(vec2(-1.0, 0.0))[0];
-float sample2 = ravu_int11_texOff(vec2(-1.0, 1.0))[0];
-float sample13 = ravu_int11_texOff(vec2(0.0, -1.0))[0];
-float sample10 = ravu_int11_texOff(vec2(0.0, 0.0))[0];
-float sample7 = ravu_int11_texOff(vec2(0.0, 1.0))[0];
-float sample15 = ravu_int11_texOff(vec2(1.0, 0.0))[0];
+float sample4 = HOOKED_texOff(vec2(-1.0, 0.0)).x;
+float sample1 = HOOKED_texOff(vec2(-1.0, 1.0)).x;
+float sample12 = HOOKED_texOff(vec2(0.0, -1.0)).x;
+float sample9 = HOOKED_texOff(vec2(0.0, 0.0)).x;
+float sample6 = HOOKED_texOff(vec2(0.0, 1.0)).x;
+float sample3 = HOOKED_texOff(vec2(0.0, 2.0)).x;
+float sample14 = HOOKED_texOff(vec2(1.0, 0.0)).x;
+float sample11 = HOOKED_texOff(vec2(1.0, 1.0)).x;
+float sample0 = ravu_int11_texOff(vec2(-2.0, 0.0)).x;
+float sample8 = ravu_int11_texOff(vec2(-1.0, -1.0)).x;
+float sample5 = ravu_int11_texOff(vec2(-1.0, 0.0)).x;
+float sample2 = ravu_int11_texOff(vec2(-1.0, 1.0)).x;
+float sample13 = ravu_int11_texOff(vec2(0.0, -1.0)).x;
+float sample10 = ravu_int11_texOff(vec2(0.0, 0.0)).x;
+float sample7 = ravu_int11_texOff(vec2(0.0, 1.0)).x;
+float sample15 = ravu_int11_texOff(vec2(1.0, 0.0)).x;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;

@@ -12,7 +12,7 @@ Use these shaders only if they actually work (i.e. no blue screen and no noticea
 # Filenames
 
 Suffix in the filename indicates the type of planes shader is hooked on
-(`ravu` supports only luma plane):
+(`ravu` supports only luma and chroma planes):
 
 * Without any suffix: Triggered on luma plane only (like `prescale-luma=...` option in `mpv`).
 * `-chroma`: Triggered on chroma plane only.
@@ -31,12 +31,21 @@ In addition, `{superxbr,ravu*}-native.hook` are native implementations of
 you want use. `{superxbr,ravu*}-native-yuv.hook` are similar shaders but require
 the original source to be YUV.
 
-For example:
-* `nnedi3-nns32-win8x4.hook`: user shader for luma `nnedi3` prescaling with `32`
-  neurons and a local sampling window size of `8x4`.
-* `superxbr-chroma.hook`: user shader for chroma-only `superxbr` prescaling.
-* `nnedi3-nns128-win8x6-all.hook`: user shader for `nnedi3` prescaling on all
-   planes with `128` neurons and a local sampling window size of `8x6`.
+`ravu-*-chroma-{center,left}-hook` are implementations of `ravu`, that
+will use downscaled luma plane to calculate gradient and guide chroma planes
+upscaling. Due to current limitation of `mpv`'s hook system, there are some
+caveats for using those shaders:
+
+1. It works with `YUV 4:2:0` format only, and will disable itself if size is not
+   matched exactly, this includes odd width/height of luma plane.
+2. It will **NOT** work with luma prescalers (for example `ravu-r3.hook`).
+   You should use `native` and `native-yuv` shaders for further upscaling.
+3. You need to explicitly state the chroma location, by choosing one of those
+   `chroma-left` and `chroma-center` shaders. If you don't know how to/don't
+   bother to check chroma location of video, or don't watch ancient videos,
+   just choose `chroma-left`.
+4. `cscale` will still be used to correct minor offset. An EWA scaler like
+   `haasnsoft` is recommended for the `cscale` setting.
 
 # Usage
 
