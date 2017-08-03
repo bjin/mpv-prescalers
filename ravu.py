@@ -88,8 +88,7 @@ class RAVU(userhook.UserHook):
         headers = [
             "//!TEXTURE %s" % self.lut_name,
             "//!SIZE %d %d" % (width, height),
-            "//!COMPONENTS 4",
-            "//!FORMAT 32f",
+            "//!FORMAT rgba32f",
             "//!FILTER NEAREST"
         ]
 
