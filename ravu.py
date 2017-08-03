@@ -94,12 +94,19 @@ class RAVU(userhook.UserHook):
 
         return "\n".join(headers + [weights_raw, ""])
 
-    def get_offset_from_texname(self, tex_name):
+    def get_id_from_texname(self, tex_name):
         for i in range(2):
             for j in range(2):
                 if self.tex_name[i][j] == tex_name:
                     return (i, j)
         raise Exception("unknown texture %s" % tex_name)
+
+    def get_chroma_offset(self):
+        if self.profile == Profile.chroma_left:
+            return (-0.5, 0.0)
+        if self.profile == Profile.chroma_center:
+            return (0.0, 0.0)
+        raise Exception("not a chroma profile: %s" % self.profile)
 
     def get_sample_positions(self, offset, use_gather=False):
         n = self.radius * 2
@@ -141,6 +148,21 @@ class RAVU(userhook.UserHook):
                 gathered_positions[tex] = used_keys
 
         return sample_positions, gathered_positions, gathered_groups
+
+    def setup_condition(self):
+        if self.profile not in [Profile.chroma_left, Profile.chroma_center]:
+            # This checks against all passes, and works since "HOOKED" is same for
+            # all of them.
+            self.set_skippable(2, 2)
+        else:
+            # Due to limitation of mpv's hook system, we don't know the
+            # texture offset between luma and chroma planes, as well as chroma
+            # offset and chroma subsampling method. Add condition to process
+            # only YUV 4:2:0 video. Ideally we also want to check that luma was
+            # not prescaled (luma plane will be prescaled first and will
+            # introduce offset), but there is no way to do so.
+            self.add_cond_eq("LUMA.w", "CHROMA.w 2 *")
+            self.add_cond_eq("LUMA.h", "CHROMA.h 2 *")
 
     def setup_profile(self):
         GLSL = self.add_glsl
@@ -261,19 +283,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
         self.set_description("RAVU (%s, %s, r%d)" %
                              (step.name, self.profile.name, self.radius))
 
-        if self.profile not in [Profile.chroma_left, Profile.chroma_center]:
-            # This checks against all passes, and works since "HOOKED" is same for
-            # all of them.
-            self.set_skippable(2, 2)
-        else:
-            # Due to limitation of mpv's hook system, we don't know the
-            # texture offset between luma and chroma planes, as well as chroma
-            # offset and chroma subsampling method. Add condition to process
-            # only YUV 4:2:0 video. Ideally we also want to check that luma was
-            # not prescaled (luma plane will be prescaled first and will
-            # introduce offset), but there is no way to do so.
-            self.add_cond_eq("LUMA.w", "CHROMA.w 2 *")
-            self.add_cond_eq("LUMA.h", "CHROMA.h 2 *")
+        self.setup_condition()
 
         if step == Step.step4:
             self.set_transform(2, 2, -0.5, -0.5)
@@ -360,11 +370,13 @@ vec4 hook() {
                 if self.profile == Profile.rgb:
                     GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), samples[i, j]))
                 elif self.profile in [Profile.chroma_left, Profile.chroma_center]:
-                    chroma_offset = (-0.5, 0.0) if self.profile == Profile.chroma_left else (0.0, 0.0)
-                    bound_tex_offset = self.get_offset_from_texname(tex)
+                    chroma_offset = self.get_chroma_offset()
+                    bound_tex_id = self.get_id_from_texname(tex)
+                    # |(x, y) * 2 + bound_tex_id| is the offset of luma texel
+                    # relative to upscaled HOOKED texels.
+                    offset_x = x * 2 + bound_tex_id[0] - 0.5 - chroma_offset[0]
+                    offset_y = y * 2 + bound_tex_id[1] - 0.5 - chroma_offset[1]
                     # use bilinear sampling for luma downscaling
-                    offset_x = x * 2 + bound_tex_offset[0] - 0.5 - chroma_offset[0]
-                    offset_y = y * 2 + bound_tex_offset[1] - 0.5 - chroma_offset[1]
                     GLSL('float %s = LUMA_texOff(vec2(%s,%s)).x;' % (luma(i, j), offset_x, offset_y))
 
         GLSL("""
@@ -382,9 +394,6 @@ return $hook_return_value;
         return super().generate()
 
     def generate_compute(self, step, block_size):
-        if self.profile in [Profile.chroma_left, Profile.chroma_center]:
-            raise Exception("compute shader port doesn't support chroma profiles")
-
         # compute shader requires only two steps
         if step == Step.step3 or step == Step.step4:
             return ""
@@ -397,7 +406,7 @@ return $hook_return_value;
 
         block_width, block_height = block_size
 
-        self.set_skippable(2, 2)
+        self.setup_condition()
         self.bind_tex(self.lut_name)
 
         self.setup_profile()
@@ -469,6 +478,14 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
                 GLSL("inp_luma%d[x][y] = inp%d[x][y][0];" % (tex_idx, tex_idx))
             elif self.profile == Profile.rgb:
                 GLSL("inp_luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (tex_idx, tex_idx))
+            elif self.profile in [Profile.chroma_left, Profile.chroma_center]:
+                chroma_offset = self.get_chroma_offset()
+                bound_tex_id = self.get_id_from_texname(tex)
+                # |(group_base+(x,y)+offset_base)*2+bound_tex_id| is the luma texel id
+                offset_x = offset_base[0] * 2 + bound_tex_id[0] - chroma_offset[0]
+                offset_y = offset_base[1] * 2 + bound_tex_id[1] - chroma_offset[1]
+                GLSL('inp_luma%d[x][y] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(%s),float(group_base.y+y)*2.0+(%s))).x;' %
+                     (tex_idx, offset_x, offset_y))
 
             GLSL("""
 }""")
@@ -507,8 +524,8 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
             GLSL("$sample_type res;")
             for tex_idx, tex in enumerate(bound_tex_names):
                 offset_base = offset_for_tex[tex_idx]
-                bound_tex_offset = self.get_offset_from_texname(tex)
-                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d,%d)" % bound_tex_offset
+                bound_tex_id = self.get_id_from_texname(tex)
+                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d,%d)" % bound_tex_id
                 res = "inp%d[gl_LocalInvocationID.x+%d][gl_LocalInvocationID.y+%d]" % (tex_idx, -offset_base[0], -offset_base[1])
                 GLSL("res = %s;" % res)
                 GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
