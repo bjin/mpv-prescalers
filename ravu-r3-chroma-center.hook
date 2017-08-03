@@ -15,7 +15,7 @@
 //!DESC RAVU (step1, chroma_center, r3)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut
+//!BIND ravu_lut3
 //!BIND LUMA
 //!SAVE ravu_int11
 //!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
@@ -199,47 +199,47 @@ coherence = 2.0;
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut, vec2(0.05555555555555555, coord_y));
+w = texture(ravu_lut3, vec2(0.05555555555555555, coord_y));
 res += sample0 * w[0];
 res += sample1 * w[1];
 res += sample2 * w[2];
 res += sample3 * w[3];
-w = texture(ravu_lut, vec2(0.16666666666666666, coord_y));
+w = texture(ravu_lut3, vec2(0.16666666666666666, coord_y));
 res += sample4 * w[0];
 res += sample5 * w[1];
 res += sample6 * w[2];
 res += sample7 * w[3];
-w = texture(ravu_lut, vec2(0.2777777777777778, coord_y));
+w = texture(ravu_lut3, vec2(0.2777777777777778, coord_y));
 res += sample8 * w[0];
 res += sample9 * w[1];
 res += sample10 * w[2];
 res += sample11 * w[3];
-w = texture(ravu_lut, vec2(0.3888888888888889, coord_y));
+w = texture(ravu_lut3, vec2(0.3888888888888889, coord_y));
 res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-w = texture(ravu_lut, vec2(0.5, coord_y));
+w = texture(ravu_lut3, vec2(0.5, coord_y));
 res += sample16 * w[0];
 res += sample17 * w[1];
 res += sample18 * w[2];
 res += sample19 * w[3];
-w = texture(ravu_lut, vec2(0.6111111111111112, coord_y));
+w = texture(ravu_lut3, vec2(0.6111111111111112, coord_y));
 res += sample20 * w[0];
 res += sample21 * w[1];
 res += sample22 * w[2];
 res += sample23 * w[3];
-w = texture(ravu_lut, vec2(0.7222222222222222, coord_y));
+w = texture(ravu_lut3, vec2(0.7222222222222222, coord_y));
 res += sample24 * w[0];
 res += sample25 * w[1];
 res += sample26 * w[2];
 res += sample27 * w[3];
-w = texture(ravu_lut, vec2(0.8333333333333334, coord_y));
+w = texture(ravu_lut3, vec2(0.8333333333333334, coord_y));
 res += sample28 * w[0];
 res += sample29 * w[1];
 res += sample30 * w[2];
 res += sample31 * w[3];
-w = texture(ravu_lut, vec2(0.9444444444444444, coord_y));
+w = texture(ravu_lut3, vec2(0.9444444444444444, coord_y));
 res += sample32 * w[0];
 res += sample33 * w[1];
 res += sample34 * w[2];
@@ -250,7 +250,7 @@ return vec4(res, 0.0, 0.0);
 //!DESC RAVU (step2, chroma_center, r3)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut
+//!BIND ravu_lut3
 //!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int10
@@ -435,47 +435,47 @@ coherence = 2.0;
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut, vec2(0.05555555555555555, coord_y));
+w = texture(ravu_lut3, vec2(0.05555555555555555, coord_y));
 res += sample0 * w[0];
 res += sample1 * w[1];
 res += sample2 * w[2];
 res += sample3 * w[3];
-w = texture(ravu_lut, vec2(0.16666666666666666, coord_y));
+w = texture(ravu_lut3, vec2(0.16666666666666666, coord_y));
 res += sample4 * w[0];
 res += sample5 * w[1];
 res += sample6 * w[2];
 res += sample7 * w[3];
-w = texture(ravu_lut, vec2(0.2777777777777778, coord_y));
+w = texture(ravu_lut3, vec2(0.2777777777777778, coord_y));
 res += sample8 * w[0];
 res += sample9 * w[1];
 res += sample10 * w[2];
 res += sample11 * w[3];
-w = texture(ravu_lut, vec2(0.3888888888888889, coord_y));
+w = texture(ravu_lut3, vec2(0.3888888888888889, coord_y));
 res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-w = texture(ravu_lut, vec2(0.5, coord_y));
+w = texture(ravu_lut3, vec2(0.5, coord_y));
 res += sample16 * w[0];
 res += sample17 * w[1];
 res += sample18 * w[2];
 res += sample19 * w[3];
-w = texture(ravu_lut, vec2(0.6111111111111112, coord_y));
+w = texture(ravu_lut3, vec2(0.6111111111111112, coord_y));
 res += sample20 * w[0];
 res += sample21 * w[1];
 res += sample22 * w[2];
 res += sample23 * w[3];
-w = texture(ravu_lut, vec2(0.7222222222222222, coord_y));
+w = texture(ravu_lut3, vec2(0.7222222222222222, coord_y));
 res += sample24 * w[0];
 res += sample25 * w[1];
 res += sample26 * w[2];
 res += sample27 * w[3];
-w = texture(ravu_lut, vec2(0.8333333333333334, coord_y));
+w = texture(ravu_lut3, vec2(0.8333333333333334, coord_y));
 res += sample28 * w[0];
 res += sample29 * w[1];
 res += sample30 * w[2];
 res += sample31 * w[3];
-w = texture(ravu_lut, vec2(0.9444444444444444, coord_y));
+w = texture(ravu_lut3, vec2(0.9444444444444444, coord_y));
 res += sample32 * w[0];
 res += sample33 * w[1];
 res += sample34 * w[2];
@@ -486,7 +486,7 @@ return vec4(res, 0.0, 0.0);
 //!DESC RAVU (step3, chroma_center, r3)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut
+//!BIND ravu_lut3
 //!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int01
@@ -671,47 +671,47 @@ coherence = 2.0;
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut, vec2(0.05555555555555555, coord_y));
+w = texture(ravu_lut3, vec2(0.05555555555555555, coord_y));
 res += sample0 * w[0];
 res += sample1 * w[1];
 res += sample2 * w[2];
 res += sample3 * w[3];
-w = texture(ravu_lut, vec2(0.16666666666666666, coord_y));
+w = texture(ravu_lut3, vec2(0.16666666666666666, coord_y));
 res += sample4 * w[0];
 res += sample5 * w[1];
 res += sample6 * w[2];
 res += sample7 * w[3];
-w = texture(ravu_lut, vec2(0.2777777777777778, coord_y));
+w = texture(ravu_lut3, vec2(0.2777777777777778, coord_y));
 res += sample8 * w[0];
 res += sample9 * w[1];
 res += sample10 * w[2];
 res += sample11 * w[3];
-w = texture(ravu_lut, vec2(0.3888888888888889, coord_y));
+w = texture(ravu_lut3, vec2(0.3888888888888889, coord_y));
 res += sample12 * w[0];
 res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
-w = texture(ravu_lut, vec2(0.5, coord_y));
+w = texture(ravu_lut3, vec2(0.5, coord_y));
 res += sample16 * w[0];
 res += sample17 * w[1];
 res += sample18 * w[2];
 res += sample19 * w[3];
-w = texture(ravu_lut, vec2(0.6111111111111112, coord_y));
+w = texture(ravu_lut3, vec2(0.6111111111111112, coord_y));
 res += sample20 * w[0];
 res += sample21 * w[1];
 res += sample22 * w[2];
 res += sample23 * w[3];
-w = texture(ravu_lut, vec2(0.7222222222222222, coord_y));
+w = texture(ravu_lut3, vec2(0.7222222222222222, coord_y));
 res += sample24 * w[0];
 res += sample25 * w[1];
 res += sample26 * w[2];
 res += sample27 * w[3];
-w = texture(ravu_lut, vec2(0.8333333333333334, coord_y));
+w = texture(ravu_lut3, vec2(0.8333333333333334, coord_y));
 res += sample28 * w[0];
 res += sample29 * w[1];
 res += sample30 * w[2];
 res += sample31 * w[3];
-w = texture(ravu_lut, vec2(0.9444444444444444, coord_y));
+w = texture(ravu_lut3, vec2(0.9444444444444444, coord_y));
 res += sample32 * w[0];
 res += sample33 * w[1];
 res += sample34 * w[2];
@@ -740,7 +740,7 @@ vec4 hook() {
         return ravu_int11_texOff(-dir);
     }
 }
-//!TEXTURE ravu_lut
+//!TEXTURE ravu_lut3
 //!SIZE 9 648
 //!COMPONENTS 4
 //!FORMAT 32f
