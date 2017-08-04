@@ -371,8 +371,8 @@ vec4 hook() {
                     bound_tex_id = self.get_id_from_texname(tex)
                     # |(x, y) * 2 + bound_tex_id| is the offset of luma texel
                     # relative to upscaled HOOKED texels.
-                    offset_x = x * 2 + bound_tex_id[0] - 0.5 - chroma_offset[0]
-                    offset_y = y * 2 + bound_tex_id[1] - 0.5 - chroma_offset[1]
+                    offset_x = x * 2 + bound_tex_id[0] - chroma_offset[0]
+                    offset_y = y * 2 + bound_tex_id[1] - chroma_offset[1]
                     # use bilinear sampling for luma downscaling
                     GLSL('float %s = LUMA_texOff(vec2(%s,%s)).x;' % (luma(i, j), offset_x, offset_y))
 
@@ -479,8 +479,8 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
                 chroma_offset = self.get_chroma_offset()
                 bound_tex_id = self.get_id_from_texname(tex)
                 # |(group_base+(x,y)+offset_base)*2+bound_tex_id| is the luma texel id
-                offset_x = offset_base[0] * 2 + bound_tex_id[0] - chroma_offset[0]
-                offset_y = offset_base[1] * 2 + bound_tex_id[1] - chroma_offset[1]
+                offset_x = offset_base[0] * 2 + bound_tex_id[0] + 0.5 - chroma_offset[0]
+                offset_y = offset_base[1] * 2 + bound_tex_id[1] + 0.5 - chroma_offset[1]
                 GLSL('inp_luma%d[x][y] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(%s),float(group_base.y+y)*2.0+(%s))).x;' %
                      (tex_idx, offset_x, offset_y))
 
