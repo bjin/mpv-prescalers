@@ -237,30 +237,21 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
 """ % (math.pi, math.pi, eps, eps))
 
         # Extract convolution kernel based on quantization of (angle, strength, coherence)
-        def quantize(target_name, var_name, seps, l, r):
+        def quantize(var_name, seps, l, r):
             if l == r:
-                GLSL("%s = %d.0;\n" % (target_name, l))
-                return
+                return "%d.0" % l
             m = (l + r) // 2
-            GLSL("if (%s < %s) {" % (var_name, seps[m]))
-            quantize(target_name, var_name, seps, l, m)
-            GLSL("} else {")
-            quantize(target_name, var_name, seps, m + 1, r)
-            GLSL("}")
+            return "mix(%s, %s, %s >= %s)" % (quantize(var_name, seps, l, m),
+                                              quantize(var_name, seps, m + 1, r),
+                                              var_name,
+                                              seps[m])
 
         GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle, math.pi))
-
         if self.min_strength == [0.001, 0.002, 0.004, 0.008, 0.016, 0.032, 0.064, 0.128]:
             GLSL("float strength = clamp(floor(log2(lambda * 2000.0 + %s)), 0.0, 8.0);" % eps)
         else:
-            GLSL("float strength;")
-            quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
-
-        if self.min_coherence == [0.25, 0.5]:
-            GLSL("float coherence = mix(0.0, mix(1.0, 2.0, mu >= 0.5), mu >= 0.25);")
-        else:
-            GLSL("float coherence;")
-            quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
+            GLSL("float strength = %s;" % quantize("lambda", self.min_strength, 0, self.quant_strength - 1))
+        GLSL("float coherence = %s;" % quantize("mu", self.min_coherence, 0, self.quant_coherence - 1))
 
     def apply_convolution_kernel(self, samples_list):
         GLSL = self.add_glsl
