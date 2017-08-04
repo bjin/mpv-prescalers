@@ -224,24 +224,19 @@ class RAVU(userhook.UserHook):
                 GLSL("abd += vec3(gx * gx, gx * gy, gy * gy) * %s;" % gw)
 
         # Eigenanalysis of gradient matrix
-        eps = "1e-9"
+        eps = "1.192092896e-7"
         GLSL("""
 float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
-float V1x = b, V1y = L1 - a;
-if (abs(b) < %s) { V1x = 1.0; V1y = 0.0; }
 float sqrtL1 = sqrt(L1), sqrtL2 = sqrt(L2);
-float theta = mod(atan(V1y, V1x) + %s, %s);
+float theta = mix(mod(atan(L1 - a, b) + %s, %s), 0.0, abs(b) < %s);
 float lambda = sqrtL1;
-float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %s);
-""" % (eps, math.pi, math.pi, eps))
+float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s);
+""" % (math.pi, math.pi, eps, eps))
 
         # Extract convolution kernel based on quantization of (angle, strength, coherence)
-        GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle, math.pi))
-        GLSL("float strength, coherence;")
-
         def quantize(target_name, var_name, seps, l, r):
             if l == r:
                 GLSL("%s = %d.0;\n" % (target_name, l))
@@ -253,8 +248,19 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < %
             quantize(target_name, var_name, seps, m + 1, r)
             GLSL("}")
 
-        quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
-        quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
+        GLSL("float angle = floor(theta * %d.0 / %s);" % (self.quant_angle, math.pi))
+
+        if self.min_strength == [0.001, 0.002, 0.004, 0.008, 0.016, 0.032, 0.064, 0.128]:
+            GLSL("float strength = clamp(floor(log2(lambda * 2000.0 + %s)), 0.0, 8.0);" % eps)
+        else:
+            GLSL("float strength;")
+            quantize("strength", "lambda", self.min_strength, 0, self.quant_strength - 1)
+
+        if self.min_coherence == [0.25, 0.5]:
+            GLSL("float coherence = mix(0.0, mix(1.0, 2.0, mu >= 0.5), mu >= 0.25);")
+        else:
+            GLSL("float coherence;")
+            quantize("coherence", "mu", self.min_coherence, 0, self.quant_coherence - 1)
 
     def apply_convolution_kernel(self, samples_list):
         GLSL = self.add_glsl
