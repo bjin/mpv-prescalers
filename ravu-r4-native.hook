@@ -262,56 +262,13 @@ float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
-float V1x = b, V1y = L1 - a;
-if (abs(b) < 1e-9) { V1x = 1.0; V1y = 0.0; }
 float sqrtL1 = sqrt(L1), sqrtL2 = sqrt(L2);
-float theta = mod(atan(V1y, V1x) + 3.141592653589793, 3.141592653589793);
+float theta = mix(mod(atan(L1 - a, b) + 3.141592653589793, 3.141592653589793), 0.0, abs(b) < 1.192092896e-7);
 float lambda = sqrtL1;
-float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < 1e-9);
+float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < 1.192092896e-7);
 float angle = floor(theta * 24.0 / 3.141592653589793);
-float strength, coherence;
-if (lambda < 0.016) {
-if (lambda < 0.004) {
-if (lambda < 0.002) {
-if (lambda < 0.001) {
-strength = 0.0;
-} else {
-strength = 1.0;
-}
-} else {
-strength = 2.0;
-}
-} else {
-if (lambda < 0.008) {
-strength = 3.0;
-} else {
-strength = 4.0;
-}
-}
-} else {
-if (lambda < 0.064) {
-if (lambda < 0.032) {
-strength = 5.0;
-} else {
-strength = 6.0;
-}
-} else {
-if (lambda < 0.128) {
-strength = 7.0;
-} else {
-strength = 8.0;
-}
-}
-}
-if (mu < 0.5) {
-if (mu < 0.25) {
-coherence = 0.0;
-} else {
-coherence = 1.0;
-}
-} else {
-coherence = 2.0;
-}
+float strength = clamp(floor(log2(lambda * 2000.0 + 1.192092896e-7)), 0.0, 8.0);
+float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec4 res = vec4(0.0);
 vec4 w;
@@ -649,56 +606,13 @@ float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
-float V1x = b, V1y = L1 - a;
-if (abs(b) < 1e-9) { V1x = 1.0; V1y = 0.0; }
 float sqrtL1 = sqrt(L1), sqrtL2 = sqrt(L2);
-float theta = mod(atan(V1y, V1x) + 3.141592653589793, 3.141592653589793);
+float theta = mix(mod(atan(L1 - a, b) + 3.141592653589793, 3.141592653589793), 0.0, abs(b) < 1.192092896e-7);
 float lambda = sqrtL1;
-float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < 1e-9);
+float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < 1.192092896e-7);
 float angle = floor(theta * 24.0 / 3.141592653589793);
-float strength, coherence;
-if (lambda < 0.016) {
-if (lambda < 0.004) {
-if (lambda < 0.002) {
-if (lambda < 0.001) {
-strength = 0.0;
-} else {
-strength = 1.0;
-}
-} else {
-strength = 2.0;
-}
-} else {
-if (lambda < 0.008) {
-strength = 3.0;
-} else {
-strength = 4.0;
-}
-}
-} else {
-if (lambda < 0.064) {
-if (lambda < 0.032) {
-strength = 5.0;
-} else {
-strength = 6.0;
-}
-} else {
-if (lambda < 0.128) {
-strength = 7.0;
-} else {
-strength = 8.0;
-}
-}
-}
-if (mu < 0.5) {
-if (mu < 0.25) {
-coherence = 0.0;
-} else {
-coherence = 1.0;
-}
-} else {
-coherence = 2.0;
-}
+float strength = clamp(floor(log2(lambda * 2000.0 + 1.192092896e-7)), 0.0, 8.0);
+float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec4 res = vec4(0.0);
 vec4 w;
@@ -1036,56 +950,13 @@ float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
 float delta = sqrt(max(T * T / 4 - D, 0.0));
 float L1 = T / 2 + delta, L2 = T / 2 - delta;
-float V1x = b, V1y = L1 - a;
-if (abs(b) < 1e-9) { V1x = 1.0; V1y = 0.0; }
 float sqrtL1 = sqrt(L1), sqrtL2 = sqrt(L2);
-float theta = mod(atan(V1y, V1x) + 3.141592653589793, 3.141592653589793);
+float theta = mix(mod(atan(L1 - a, b) + 3.141592653589793, 3.141592653589793), 0.0, abs(b) < 1.192092896e-7);
 float lambda = sqrtL1;
-float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, (sqrtL1 + sqrtL2) < 1e-9);
+float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < 1.192092896e-7);
 float angle = floor(theta * 24.0 / 3.141592653589793);
-float strength, coherence;
-if (lambda < 0.016) {
-if (lambda < 0.004) {
-if (lambda < 0.002) {
-if (lambda < 0.001) {
-strength = 0.0;
-} else {
-strength = 1.0;
-}
-} else {
-strength = 2.0;
-}
-} else {
-if (lambda < 0.008) {
-strength = 3.0;
-} else {
-strength = 4.0;
-}
-}
-} else {
-if (lambda < 0.064) {
-if (lambda < 0.032) {
-strength = 5.0;
-} else {
-strength = 6.0;
-}
-} else {
-if (lambda < 0.128) {
-strength = 7.0;
-} else {
-strength = 8.0;
-}
-}
-}
-if (mu < 0.5) {
-if (mu < 0.25) {
-coherence = 0.0;
-} else {
-coherence = 1.0;
-}
-} else {
-coherence = 2.0;
-}
+float strength = clamp(floor(log2(lambda * 2000.0 + 1.192092896e-7)), 0.0, 8.0);
+float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec4 res = vec4(0.0);
 vec4 w;
