@@ -5,7 +5,7 @@ branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
 Shaders in [`gather/` directory](https://github.com/bjin/mpv-prescalers/tree/master/gather)
 and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/compute)
-are generally faster but requires recent version of OpenGL.
+are **generally faster** but requires recent version of OpenGL.
 Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
 
 # Usage
@@ -36,6 +36,9 @@ Suffix in the filename indicates the planes that the prescaler will upscale.
 * Without any suffix: Works on `YUV` video, upscale only luma plane. (like the old `prescale-luma=...` option in `mpv`).
 * `-chroma*`: Works on `YUV` video, upscale only chroma plane.
 * `-native-yuv`: Works on `YUV` video, upscale all planes after they are merged.
+  (If you really want to use these shaders for `RGB` video, you can use `--vf-add format=fmt=yuv444p16`.
+  But be aware that there is no guarantee of colorspace/depth conversion
+  correctness from `mpv` then.)
 * `-native`: Works on all video, upscale all planes after they are merged.
 
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
@@ -64,8 +67,6 @@ caveats for using those shaders:
 
 # Known Issue
 
-* `nnedi3-nns32-win8x6-{chroma,yuv,all}.hook` are extremely slow with certain
-  version of nvidia driver.
 * Some setup (macOS with AMD driver, or Mesa with old Intel card) are known to
   have buggy `textureGatherOffset` implementation, which might break `nnedi3`
   shaders.
