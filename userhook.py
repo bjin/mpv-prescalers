@@ -116,6 +116,11 @@ class UserHook:
         else:
             self.header[COMPUTE] = "%d %d" % (bw, bh)
 
+    def assert_native_yuv(self):
+        # Add some no-op cond to assert LUMA texture exists, rather make
+        # the shader failed to run than getting some random output.
+        self.add_cond("LUMA.w 0 >")
+
     def generate(self):
         headers = []
         for name in HEADERS:
@@ -131,13 +136,3 @@ class UserHook:
         if self.mappings:
             hook = Template(hook).substitute(self.mappings)
         return hook
-
-    def max_components(self):
-        s = set(self.header[HOOK])
-        s -= {"LUMA", "ALPHA", "ALPHA_SCALED"}
-        if len(s) == 0:
-            return 1
-        s -= {"CHROMA", "CHROMA_SCALED"}
-        if len(s) == 0:
-            return 2
-        return 4

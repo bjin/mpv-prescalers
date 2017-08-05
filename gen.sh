@@ -6,7 +6,7 @@ DIR="$(dirname "$0")"
 
 max_downscaling_ratio=1.6
 
-for target in all chroma luma yuv; do
+for target in luma chroma native-yuv; do
     suffix="-$target"
     [ "$target" = "luma" ] && suffix=""
     for nns in 16 32 64 128 256; do
@@ -20,7 +20,7 @@ for target in all chroma luma yuv; do
     done
 done
 
-for target in all chroma luma native native-yuv yuv; do
+for target in luma native native-yuv; do
     suffix="-$target"
     [ "$target" = "luma" ] && suffix=""
     file_name="superxbr$suffix.hook"

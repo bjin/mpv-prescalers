@@ -183,9 +183,7 @@ class RAVU(userhook.UserHook):
                 # Assumes Rec. 709
                 GLSL("const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);")
             elif self.profile == Profile.yuv:
-                # Add some no-op cond to assert LUMA texture exists, rather make
-                # the shader failed to run than getting some random output.
-                self.add_cond("LUMA.w 0 >")
+                self.assert_native_yuv()
         else:
             self.add_mappings(
                 sample_type="vec2",

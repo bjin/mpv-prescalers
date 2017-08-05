@@ -178,39 +178,31 @@ res = clamp(res, lo, hi);""")
                              (step.name, self.profile.name))
 
         if self.profile == Profile.luma:
-            comps = self.max_components()
-            args = ", ".join("superxbr(%d)" % i if i < comps else "0.0"
-                             for i in range(4))
-
             self.add_mappings(sample_type="float",
                               sample_zero="0.0",
                               sample4_type="vec4",
-                              function_args="int comp",
-                              hook_return_value="vec4(%s)" % args)
+                              hook_return_value="vec4(superxbr(), 0.0, 0.0, 0.0)")
         else:
             self.add_mappings(sample_type="vec4",
                               sample_zero="vec4(0.0)",
                               sample4_type="mat4",
-                              function_args="",
                               hook_return_value="superxbr()")
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
                 self.add_mappings(
                     color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
             elif self.profile == Profile.yuv:
-                # Add some no-op cond to assert LUMA texture exists, rather make
-                # the shader failed to run than getting some random output.
-                self.add_cond("LUMA.w 0 >")
+                self.assert_native_yuv()
 
         GLSL("""
-$sample_type superxbr($function_args) {
+$sample_type superxbr() {
 $sample_type i[4*4];
 $sample_type res;
 #define i(x,y) i[(x)*4+(y)]""")
 
         if self.profile == Profile.luma:
             GLSL('#define luma(x, y) i((x), (y))')
-            GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)[comp]')
+            GLSL('#define GET_SAMPLE(pos) HOOKED_texOff(pos)[0]')
             GLSL('#define SAMPLE4_MUL(sample4, w) dot((sample4), (w))')
         else:
             if self.profile == Profile.rgb:
@@ -276,13 +268,11 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    hooks = {"luma": ["LUMA"],
-             "chroma": ["CHROMA"],
-             "yuv": ["LUMA", "CHROMA"],
-             "all": ["LUMA", "CHROMA", "RGB", "XYZ"],
-             "native": ["MAIN"],
-             "native-yuv": ["NATIVE"]}
-    native_profiles = {"native": Profile.rgb, "native-yuv": Profile.yuv}
+    profile_mapping = {
+        "luma": (["LUMA"], Profile.luma),
+        "native": (["MAIN"], Profile.rgb),
+        "native-yuv": (["NATIVE"], Profile.yuv),
+    }
 
     parser = argparse.ArgumentParser(
         description="generate Super-xBR user shader for mpv")
@@ -290,7 +280,7 @@ if __name__ == "__main__":
         '-t',
         '--target',
         nargs=1,
-        choices=sorted(hooks.keys()),
+        choices=sorted(profile_mapping.keys()),
         default=["native"],
         help='target that shader is hooked on (default: native)')
     parser.add_argument('-s',
@@ -307,10 +297,7 @@ if __name__ == "__main__":
                         help='[0.0, 1.0] (default: 0.6)')
 
     args = parser.parse_args()
-    target = args.target[0]
-    hook = hooks[target]
-    profile = native_profiles[
-        target] if target in native_profiles else Profile.luma
+    hook, profile = profile_mapping[args.target[0]]
     option = Option(sharpness=args.sharpness[0],
                     edge_strength=args.edge_strength[0])
 

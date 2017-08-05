@@ -70,6 +70,12 @@ class Step(enum.Enum):
     step4 = 3
 
 
+class Profile(enum.Enum):
+    luma = 0
+    chroma = 1
+    yuv = 2
+
+
 class NNEDI3(userhook.UserHook):
 
     weight_offsets = [0, 1088, 3264, 7616, 16320, 33728, 35328, 38528, 44928, 57728]
@@ -83,9 +89,10 @@ class NNEDI3(userhook.UserHook):
     weight_fmt = struct.Struct("<i")
     assert weight_fmt.size == 4
 
-    def __init__(self, neurons, window, int_tex_name = "nnedi3_int", **args):
+    def __init__(self, profile, neurons, window, int_tex_name = "nnedi3_int", **args):
         super().__init__(**args)
 
+        self.profile = profile
         self.neurons = neurons.get_neurons()
         self.window_width = window.get_width()
         self.window_height = window.get_height()
@@ -134,8 +141,8 @@ class NNEDI3(userhook.UserHook):
         width = self.window_width
         height = self.window_height
 
-        self.set_description("NNEDI3 (%s, nns%d, win%dx%d)" %
-                             (step.name, self.neurons, width, height))
+        self.set_description("NNEDI3 (%s, %s, nns%d, win%dx%d)" %
+                             (step.name, self.profile.name, self.neurons, width, height))
 
         assert width % 2 == 0 and height % 2 == 0
         sample_count = width * height // 4
@@ -172,6 +179,14 @@ vec4 hook() {
 """ % (tex_name[0][0], tex_name[0][1], tex_name[1][0], tex_name[1][1]))
 
             return super().generate()
+
+        if self.profile == Profile.luma:
+            components = 1
+        elif self.profile == Profile.chroma:
+            components = 2
+        elif self.profile == Profile.yuv:
+            components = 3
+            self.assert_native_yuv()
 
         center_x = (width // 2 - 1) * 2
         center_y = (height // 2 - 1) * 2 + 1
@@ -267,7 +282,7 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 vec4 hook() {""")
 
         GLSL("vec4 ret = vec4(0.0);")
-        for comp in range(self.max_components()):
+        for comp in range(components):
             GLSL("vec4 samples%d[%d];" % (comp, sample_count))
             for i in range(sample_count):
                 tex, global_pos, window_pos = sampling_info[i]
@@ -294,10 +309,11 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    hooks = {"luma": ["LUMA"],
-             "chroma": ["CHROMA"],
-             "yuv": ["LUMA", "CHROMA"],
-             "all": ["LUMA", "CHROMA", "RGB", "XYZ"]}
+    profile_mapping = {
+        "luma": (["LUMA"], Profile.luma),
+        "chroma": (["CHROMA"], Profile.chroma),
+        "native-yuv": (["NATIVE"], Profile.yuv)
+    }
 
     neurons = {16: Neurons.nns16,
                32: Neurons.nns32,
@@ -312,7 +328,7 @@ if __name__ == "__main__":
     parser.add_argument('-t',
                         '--target',
                         nargs=1,
-                        choices=sorted(hooks.keys()),
+                        choices=sorted(profile_mapping.keys()),
                         default=["luma"],
                         help='target that shader is hooked on (default: luma)')
     parser.add_argument('-n',
@@ -339,14 +355,15 @@ if __name__ == "__main__":
                         help="enable use of textureGatherOffset (requires OpenGL 4.0)")
 
     args = parser.parse_args()
-    hook = hooks[args.target[0]]
+    hook, profile = profile_mapping[args.target[0]]
     neuron = neurons[args.nns[0]]
     window = windows[args.win[0]]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
 
-    target_tex = "LUMA" if hook == ["CHROMA"] else "OUTPUT"
-    gen = NNEDI3(neuron,
+    target_tex = "LUMA" if profile == Profile.chroma else "OUTPUT"
+    gen = NNEDI3(profile,
+                 neuron,
                  window,
                  hook=hook,
                  target_tex=target_tex,
