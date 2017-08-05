@@ -8,29 +8,42 @@ and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/co
 are generally faster but requires recent version of OpenGL.
 Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
 
-# Filenames
+# Usage
 
-Suffix in the filename indicates the type of planes shader is hooked on
-(`ravu` supports only luma and chroma planes):
+You only need to download shaders you actually use. The following part of this
+section assumes that they are in `shaders` directory in the `mpv` configure
+folder (usually `~/.config/mpv/shaders` on Linux).
 
-* Without any suffix: Triggered on luma plane only (like `prescale-luma=...` option in `mpv`).
-* `-chroma`: Triggered on chroma plane only.
-* `-yuv`: Triggered on both luma and chroma planes.
-* `-all`: Triggered on all source planes (including non-YUV formats).
+Use `opengl-shaders="prescaler.hook"` option to load those shaders. (This will
+override other user shaders, use `opengl-shaders-append` in that case)
+
+```
+opengl-shaders="~~/shaders/ravu-r3.hook"
+```
+
+All shaders are for one pass only. If you want to have `4x` upscaling, trigger
+the same shader twice. All the shaders here are generated with
+`max-downscaling-ratio` set to `1.6`. They will disable themself if they
+believe upscaling is not necessary.
+
+```
+opengl-shaders-append="~~/shaders/ravu-r3.hook"
+opengl-shaders-append="~~/shaders/ravu-r3.hook"
+```
+
+Suffix in the filename indicates the planes that the prescaler will upscale.
+
+* Without any suffix: Works on `YUV` video, upscale only luma plane. (like the old `prescale-luma=...` option in `mpv`).
+* `-chroma*`: Works on `YUV` video, upscale only chroma plane.
+* `-native-yuv`: Works on `YUV` video, upscale all planes after they are merged.
+* `-native`: Works on all video, upscale all planes after they are merged.
 
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
 
-For `ravu` prescaler, `radius` settings are indicated in the filename. Note
-that evaluation results shows that improvement by `radius=4` is minimal (less
-than `0.1dB` in PSNR), `radius=3` should be enough for daily purpose.
+For `ravu` prescaler, `radius` settings are indicated in the filename.
 
-In addition, `{superxbr,ravu*}-native.hook` are native implementations of
-`superxbr` and `ravu`, that will do the upscaling on RGB, and is most likely the one
-you want use. `{superxbr,ravu*}-native-yuv.hook` are similar shaders but require
-the original source to be YUV.
-
-`ravu-*-chroma-{center,left}-hook` are implementations of `ravu`, that
+`ravu-*-chroma-{center,left}` are implementations of `ravu`, that
 will use downscaled luma plane to calculate gradient and guide chroma planes
 upscaling. Due to current limitation of `mpv`'s hook system, there are some
 caveats for using those shaders:
@@ -48,34 +61,6 @@ caveats for using those shaders:
    for `chroma-center` shader.
 4. `cscale` will still be used to correct minor offset. An EWA scaler like
    `haasnsoft` is recommended for the `cscale` setting.
-
-# Usage
-
-You only need to download shaders you actually use. The following part of this
-section assumes that they are in `shaders` directory in the `mpv` configure
-folder (usually `~/.config/mpv/shaders` on Linux).
-
-Use `opengl-shaders="prescaler.hook"` option to load those shaders.
-
-```
-opengl-shaders="~~/shaders/nnedi3-nns32-win8x4.hook"
-```
-
-All shaders are for one pass only. If you want to have `4x` upscaling, trigger
-the same shader twice. For `4x` luma prescaling:
-
-```
-opengl-shaders="~~/shaders/nnedi3-nns32-win8x4.hook,~~/shaders/nnedi3-nns32-win8x4.hook"
-```
-
-Pay attention that for `4:2:0` sub-sampled `YUV` video, you need an additional
-chroma-only prescaling pass to match the post-prescaling size of luma and
-chroma planes (they are still not aligned though):
-
-```
-opengl-shaders="~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
-opengl-shaders="~~/shaders/nnedi3-nns32-win8x4-yuv.hook,~~/shaders/nnedi3-nns32-win8x4-chroma.hook"
-```
 
 # Known Issue
 

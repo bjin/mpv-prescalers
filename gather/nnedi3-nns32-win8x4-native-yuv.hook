@@ -12,12 +12,11 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC NNEDI3 (step1, nns32, win8x4)
-//!HOOK LUMA
-//!HOOK CHROMA
+//!DESC NNEDI3 (step1, yuv, nns32, win8x4)
+//!HOOK NATIVE
 //!BIND HOOKED
 //!SAVE nnedi3_int01
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
 #pragma optionNV(fastprecision on)
 float nnedi3(vec4 samples[8]) {
 float sum = 0.0, sumsq = 0.0;
@@ -89,15 +88,24 @@ samples1[5] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 
 samples1[6] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, -1), 1);
 samples1[7] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, 1), 1);
 ret[1] = nnedi3(samples1);
+vec4 samples2[8];
+samples2[0] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -1), 2);
+samples2[1] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 1), 2);
+samples2[2] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 2);
+samples2[3] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 1), 2);
+samples2[4] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 2);
+samples2[5] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 2);
+samples2[6] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, -1), 2);
+samples2[7] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, 1), 2);
+ret[2] = nnedi3(samples2);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step2, nns32, win8x4)
-//!HOOK LUMA
-//!HOOK CHROMA
+//!DESC NNEDI3 (step2, yuv, nns32, win8x4)
+//!HOOK NATIVE
 //!BIND HOOKED
 //!BIND nnedi3_int01
 //!SAVE nnedi3_int10
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
 #pragma optionNV(fastprecision on)
 float nnedi3(vec4 samples[8]) {
 float sum = 0.0, sumsq = 0.0;
@@ -169,15 +177,24 @@ samples1[5] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_in
 samples1[6] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, -2), 1);
 samples1[7] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, 0), 1);
 ret[1] = nnedi3(samples1);
+vec4 samples2[8];
+samples2[0] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 2);
+samples2[1] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 1), 2);
+samples2[2] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 2);
+samples2[3] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 2);
+samples2[4] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(-1, -2), 2);
+samples2[5] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(-1, 0), 2);
+samples2[6] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, -2), 2);
+samples2[7] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, 0), 2);
+ret[2] = nnedi3(samples2);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step3, nns32, win8x4)
-//!HOOK LUMA
-//!HOOK CHROMA
+//!DESC NNEDI3 (step3, yuv, nns32, win8x4)
+//!HOOK NATIVE
 //!BIND HOOKED
 //!BIND nnedi3_int01
 //!SAVE nnedi3_int11
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
 #pragma optionNV(fastprecision on)
 float nnedi3(vec4 samples[8]) {
 float sum = 0.0, sumsq = 0.0;
@@ -249,11 +266,20 @@ samples1[5] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_in
 samples1[6] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, -1), 1);
 samples1[7] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, 1), 1);
 ret[1] = nnedi3(samples1);
+vec4 samples2[8];
+samples2[0] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 2);
+samples2[1] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 1), 2);
+samples2[2] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 2);
+samples2[3] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 2);
+samples2[4] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(-1, -1), 2);
+samples2[5] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(-1, 1), 2);
+samples2[6] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, -1), 2);
+samples2[7] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_int01_pos, ivec2(1, 1), 2);
+ret[2] = nnedi3(samples2);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step4, nns32, win8x4)
-//!HOOK LUMA
-//!HOOK CHROMA
+//!DESC NNEDI3 (step4, yuv, nns32, win8x4)
+//!HOOK NATIVE
 //!BIND HOOKED
 //!BIND nnedi3_int01
 //!BIND nnedi3_int10

@@ -18,12 +18,12 @@
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-float superxbr(int comp) {
+float superxbr() {
 float i[4*4];
 float res;
 #define i(x,y) i[(x)*4+(y)]
 #define luma(x, y) i((x), (y))
-#define GET_SAMPLE(pos) HOOKED_texOff(pos)[comp]
+#define GET_SAMPLE(pos) HOOKED_texOff(pos)[0]
 #define SAMPLE4_MUL(sample4, w) dot((sample4), (w))
 vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
 dir = transpose(HOOKED_rot) * dir;
@@ -90,17 +90,17 @@ res = clamp(res, lo, hi);
 return res;
 }  // superxbr
 vec4 hook() {
-    return vec4(superxbr(0), 0.0, 0.0, 0.0);
+    return vec4(superxbr(), 0.0, 0.0, 0.0);
 }
 //!DESC Super-xBR (step2, luma)
 //!HOOK LUMA
 //!BIND HOOKED
-float superxbr(int comp) {
+float superxbr() {
 float i[4*4];
 float res;
 #define i(x,y) i[(x)*4+(y)]
 #define luma(x, y) i((x), (y))
-#define GET_SAMPLE(pos) HOOKED_texOff(pos)[comp]
+#define GET_SAMPLE(pos) HOOKED_texOff(pos)[0]
 #define SAMPLE4_MUL(sample4, w) dot((sample4), (w))
 vec2 dir = fract(HOOKED_pos * HOOKED_size / 2.0) - 0.5;
 if (dir.x * dir.y > 0.0)
@@ -159,5 +159,5 @@ res = clamp(res, lo, hi);
 return res;
 }  // superxbr
 vec4 hook() {
-    return vec4(superxbr(0), 0.0, 0.0, 0.0);
+    return vec4(superxbr(), 0.0, 0.0, 0.0);
 }

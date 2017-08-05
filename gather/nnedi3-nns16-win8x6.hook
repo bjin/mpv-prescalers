@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC NNEDI3 (step1, nns16, win8x6)
+//!DESC NNEDI3 (step1, luma, nns16, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int01
@@ -68,7 +68,7 @@ samples0[11] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3,
 ret[0] = nnedi3(samples0);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step2, nns16, win8x6)
+//!DESC NNEDI3 (step2, luma, nns16, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int01
@@ -125,7 +125,7 @@ samples0[11] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_i
 ret[0] = nnedi3(samples0);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step3, nns16, win8x6)
+//!DESC NNEDI3 (step3, luma, nns16, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int01
@@ -182,7 +182,7 @@ samples0[11] = nnedi3_int01_mul * textureGatherOffset(nnedi3_int01_raw, nnedi3_i
 ret[0] = nnedi3(samples0);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step4, nns16, win8x6)
+//!DESC NNEDI3 (step4, luma, nns16, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int01

@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC NNEDI3 (step1, nns256, win8x6)
+//!DESC NNEDI3 (step1, luma, nns256, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int01
@@ -344,7 +344,7 @@ samples0[11][3] = HOOKED_texOff(vec2(3.0, 2.0))[0];
 ret[0] = nnedi3(samples0);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step2, nns256, win8x6)
+//!DESC NNEDI3 (step2, luma, nns256, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int01
@@ -677,7 +677,7 @@ samples0[11][3] = nnedi3_int01_texOff(vec2(2.0, 0.0))[0];
 ret[0] = nnedi3(samples0);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step3, nns256, win8x6)
+//!DESC NNEDI3 (step3, luma, nns256, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int01
@@ -1010,7 +1010,7 @@ samples0[11][3] = nnedi3_int01_texOff(vec2(2.0, 1.0))[0];
 ret[0] = nnedi3(samples0);
 return ret;
 }  // hook
-//!DESC NNEDI3 (step4, nns256, win8x6)
+//!DESC NNEDI3 (step4, luma, nns256, win8x6)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int01
