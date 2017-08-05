@@ -163,6 +163,7 @@ class NNEDI3(userhook.UserHook):
             self.bind_tex(tex_name[1][0])
             self.bind_tex(tex_name[1][1])
 
+            # FIXME: get rid of branching (is it even possible?)
             GLSL("""
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
