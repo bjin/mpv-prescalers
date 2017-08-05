@@ -8,14 +8,14 @@ For the generated user shaders, check the [master branch](https://github.com/bji
 Python 3 is required. `./gen.sh` will generate all user shaders in
 current work directory.
 
-Alternatively, you could generate shaders with customized options:
+Alternatively, you could generate shader with customized options:
 ```
-./nnedi3.py --target yuv --nns 32 --win 8x4 --max-downscaling-ratio 1.8 > ~/.config/mpv/shaders/nnedi3.hook
+./nnedi3.py --target luma --nns 32 --win 8x4 --max-downscaling-ratio 1.8 > ~/.config/mpv/shaders/nnedi3.hook
 ```
 
 Or play video directly with scripts
 ```
-mpv --opengl-shaders=<(path/to/superxbr.py --target=native) video.mkv
+mpv --opengl-shaders=<(path/to/ravu.py --weights-file path/to/ravu_weights-r3.py --use-gather) video.mkv
 ```
 
 # About RAVU
