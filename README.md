@@ -23,8 +23,7 @@ opengl-shaders="~~/shaders/ravu-r3.hook"
 
 All shaders are for one pass only. If you want to have `4x` upscaling, trigger
 the same shader twice. All the shaders here are generated with
-`max-downscaling-ratio` set to `1.6`. They will disable themself if they
-believe upscaling is not necessary.
+`max-downscaling-ratio` set to `1.6`. They will be disabled if upscaling is not necessary.
 
 ```
 opengl-shaders-append="~~/shaders/ravu-r3.hook"
@@ -44,7 +43,7 @@ Suffix in the filename indicates the planes that the prescaler will upscale.
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
 
-For `ravu` prescaler, `radius` settings are indicated in the filename.
+For `ravu` prescaler, `radius` setting is indicated in the filename.
 
 `ravu-*-chroma-{center,left}` are implementations of `ravu`, that
 will use downscaled luma plane to calculate gradient and guide chroma planes
@@ -64,12 +63,6 @@ caveats for using those shaders:
    for `chroma-center` shader.
 4. `cscale` will still be used to correct minor offset. An EWA scaler like
    `haasnsoft` is recommended for the `cscale` setting.
-
-# Known Issue
-
-* Some setup (macOS with AMD driver, or Mesa with old Intel card) are known to
-  have buggy `textureGatherOffset` implementation, which might break `nnedi3`
-  shaders.
 
 # About RAVU
 
