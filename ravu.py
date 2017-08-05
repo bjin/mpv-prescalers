@@ -108,6 +108,13 @@ class RAVU(userhook.UserHook):
             return (0.0, 0.0)
         raise Exception("not a chroma profile: %s" % self.profile)
 
+    def is_luma_required(self, x, y):
+        n = self.radius * 2
+
+        border_width = self.radius - self.gradient_radius
+
+        return min(x, n - 1 - x) >= border_width or min(y, n - 1 - y) >= border_width
+
     def get_sample_positions(self, offset, use_gather=False):
         n = self.radius * 2
 
@@ -363,6 +370,8 @@ vec4 hook() {
                 if (x, y) not in already_gathered:
                     GLSL('$sample_type %s = %s_texOff(vec2(%d.0, %d.0))$comps_swizzle;' %
                          (samples[i, j], tex, x, y))
+                if not self.is_luma_required(i, j):
+                    continue
                 if self.profile == Profile.rgb:
                     GLSL('float %s = dot(%s, color_primary);' % (luma(i, j), samples[i, j]))
                 elif self.profile in [Profile.chroma_left, Profile.chroma_center]:
@@ -497,6 +506,8 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
 
             luma = lambda x, y: "luma%d" % (x * n + y)
             for sample_xy, (x, y) in sorted((samples_mapping[key], key) for key in samples_mapping.keys()):
+                if not self.is_luma_required(x, y):
+                    continue
                 luma_xy = luma(x, y)
                 if self.profile == Profile.luma:
                     GLSL("float %s = %s;" % (luma_xy, sample_xy))
