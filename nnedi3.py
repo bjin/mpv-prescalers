@@ -187,7 +187,7 @@ vec4 hook() {
             components = 2
         elif self.profile == Profile.yuv:
             components = 3
-            self.assert_native_yuv()
+            self.assert_yuv()
 
         center_x = (width // 2 - 1) * 2
         center_y = (height // 2 - 1) * 2 + 1
@@ -313,7 +313,7 @@ if __name__ == "__main__":
     profile_mapping = {
         "luma": (["LUMA"], Profile.luma),
         "chroma": (["CHROMA"], Profile.chroma),
-        "native-yuv": (["NATIVE"], Profile.yuv)
+        "yuv": (["NATIVE"], Profile.yuv)
     }
 
     neurons = {16: Neurons.nns16,

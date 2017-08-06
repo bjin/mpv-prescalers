@@ -192,7 +192,7 @@ res = clamp(res, lo, hi);""")
                 self.add_mappings(
                     color_primary="vec4(0.2126, 0.7152, 0.0722, 0)")
             elif self.profile == Profile.yuv:
-                self.assert_native_yuv()
+                self.assert_yuv()
 
         GLSL("""
 $sample_type superxbr() {
@@ -270,8 +270,8 @@ if __name__ == "__main__":
 
     profile_mapping = {
         "luma": (["LUMA"], Profile.luma),
-        "native": (["MAIN"], Profile.rgb),
-        "native-yuv": (["NATIVE"], Profile.yuv),
+        "rgb": (["MAIN"], Profile.rgb),
+        "yuv": (["NATIVE"], Profile.yuv),
     }
 
     parser = argparse.ArgumentParser(
@@ -281,8 +281,8 @@ if __name__ == "__main__":
         '--target',
         nargs=1,
         choices=sorted(profile_mapping.keys()),
-        default=["native"],
-        help='target that shader is hooked on (default: native)')
+        default=["rgb"],
+        help='target that shader is hooked on (default: rgb)')
     parser.add_argument('-s',
                         '--sharpness',
                         nargs=1,

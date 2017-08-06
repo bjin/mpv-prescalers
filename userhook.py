@@ -116,7 +116,7 @@ class UserHook:
         else:
             self.header[COMPUTE] = "%d %d" % (bw, bh)
 
-    def assert_native_yuv(self):
+    def assert_yuv(self):
         # Add some no-op cond to assert LUMA texture exists, rather make
         # the shader failed to run than getting some random output.
         self.add_cond("LUMA.w 0 >")

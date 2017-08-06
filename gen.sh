@@ -6,7 +6,7 @@ DIR="$(dirname "$0")"
 
 max_downscaling_ratio=1.6
 
-for target in luma chroma native-yuv; do
+for target in luma chroma yuv; do
     suffix="-$target"
     [ "$target" = "luma" ] && suffix=""
     for nns in 16 32 64 128 256; do
@@ -20,14 +20,14 @@ for target in luma chroma native-yuv; do
     done
 done
 
-for target in luma native native-yuv; do
+for target in luma yuv rgb; do
     suffix="-$target"
     [ "$target" = "luma" ] && suffix=""
     file_name="superxbr$suffix.hook"
     "$DIR/superxbr.py" --target "$target" > "$file_name"
 done
 
-for target in luma native native-yuv chroma-left chroma-center; do
+for target in luma chroma-left chroma-center yuv rgb; do
     suffix="-$target"
     [ "$target" = "luma" ] && suffix=""
     for radius in 2 3 4; do

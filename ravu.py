@@ -190,7 +190,7 @@ class RAVU(userhook.UserHook):
                 # Assumes Rec. 709
                 GLSL("const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);")
             elif self.profile == Profile.yuv:
-                self.assert_native_yuv()
+                self.assert_yuv()
         else:
             self.add_mappings(
                 sample_type="vec2",
@@ -549,8 +549,8 @@ if __name__ == "__main__":
 
     profile_mapping = {
         "luma": (["LUMA"], Profile.luma),
-        "native": (["MAIN"], Profile.rgb),
-        "native-yuv": (["NATIVE"], Profile.yuv),
+        "rgb": (["MAIN"], Profile.rgb),
+        "yuv": (["NATIVE"], Profile.yuv),
         "chroma-left": (["CHROMA"], Profile.chroma_left),
         "chroma-center": (["CHROMA"], Profile.chroma_center)
     }
@@ -562,8 +562,8 @@ if __name__ == "__main__":
         '--target',
         nargs=1,
         choices=sorted(profile_mapping.keys()),
-        default=["native"],
-        help='target that shader is hooked on (default: native)')
+        default=["rgb"],
+        help='target that shader is hooked on (default: rgb)')
     parser.add_argument(
         '-w',
         '--weights-file',
