@@ -34,11 +34,12 @@ Suffix in the filename indicates the planes that the prescaler will upscale.
 
 * Without any suffix: Works on `YUV` video, upscale only luma plane. (like the old `prescale-luma=...` option in `mpv`).
 * `-chroma*`: Works on `YUV` video, upscale only chroma plane.
-* `-native-yuv`: Works on `YUV` video, upscale all planes after they are merged.
+* `-yuv`: Works on `YUV` video, upscale all planes after they are merged.
   (If you really want to use these shaders for `RGB` video, you can use `--vf-add format=fmt=yuv444p16`.
   But be aware that there is no guarantee of colorspace/depth conversion
   correctness from `mpv` then.)
-* `-native`: Works on all video, upscale all planes after they are merged.
+* `-rgb`: Works on all video, upscale all planes after they are merged and
+  converted to `RGB`.
 
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
@@ -53,7 +54,7 @@ caveats for using those shaders:
 1. It works with `YUV 4:2:0` format only, and will disable itself if size is not
    matched exactly, this includes odd width/height of luma plane.
 2. It will **NOT** work with luma prescalers (for example `ravu-r3.hook`).
-   You should use `native` and `native-yuv` shaders for further upscaling.
+   You should use `rgb` and `yuv` shaders for further upscaling.
 3. You need to explicitly state the chroma location, by choosing one of those
    `chroma-left` and `chroma-center` shaders. If you don't know how to/don't
    bother to check chroma location of video, or don't watch ancient videos,
