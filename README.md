@@ -6,6 +6,8 @@ branch](https://github.com/bjin/mpv-prescalers/tree/source).
 Shaders in [`gather/` directory](https://github.com/bjin/mpv-prescalers/tree/master/gather)
 and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/compute)
 are **generally faster** but requires recent version of OpenGL.
+[`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/compute) version is faster, and requires OpenGL 4.3.
+[`gather/` directory](https://github.com/bjin/mpv-prescalers/tree/master/gather) requires OpenGL 4.0.
 Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
 
 # Usage
