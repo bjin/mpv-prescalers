@@ -476,8 +476,8 @@ void hook() {""")
 for (int x = int(gl_LocalInvocationID.x); x < %d; x += int(gl_WorkGroupSize.x))
 for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) {""" % (array_size[0], array_size[1]))
 
-            GLSL("inp%d[x][y] = %s_mul * texelFetch(%s_raw, group_base + ivec2(x+(%d),y+(%d)), 0)$comps_swizzle;" %
-                 (tex_idx, tex, tex, offset_base[0], offset_base[1]))
+            GLSL("inp%d[x][y] = %s_tex(%s_pt * vec2(float(group_base.x+x)+(%s), float(group_base.y+y)+(%s)))$comps_swizzle;" %
+                 (tex_idx, tex, tex, offset_base[0] + 0.5, offset_base[1] + 0.5))
 
             if self.profile == Profile.yuv:
                 GLSL("inp_luma%d[x][y] = inp%d[x][y][0];" % (tex_idx, tex_idx))
