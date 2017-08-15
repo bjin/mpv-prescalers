@@ -24,7 +24,7 @@ void hook() {
 ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
 for (int x = int(gl_LocalInvocationID.x); x < 39; x += int(gl_WorkGroupSize.x))
 for (int y = int(gl_LocalInvocationID.y); y < 15; y += int(gl_WorkGroupSize.y)) {
-inp0[x][y] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x+(-3),y+(-3)), 0).x;
+inp0[x][y] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-2.5), float(group_base.y+y)+(-2.5))).x;
 }
 groupMemoryBarrier();
 barrier();
@@ -313,11 +313,11 @@ void hook() {
 ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
 for (int x = int(gl_LocalInvocationID.x); x < 39; x += int(gl_WorkGroupSize.x))
 for (int y = int(gl_LocalInvocationID.y); y < 15; y += int(gl_WorkGroupSize.y)) {
-inp0[x][y] = ravu_int11_mul * texelFetch(ravu_int11_raw, group_base + ivec2(x+(-4),y+(-4)), 0).x;
+inp0[x][y] = ravu_int11_tex(ravu_int11_pt * vec2(float(group_base.x+x)+(-3.5), float(group_base.y+y)+(-3.5))).x;
 }
 for (int x = int(gl_LocalInvocationID.x); x < 39; x += int(gl_WorkGroupSize.x))
 for (int y = int(gl_LocalInvocationID.y); y < 15; y += int(gl_WorkGroupSize.y)) {
-inp1[x][y] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x+(-3),y+(-3)), 0).x;
+inp1[x][y] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-2.5), float(group_base.y+y)+(-2.5))).x;
 }
 groupMemoryBarrier();
 barrier();
