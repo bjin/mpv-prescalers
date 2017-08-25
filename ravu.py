@@ -71,7 +71,7 @@ class RAVU(userhook.UserHook):
         self.tex_name = [["HOOKED", int_tex_name + "01"],
                          [int_tex_name + "10", int_tex_name + "11"]]
 
-    def generate_tex(self):
+    def generate_tex(self, use_float16=False):
         import struct
 
         height = self.quant_angle * self.quant_strength * self.quant_coherence
@@ -85,10 +85,12 @@ class RAVU(userhook.UserHook):
                     weights.extend(self.model_weights[i][j][k])
         weights_raw = struct.pack('<%df' % len(weights), *weights).hex()
 
+        tex_format = "rgba%df" % (16 if use_float16 else 32)
+
         headers = [
             "//!TEXTURE %s" % self.lut_name,
             "//!SIZE %d %d" % (width, height),
-            "//!FORMAT rgba32f",
+            "//!FORMAT %s" % tex_format,
             "//!FILTER NEAREST"
         ]
 
@@ -593,6 +595,10 @@ if __name__ == "__main__":
         default=[32, 8],
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
+    parser.add_argument(
+        '--use-float16',
+        action='store_true',
+        help="use float16 as LUT texture format")
 
     args = parser.parse_args()
     target = args.target[0]
@@ -602,6 +608,7 @@ if __name__ == "__main__":
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
+    use_float16 = args.use_float16
 
     gen = RAVU(hook=hook,
                profile=profile,
@@ -616,4 +623,4 @@ if __name__ == "__main__":
         else:
             shader = gen.generate(step, use_gather)
         sys.stdout.write(shader)
-    sys.stdout.write(gen.generate_tex())
+    sys.stdout.write(gen.generate_tex(use_float16))
