@@ -129,7 +129,7 @@ r2 += dot(g7, texture(ravu_lite_lut3, vec2(0.8703703703703703, coord_y)));
 r0 += dot(g8, texture(ravu_lite_lut3, vec2(0.9074074074074074, coord_y)));
 r1 += dot(g8, texture(ravu_lite_lut3, vec2(0.9444444444444444, coord_y)));
 r2 += dot(g8, texture(ravu_lite_lut3, vec2(0.9814814814814815, coord_y)));
-vec4 res = clamp(vec4(0.0), vec4(1.0), vec4(g4.w, r0, r1, r2));
+vec4 res = clamp(vec4(g4.w, r0, r1, r2), vec4(0.0), vec4(1.0));
 imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(0, 0), vec4(res[0], 0.0, 0.0, 0.0));
 imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(0, 1), vec4(res[1], 0.0, 0.0, 0.0));
 imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(1, 0), vec4(res[2], 0.0, 0.0, 0.0));

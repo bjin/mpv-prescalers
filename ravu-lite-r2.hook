@@ -99,7 +99,7 @@ r2 += dot(g2, texture(ravu_lite_lut2, vec2(0.7083333333333334, coord_y)));
 r0 += dot(g3, texture(ravu_lite_lut2, vec2(0.7916666666666666, coord_y)));
 r1 += dot(g3, texture(ravu_lite_lut2, vec2(0.875, coord_y)));
 r2 += dot(g3, texture(ravu_lite_lut2, vec2(0.9583333333333334, coord_y)));
-vec4 res = clamp(vec4(0.0), vec4(1.0), vec4(g0.y, r0, r1, r2));
+vec4 res = clamp(vec4(g0.y, r0, r1, r2), vec4(0.0), vec4(1.0));
 return res;
 }
 //!DESC RAVU-Lite (step2, r2)
