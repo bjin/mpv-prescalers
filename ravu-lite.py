@@ -172,7 +172,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                 coord_x = (float(i * 3 + j) + 0.5) / float(blocks)
                 GLSL("r%d += dot(g%d, texture(%s, vec2(%s, coord_y)));" % (j, i, self.lut_name, coord_x))
 
-        GLSL("vec4 res = clamp(vec4(0.0), vec4(1.0), vec4(%s, r0, r1, r2));" % self.luma[(self.radius - 1) * n + (self.radius - 1)])
+        GLSL("vec4 res = clamp(vec4(%s, r0, r1, r2), vec4(0.0), vec4(1.0));" % self.luma[(self.radius - 1) * n + (self.radius - 1)])
 
     def generate(self, step, use_gather=False):
         self.reset()
