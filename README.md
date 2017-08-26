@@ -31,6 +31,8 @@ From a high level view, it's kind of similar to EWA scalers, but more adaptive
 to local gradient features, and would produce lesser aliasing. Like EWA scalers,
 currently, plain RAVU would also produce noticeable ringings.
 
+RAVU-Lite is a faster, slightly-lower-quality and luma-only variant of RAVU.
+
 # License
 
 `nnedi3` and `superxbr` were ported from [MPDN

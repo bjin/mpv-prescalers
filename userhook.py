@@ -56,7 +56,7 @@ class UserHook:
         self.header = {}
         self.header[HOOK] = self.hook
         if self.components:
-            self.headers[COMPONENTS] = [str(self.components)]
+            self.headers[COMPONENTS] = str(self.components)
         self.header[DESC] = None
         self.header[BIND] = [HOOKED]
         self.header[SAVE] = None
@@ -115,6 +115,9 @@ class UserHook:
             self.header[COMPUTE] = "%d %d %d %d" % (bw, bh, tw, th)
         else:
             self.header[COMPUTE] = "%d %d" % (bw, bh)
+
+    def set_components(self, comp):
+        self.header[COMPONENTS] = str(comp)
 
     def assert_yuv(self):
         # Add some no-op cond to assert LUMA texture exists, rather make
