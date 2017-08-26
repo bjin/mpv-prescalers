@@ -321,9 +321,9 @@ if __name__ == "__main__":
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
     parser.add_argument(
-        '--use-float32',
+        '--use-float16',
         action='store_true',
-        help="use float32 as LUT texture format")
+        help="use float16 as LUT texture format")
 
     args = parser.parse_args()
     weights_file = args.weights_file[0]
@@ -331,7 +331,7 @@ if __name__ == "__main__":
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
-    use_float16 = not args.use_float32
+    use_float16 = args.use_float16
 
     gen = RAVU_Lite(hook=["LUMA"],
                     weights_file=weights_file,

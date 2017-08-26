@@ -46,11 +46,11 @@ done
 for radius in 2 3 4; do
     file_name="ravu-lite-r$radius.hook"
     weights_file="$DIR/ravu-lite_weights-r$radius.py"
-    "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" > "$file_name"
+    "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 > "$file_name"
     if [ -d gather ]; then
-        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
+        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 --use-gather > "gather/$file_name"
     fi
     if [ -d compute ]; then
-        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-compute-shader > "compute/$file_name"
+        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 --use-compute-shader > "compute/$file_name"
     fi
 done
