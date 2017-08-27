@@ -235,8 +235,8 @@ class RAVU(userhook.UserHook):
         GLSL("""
 float a = abd.x, b = abd.y, d = abd.z;
 float T = a + d, D = a * d - b * b;
-float delta = sqrt(max(T * T / 4 - D, 0.0));
-float L1 = T / 2 + delta, L2 = T / 2 - delta;
+float delta = sqrt(max(T * T / 4.0 - D, 0.0));
+float L1 = T / 2.0 + delta, L2 = T / 2.0 - delta;
 float sqrtL1 = sqrt(L1), sqrtL2 = sqrt(L2);
 float theta = mix(mod(atan(L1 - a, b) + %s, %s), 0.0, abs(b) < %s);
 float lambda = sqrtL1;
