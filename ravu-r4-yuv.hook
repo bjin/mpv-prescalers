@@ -860,12 +860,12 @@ return res;
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-    if (dir.x < 0) {
-        if (dir.y < 0)
+    if (dir.x < 0.0) {
+        if (dir.y < 0.0)
             return HOOKED_texOff(-dir);
         return ravu_int01_texOff(-dir);
     } else {
-        if (dir.y < 0)
+        if (dir.y < 0.0)
             return ravu_int10_texOff(-dir);
         return ravu_int11_texOff(-dir);
     }

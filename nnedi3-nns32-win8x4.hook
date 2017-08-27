@@ -303,12 +303,12 @@ return ret;
 #pragma optionNV(fastprecision on)
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-    if (dir.x < 0) {
-        if (dir.y < 0)
+    if (dir.x < 0.0) {
+        if (dir.y < 0.0)
             return HOOKED_texOff(-dir);
         return nnedi3_int01_texOff(-dir);
     } else {
-        if (dir.y < 0)
+        if (dir.y < 0.0)
             return nnedi3_int10_texOff(-dir);
         return nnedi3_int11_texOff(-dir);
     }

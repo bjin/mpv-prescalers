@@ -548,12 +548,12 @@ return vec4(res, 0.0, 0.0);
 //!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-    if (dir.x < 0) {
-        if (dir.y < 0)
+    if (dir.x < 0.0) {
+        if (dir.y < 0.0)
             return HOOKED_texOff(-dir);
         return ravu_int01_texOff(-dir);
     } else {
-        if (dir.y < 0)
+        if (dir.y < 0.0)
             return ravu_int10_texOff(-dir);
         return ravu_int11_texOff(-dir);
     }
