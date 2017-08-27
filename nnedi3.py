@@ -167,12 +167,12 @@ class NNEDI3(userhook.UserHook):
             GLSL("""
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-    if (dir.x < 0) {
-        if (dir.y < 0)
+    if (dir.x < 0.0) {
+        if (dir.y < 0.0)
             return %s_texOff(-dir);
         return %s_texOff(-dir);
     } else {
-        if (dir.y < 0)
+        if (dir.y < 0.0)
             return %s_texOff(-dir);
         return %s_texOff(-dir);
     }
