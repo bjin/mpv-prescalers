@@ -18,22 +18,22 @@
 //!BIND ravu_lut2
 //!SAVE ravu_int11
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
-vec4 sample0 = HOOKED_texOff(vec2(-1.0, -1.0));
-vec4 sample1 = HOOKED_texOff(vec2(-1.0, 0.0));
-vec4 sample2 = HOOKED_texOff(vec2(-1.0, 1.0));
-vec4 sample3 = HOOKED_texOff(vec2(-1.0, 2.0));
-vec4 sample4 = HOOKED_texOff(vec2(0.0, -1.0));
-vec4 sample5 = HOOKED_texOff(vec2(0.0, 0.0));
-vec4 sample6 = HOOKED_texOff(vec2(0.0, 1.0));
-vec4 sample7 = HOOKED_texOff(vec2(0.0, 2.0));
-vec4 sample8 = HOOKED_texOff(vec2(1.0, -1.0));
-vec4 sample9 = HOOKED_texOff(vec2(1.0, 0.0));
-vec4 sample10 = HOOKED_texOff(vec2(1.0, 1.0));
-vec4 sample11 = HOOKED_texOff(vec2(1.0, 2.0));
-vec4 sample12 = HOOKED_texOff(vec2(2.0, -1.0));
-vec4 sample13 = HOOKED_texOff(vec2(2.0, 0.0));
-vec4 sample14 = HOOKED_texOff(vec2(2.0, 1.0));
-vec4 sample15 = HOOKED_texOff(vec2(2.0, 2.0));
+vec3 sample0 = HOOKED_texOff(vec2(-1.0, -1.0)).xyz;
+vec3 sample1 = HOOKED_texOff(vec2(-1.0, 0.0)).xyz;
+vec3 sample2 = HOOKED_texOff(vec2(-1.0, 1.0)).xyz;
+vec3 sample3 = HOOKED_texOff(vec2(-1.0, 2.0)).xyz;
+vec3 sample4 = HOOKED_texOff(vec2(0.0, -1.0)).xyz;
+vec3 sample5 = HOOKED_texOff(vec2(0.0, 0.0)).xyz;
+vec3 sample6 = HOOKED_texOff(vec2(0.0, 1.0)).xyz;
+vec3 sample7 = HOOKED_texOff(vec2(0.0, 2.0)).xyz;
+vec3 sample8 = HOOKED_texOff(vec2(1.0, -1.0)).xyz;
+vec3 sample9 = HOOKED_texOff(vec2(1.0, 0.0)).xyz;
+vec3 sample10 = HOOKED_texOff(vec2(1.0, 1.0)).xyz;
+vec3 sample11 = HOOKED_texOff(vec2(1.0, 2.0)).xyz;
+vec3 sample12 = HOOKED_texOff(vec2(2.0, -1.0)).xyz;
+vec3 sample13 = HOOKED_texOff(vec2(2.0, 0.0)).xyz;
+vec3 sample14 = HOOKED_texOff(vec2(2.0, 1.0)).xyz;
+vec3 sample15 = HOOKED_texOff(vec2(2.0, 2.0)).xyz;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
@@ -97,7 +97,7 @@ float angle = floor(theta * 24.0 / 3.141592653589793);
 float strength = clamp(floor(log2(lambda * 2000.0 + 1.192092896e-7)), 0.0, 8.0);
 float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
-vec4 res = vec4(0.0);
+vec3 res = vec3(0.0);
 vec4 w;
 w = texture(ravu_lut2, vec2(0.125, coord_y));
 res += sample0 * w[0];
@@ -120,7 +120,7 @@ res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
 res = clamp(res, 0.0, 1.0);
-return res;
+return vec4(res, 0.0);
 }
 //!DESC RAVU (step2, yuv, r2)
 //!HOOK NATIVE
@@ -129,22 +129,22 @@ return res;
 //!BIND ravu_int11
 //!SAVE ravu_int10
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
-vec4 sample0 = HOOKED_texOff(vec2(-1.0, 0.0));
-vec4 sample8 = HOOKED_texOff(vec2(0.0, -1.0));
-vec4 sample5 = HOOKED_texOff(vec2(0.0, 0.0));
-vec4 sample2 = HOOKED_texOff(vec2(0.0, 1.0));
-vec4 sample13 = HOOKED_texOff(vec2(1.0, -1.0));
-vec4 sample10 = HOOKED_texOff(vec2(1.0, 0.0));
-vec4 sample7 = HOOKED_texOff(vec2(1.0, 1.0));
-vec4 sample15 = HOOKED_texOff(vec2(2.0, 0.0));
-vec4 sample4 = ravu_int11_texOff(vec2(-1.0, -1.0));
-vec4 sample1 = ravu_int11_texOff(vec2(-1.0, 0.0));
-vec4 sample12 = ravu_int11_texOff(vec2(0.0, -2.0));
-vec4 sample9 = ravu_int11_texOff(vec2(0.0, -1.0));
-vec4 sample6 = ravu_int11_texOff(vec2(0.0, 0.0));
-vec4 sample3 = ravu_int11_texOff(vec2(0.0, 1.0));
-vec4 sample14 = ravu_int11_texOff(vec2(1.0, -1.0));
-vec4 sample11 = ravu_int11_texOff(vec2(1.0, 0.0));
+vec3 sample0 = HOOKED_texOff(vec2(-1.0, 0.0)).xyz;
+vec3 sample8 = HOOKED_texOff(vec2(0.0, -1.0)).xyz;
+vec3 sample5 = HOOKED_texOff(vec2(0.0, 0.0)).xyz;
+vec3 sample2 = HOOKED_texOff(vec2(0.0, 1.0)).xyz;
+vec3 sample13 = HOOKED_texOff(vec2(1.0, -1.0)).xyz;
+vec3 sample10 = HOOKED_texOff(vec2(1.0, 0.0)).xyz;
+vec3 sample7 = HOOKED_texOff(vec2(1.0, 1.0)).xyz;
+vec3 sample15 = HOOKED_texOff(vec2(2.0, 0.0)).xyz;
+vec3 sample4 = ravu_int11_texOff(vec2(-1.0, -1.0)).xyz;
+vec3 sample1 = ravu_int11_texOff(vec2(-1.0, 0.0)).xyz;
+vec3 sample12 = ravu_int11_texOff(vec2(0.0, -2.0)).xyz;
+vec3 sample9 = ravu_int11_texOff(vec2(0.0, -1.0)).xyz;
+vec3 sample6 = ravu_int11_texOff(vec2(0.0, 0.0)).xyz;
+vec3 sample3 = ravu_int11_texOff(vec2(0.0, 1.0)).xyz;
+vec3 sample14 = ravu_int11_texOff(vec2(1.0, -1.0)).xyz;
+vec3 sample11 = ravu_int11_texOff(vec2(1.0, 0.0)).xyz;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
@@ -208,7 +208,7 @@ float angle = floor(theta * 24.0 / 3.141592653589793);
 float strength = clamp(floor(log2(lambda * 2000.0 + 1.192092896e-7)), 0.0, 8.0);
 float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
-vec4 res = vec4(0.0);
+vec3 res = vec3(0.0);
 vec4 w;
 w = texture(ravu_lut2, vec2(0.125, coord_y));
 res += sample0 * w[0];
@@ -231,7 +231,7 @@ res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
 res = clamp(res, 0.0, 1.0);
-return res;
+return vec4(res, 0.0);
 }
 //!DESC RAVU (step3, yuv, r2)
 //!HOOK NATIVE
@@ -240,22 +240,22 @@ return res;
 //!BIND ravu_int11
 //!SAVE ravu_int01
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
-vec4 sample4 = HOOKED_texOff(vec2(-1.0, 0.0));
-vec4 sample1 = HOOKED_texOff(vec2(-1.0, 1.0));
-vec4 sample12 = HOOKED_texOff(vec2(0.0, -1.0));
-vec4 sample9 = HOOKED_texOff(vec2(0.0, 0.0));
-vec4 sample6 = HOOKED_texOff(vec2(0.0, 1.0));
-vec4 sample3 = HOOKED_texOff(vec2(0.0, 2.0));
-vec4 sample14 = HOOKED_texOff(vec2(1.0, 0.0));
-vec4 sample11 = HOOKED_texOff(vec2(1.0, 1.0));
-vec4 sample0 = ravu_int11_texOff(vec2(-2.0, 0.0));
-vec4 sample8 = ravu_int11_texOff(vec2(-1.0, -1.0));
-vec4 sample5 = ravu_int11_texOff(vec2(-1.0, 0.0));
-vec4 sample2 = ravu_int11_texOff(vec2(-1.0, 1.0));
-vec4 sample13 = ravu_int11_texOff(vec2(0.0, -1.0));
-vec4 sample10 = ravu_int11_texOff(vec2(0.0, 0.0));
-vec4 sample7 = ravu_int11_texOff(vec2(0.0, 1.0));
-vec4 sample15 = ravu_int11_texOff(vec2(1.0, 0.0));
+vec3 sample4 = HOOKED_texOff(vec2(-1.0, 0.0)).xyz;
+vec3 sample1 = HOOKED_texOff(vec2(-1.0, 1.0)).xyz;
+vec3 sample12 = HOOKED_texOff(vec2(0.0, -1.0)).xyz;
+vec3 sample9 = HOOKED_texOff(vec2(0.0, 0.0)).xyz;
+vec3 sample6 = HOOKED_texOff(vec2(0.0, 1.0)).xyz;
+vec3 sample3 = HOOKED_texOff(vec2(0.0, 2.0)).xyz;
+vec3 sample14 = HOOKED_texOff(vec2(1.0, 0.0)).xyz;
+vec3 sample11 = HOOKED_texOff(vec2(1.0, 1.0)).xyz;
+vec3 sample0 = ravu_int11_texOff(vec2(-2.0, 0.0)).xyz;
+vec3 sample8 = ravu_int11_texOff(vec2(-1.0, -1.0)).xyz;
+vec3 sample5 = ravu_int11_texOff(vec2(-1.0, 0.0)).xyz;
+vec3 sample2 = ravu_int11_texOff(vec2(-1.0, 1.0)).xyz;
+vec3 sample13 = ravu_int11_texOff(vec2(0.0, -1.0)).xyz;
+vec3 sample10 = ravu_int11_texOff(vec2(0.0, 0.0)).xyz;
+vec3 sample7 = ravu_int11_texOff(vec2(0.0, 1.0)).xyz;
+vec3 sample15 = ravu_int11_texOff(vec2(1.0, 0.0)).xyz;
 vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
@@ -319,7 +319,7 @@ float angle = floor(theta * 24.0 / 3.141592653589793);
 float strength = clamp(floor(log2(lambda * 2000.0 + 1.192092896e-7)), 0.0, 8.0);
 float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
-vec4 res = vec4(0.0);
+vec3 res = vec3(0.0);
 vec4 w;
 w = texture(ravu_lut2, vec2(0.125, coord_y));
 res += sample0 * w[0];
@@ -342,7 +342,7 @@ res += sample13 * w[1];
 res += sample14 * w[2];
 res += sample15 * w[3];
 res = clamp(res, 0.0, 1.0);
-return res;
+return vec4(res, 0.0);
 }
 //!DESC RAVU (step4, yuv, r2)
 //!HOOK NATIVE
