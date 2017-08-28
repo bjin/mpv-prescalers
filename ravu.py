@@ -184,13 +184,13 @@ class RAVU(userhook.UserHook):
                 comps_swizzle = ".x")
         elif self.profile in [Profile.rgb, Profile.yuv]:
             self.add_mappings(
-                sample_type="vec4",
-                sample_zero="vec4(0.0)",
-                hook_return_value="res",
-                comps_swizzle = "")
+                sample_type="vec3",
+                sample_zero="vec3(0.0)",
+                hook_return_value="vec4(res, 0.0)",
+                comps_swizzle = ".xyz")
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
-                GLSL("const vec4 color_primary = vec4(0.2126, 0.7152, 0.0722, 0.0);")
+                GLSL("const vec3 color_primary = vec3(0.2126, 0.7152, 0.0722);")
             elif self.profile == Profile.yuv:
                 self.assert_yuv()
         else:
@@ -325,7 +325,13 @@ vec4 hook() {
         if self.profile == Profile.luma:
             luma = lambda x, y: samples[x, y]
         elif self.profile == Profile.yuv:
-            luma = lambda x, y: samples[x, y] + ".x"
+            def luma(x, y):
+                s = samples[x, y]
+                if s.startswith("sample"):
+                    return s + ".x"
+                # sample is combined from gathered components, use first
+                # arguments of "vec3()" directly for luma component
+                return s[s.find('(') + 1 : s.find(',')]
         else:
             luma = lambda x, y: "luma%d" % (x * n + y)
 
@@ -340,9 +346,7 @@ vec4 hook() {
 
         self.save_tex(self.tex_name[target_offset[0]][target_offset[1]])
 
-        profiles_using_gather = [Profile.luma, Profile.chroma_left, Profile.chroma_center]
-        sample_positions, gathered_positions, gathered_groups = self.get_sample_positions(
-                target_offset, use_gather and self.profile in profiles_using_gather)
+        sample_positions, gathered_positions, gathered_groups = self.get_sample_positions(target_offset, use_gather)
 
         gathered = 0
         for tex in sorted(gathered_groups.keys()):
@@ -351,6 +355,10 @@ vec4 hook() {
                 logical_offsets = mapping[base_x, base_y]
                 if self.profile == Profile.luma:
                     gathered_names = ["gathered%d" % gathered]
+                elif self.profile == Profile.yuv:
+                    gathered_names = ["gathered%d_y" % gathered, "gathered%d_u" % gathered, "gathered%d_v" % gathered]
+                elif self.profile == Profile.rgb:
+                    gathered_names = ["gathered%d_r" % gathered, "gathered%d_g" % gathered, "gathered%d_b" % gathered]
                 else:
                     gathered_names = ["gathered%d_u" % gathered, "gathered%d_v" % gathered]
                 gathered += 1
@@ -359,10 +367,8 @@ vec4 hook() {
                          (gathered_name, tex, tex, tex, base_x, base_y, comp))
                 for idx in range(len(logical_offsets)):
                     i, j = logical_offsets[idx]
-                    if self.profile == Profile.luma:
-                        samples[i, j] = "%s[%d]" % (gathered_names[0], idx)
-                    else:
-                        samples[i, j] = "vec2(%s[%d], %s[%d])" % (gathered_names[0], idx, gathered_names[1], idx)
+                    templ = "$sample_type(%s)" if len(gathered_names) > 1 else "%s"
+                    samples[i, j] = templ % ", ".join("%s[%d]" % (gathered_name, idx) for gathered_name in gathered_names)
 
         for tex in sorted(sample_positions.keys()):
             mapping = sample_positions[tex]

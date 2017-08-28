@@ -34,7 +34,7 @@ for target in luma chroma-left chroma-center yuv rgb; do
         file_name="ravu-r$radius$suffix.hook"
         weights_file="$DIR/ravu_weights-r$radius.py"
         "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" > "$file_name"
-        if [ -d gather -a \( "$target" = "luma" -o "$target" = "chroma-left" -o "$target" = "chroma-center" \) ]; then
+        if [ -d gather ]; then
             "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
         fi
         if [ -d compute ]; then
