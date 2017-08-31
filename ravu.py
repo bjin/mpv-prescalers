@@ -71,25 +71,34 @@ class RAVU(userhook.UserHook):
         self.tex_name = [["HOOKED", int_tex_name + "01"],
                          [int_tex_name + "10", int_tex_name + "11"]]
 
+        self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence
+        self.lut_width = ((self.radius * 2) ** 2 // 2 + 3) // 4
+
     def generate_tex(self, use_float16=False):
         import struct
-
-        height = self.quant_angle * self.quant_strength * self.quant_coherence
-        width = self.radius * self.radius
 
         weights = []
         for i in range(self.quant_angle):
             for j in range(self.quant_strength):
                 for k in range(self.quant_coherence):
-                    assert len(self.model_weights[i][j][k]) == width * 4
-                    weights.extend(self.model_weights[i][j][k])
+                    kernel = self.model_weights[i][j][k]
+                    assert len(kernel) == (self.radius * 2) ** 2
+                    kernel_sum = sum(kernel)
+                    kernel2 = []
+                    for idx in range(len(kernel) // 2):
+                        assert abs(kernel[idx] - kernel[~idx]) < 1e-6, "filter kernel is not symmetric"
+                        kernel2.append((kernel[idx] + kernel[~idx]) / kernel_sum / 2.0)
+                    while len(kernel2) % 4 != 0:
+                        kernel2.append(0.0)
+                    weights.extend(kernel2)
+        assert len(weights) == self.lut_width * self.lut_height * 4
         weights_raw = struct.pack('<%df' % len(weights), *weights).hex()
 
         tex_format = "rgba%df" % (16 if use_float16 else 32)
 
         headers = [
             "//!TEXTURE %s" % self.lut_name,
-            "//!SIZE %d %d" % (width, height),
+            "//!SIZE %d %d" % (self.lut_width, self.lut_height),
             "//!FORMAT %s" % tex_format,
             "//!FILTER NEAREST"
         ]
@@ -271,12 +280,11 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
 
         GLSL("$sample_type res = $sample_zero;")
         GLSL("vec4 w;")
-        blocks = n * n // 4
-        for i in range(blocks):
-            coord_x = (float(i) + 0.5) / float(blocks)
-            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
-            for j in range(4):
-                GLSL("res += %s * w[%d];" % (samples_list[i * 4 + j], j))
+        for i in range(len(samples_list) // 2):
+            if i % 4 == 0:
+                coord_x = (float(i // 4) + 0.5) / float(self.lut_width)
+                GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
+            GLSL("res += (%s + %s) * w[%d];" % (samples_list[i], samples_list[~i], i % 4))
         GLSL("res = clamp(res, 0.0, 1.0);")
 
 
