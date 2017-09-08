@@ -19,6 +19,7 @@
 //!SAVE ravu_int11
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
 const vec3 color_primary = vec3(0.2126, 0.7152, 0.0722);
+vec4 hook() {
 vec3 sample0 = HOOKED_texOff(vec2(-1.0, -1.0)).xyz;
 float luma0 = dot(sample0, color_primary);
 vec3 sample1 = HOOKED_texOff(vec2(-1.0, 0.0)).xyz;
@@ -51,7 +52,6 @@ vec3 sample14 = HOOKED_texOff(vec2(2.0, 1.0)).xyz;
 float luma14 = dot(sample14, color_primary);
 vec3 sample15 = HOOKED_texOff(vec2(2.0, 2.0)).xyz;
 float luma15 = dot(sample15, color_primary);
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -137,6 +137,7 @@ return vec4(res, 0.0);
 //!SAVE ravu_int10
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
 const vec3 color_primary = vec3(0.2126, 0.7152, 0.0722);
+vec4 hook() {
 vec3 sample0 = HOOKED_texOff(vec2(-1.0, 0.0)).xyz;
 float luma0 = dot(sample0, color_primary);
 vec3 sample8 = HOOKED_texOff(vec2(0.0, -1.0)).xyz;
@@ -169,7 +170,6 @@ vec3 sample14 = ravu_int11_texOff(vec2(1.0, -1.0)).xyz;
 float luma14 = dot(sample14, color_primary);
 vec3 sample11 = ravu_int11_texOff(vec2(1.0, 0.0)).xyz;
 float luma11 = dot(sample11, color_primary);
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -255,6 +255,7 @@ return vec4(res, 0.0);
 //!SAVE ravu_int01
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
 const vec3 color_primary = vec3(0.2126, 0.7152, 0.0722);
+vec4 hook() {
 vec3 sample4 = HOOKED_texOff(vec2(-1.0, 0.0)).xyz;
 float luma4 = dot(sample4, color_primary);
 vec3 sample1 = HOOKED_texOff(vec2(-1.0, 1.0)).xyz;
@@ -287,7 +288,6 @@ vec3 sample7 = ravu_int11_texOff(vec2(0.0, 1.0)).xyz;
 float luma7 = dot(sample7, color_primary);
 vec3 sample15 = ravu_int11_texOff(vec2(1.0, 0.0)).xyz;
 float luma15 = dot(sample15, color_primary);
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);

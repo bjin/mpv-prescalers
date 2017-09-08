@@ -30,10 +30,10 @@ inp[x][y] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-0.5), float(grou
 }
 groupMemoryBarrier();
 barrier();
-vec4 g0 = vec4(inp[gl_LocalInvocationID.x+0][gl_LocalInvocationID.y+1],inp[gl_LocalInvocationID.x+1][gl_LocalInvocationID.y+1],inp[gl_LocalInvocationID.x+1][gl_LocalInvocationID.y+0],inp[gl_LocalInvocationID.x+0][gl_LocalInvocationID.y+0]);
-vec4 g1 = vec4(inp[gl_LocalInvocationID.x+0][gl_LocalInvocationID.y+3],inp[gl_LocalInvocationID.x+1][gl_LocalInvocationID.y+3],inp[gl_LocalInvocationID.x+1][gl_LocalInvocationID.y+2],inp[gl_LocalInvocationID.x+0][gl_LocalInvocationID.y+2]);
-vec4 g2 = vec4(inp[gl_LocalInvocationID.x+2][gl_LocalInvocationID.y+1],inp[gl_LocalInvocationID.x+3][gl_LocalInvocationID.y+1],inp[gl_LocalInvocationID.x+3][gl_LocalInvocationID.y+0],inp[gl_LocalInvocationID.x+2][gl_LocalInvocationID.y+0]);
-vec4 g3 = vec4(inp[gl_LocalInvocationID.x+2][gl_LocalInvocationID.y+3],inp[gl_LocalInvocationID.x+3][gl_LocalInvocationID.y+3],inp[gl_LocalInvocationID.x+3][gl_LocalInvocationID.y+2],inp[gl_LocalInvocationID.x+2][gl_LocalInvocationID.y+2]);
+vec4 g0 = vec4(inp[int(gl_LocalInvocationID.x)+0][int(gl_LocalInvocationID.y)+1],inp[int(gl_LocalInvocationID.x)+1][int(gl_LocalInvocationID.y)+1],inp[int(gl_LocalInvocationID.x)+1][int(gl_LocalInvocationID.y)+0],inp[int(gl_LocalInvocationID.x)+0][int(gl_LocalInvocationID.y)+0]);
+vec4 g1 = vec4(inp[int(gl_LocalInvocationID.x)+0][int(gl_LocalInvocationID.y)+3],inp[int(gl_LocalInvocationID.x)+1][int(gl_LocalInvocationID.y)+3],inp[int(gl_LocalInvocationID.x)+1][int(gl_LocalInvocationID.y)+2],inp[int(gl_LocalInvocationID.x)+0][int(gl_LocalInvocationID.y)+2]);
+vec4 g2 = vec4(inp[int(gl_LocalInvocationID.x)+2][int(gl_LocalInvocationID.y)+1],inp[int(gl_LocalInvocationID.x)+3][int(gl_LocalInvocationID.y)+1],inp[int(gl_LocalInvocationID.x)+3][int(gl_LocalInvocationID.y)+0],inp[int(gl_LocalInvocationID.x)+2][int(gl_LocalInvocationID.y)+0]);
+vec4 g3 = vec4(inp[int(gl_LocalInvocationID.x)+2][int(gl_LocalInvocationID.y)+3],inp[int(gl_LocalInvocationID.x)+3][int(gl_LocalInvocationID.y)+3],inp[int(gl_LocalInvocationID.x)+3][int(gl_LocalInvocationID.y)+2],inp[int(gl_LocalInvocationID.x)+2][int(gl_LocalInvocationID.y)+2]);
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (g0.z-g0.w);

@@ -19,6 +19,7 @@
 //!BIND LUMA
 //!SAVE ravu_int11
 //!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+vec4 hook() {
 vec2 sample0 = HOOKED_texOff(vec2(-1.0, -1.0)).xy;
 float luma0 = LUMA_texOff(vec2(-1.5,-2.0)).x;
 vec2 sample1 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
@@ -51,7 +52,6 @@ vec2 sample14 = HOOKED_texOff(vec2(2.0, 1.0)).xy;
 float luma14 = LUMA_texOff(vec2(4.5,2.0)).x;
 vec2 sample15 = HOOKED_texOff(vec2(2.0, 2.0)).xy;
 float luma15 = LUMA_texOff(vec2(4.5,4.0)).x;
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -137,6 +137,7 @@ return vec4(res, 0.0, 0.0);
 //!BIND ravu_int11
 //!SAVE ravu_int10
 //!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+vec4 hook() {
 vec2 sample0 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
 float luma0 = LUMA_texOff(vec2(-1.5,0.0)).x;
 vec2 sample8 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
@@ -169,7 +170,6 @@ vec2 sample14 = ravu_int11_texOff(vec2(1.0, -1.0)).xy;
 float luma14 = LUMA_texOff(vec2(3.5,-1.0)).x;
 vec2 sample11 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
 float luma11 = LUMA_texOff(vec2(3.5,1.0)).x;
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -255,6 +255,7 @@ return vec4(res, 0.0, 0.0);
 //!BIND ravu_int11
 //!SAVE ravu_int01
 //!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+vec4 hook() {
 vec2 sample4 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
 float luma4 = LUMA_texOff(vec2(-1.5,0.0)).x;
 vec2 sample1 = HOOKED_texOff(vec2(-1.0, 1.0)).xy;
@@ -287,7 +288,6 @@ vec2 sample7 = ravu_int11_texOff(vec2(0.0, 1.0)).xy;
 float luma7 = LUMA_texOff(vec2(1.5,3.0)).x;
 vec2 sample15 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
 float luma15 = LUMA_texOff(vec2(3.5,1.0)).x;
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);

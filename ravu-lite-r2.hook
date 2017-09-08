@@ -19,11 +19,11 @@
 //!SAVE ravu_lite_int
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
 //!COMPONENTS 4
+vec4 hook() {
 vec4 g0 = vec4(HOOKED_texOff(vec2(-1.0, 0.0)).x,HOOKED_texOff(vec2(0.0, 0.0)).x,HOOKED_texOff(vec2(0.0, -1.0)).x,HOOKED_texOff(vec2(-1.0, -1.0)).x);
 vec4 g1 = vec4(HOOKED_texOff(vec2(-1.0, 2.0)).x,HOOKED_texOff(vec2(0.0, 2.0)).x,HOOKED_texOff(vec2(0.0, 1.0)).x,HOOKED_texOff(vec2(-1.0, 1.0)).x);
 vec4 g2 = vec4(HOOKED_texOff(vec2(1.0, 0.0)).x,HOOKED_texOff(vec2(2.0, 0.0)).x,HOOKED_texOff(vec2(2.0, -1.0)).x,HOOKED_texOff(vec2(1.0, -1.0)).x);
 vec4 g3 = vec4(HOOKED_texOff(vec2(1.0, 2.0)).x,HOOKED_texOff(vec2(2.0, 2.0)).x,HOOKED_texOff(vec2(2.0, 1.0)).x,HOOKED_texOff(vec2(1.0, 1.0)).x);
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (g0.z-g0.w);

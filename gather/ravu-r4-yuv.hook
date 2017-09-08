@@ -18,6 +18,7 @@
 //!BIND ravu_lut4
 //!SAVE ravu_int11
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
+vec4 hook() {
 vec4 gathered0_y = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -3), 0);
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -3), 1);
 vec4 gathered0_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -3), 2);
@@ -66,7 +67,6 @@ vec4 gathered14_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ive
 vec4 gathered15_y = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, 3), 0);
 vec4 gathered15_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, 3), 1);
 vec4 gathered15_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, 3), 2);
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (gathered4_y[0]-gathered0_y[0])/2.0;
@@ -241,6 +241,7 @@ return vec4(res, 0.0);
 //!BIND ravu_int11
 //!SAVE ravu_int10
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
+vec4 hook() {
 vec4 gathered0_y = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, -1), 0);
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, -1), 1);
 vec4 gathered0_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, -1), 2);
@@ -293,7 +294,6 @@ vec3 sample58 = ravu_int11_texOff(vec2(1.0, -3.0)).xyz;
 vec3 sample23 = ravu_int11_texOff(vec2(1.0, 2.0)).xyz;
 vec3 sample62 = ravu_int11_texOff(vec2(3.0, -1.0)).xyz;
 vec3 sample55 = ravu_int11_texOff(vec2(3.0, 0.0)).xyz;
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (gathered6_y[2]-gathered6_y[0])/2.0;
@@ -468,6 +468,7 @@ return vec4(res, 0.0);
 //!BIND ravu_int11
 //!SAVE ravu_int01
 //!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < * LUMA.w 0 > *
+vec4 hook() {
 vec4 gathered0_y = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 0), 0);
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 0), 1);
 vec4 gathered0_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 0), 2);
@@ -520,7 +521,6 @@ vec3 sample15 = ravu_int11_texOff(vec2(0.0, 3.0)).xyz;
 vec3 sample59 = ravu_int11_texOff(vec2(1.0, -2.0)).xyz;
 vec3 sample47 = ravu_int11_texOff(vec2(2.0, 1.0)).xyz;
 vec3 sample63 = ravu_int11_texOff(vec2(3.0, 0.0)).xyz;
-vec4 hook() {
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (gathered0_y[2]-gathered0_y[0])/2.0;

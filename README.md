@@ -66,6 +66,16 @@ caveats for using those shaders:
 4. `cscale` will still be used to correct minor offset. An EWA scaler like
    `haasnsoft` is recommended for the `cscale` setting.
 
+# Known Issue
+
+1. `ravu-lite` is incompatible with `--opengl-fbo-format=rgb10_a2` (default
+   for some OpenGL ES implementation). Use `rgba16f` or `rgba16` if available.
+2. `ravu-r4-{rgb,yuv}` causes distortion with lower-end intel card.
+3.  All `ravu` and `ravu-lite` shaders are generated with `rgba16f` LUT.
+    However, while it's a safe fallback choice, it's not universally
+    available as well. Generate shaders without `--use-float16` option to use
+    `rgba32f` LUT in those cases.
+
 # About RAVU
 
 RAVU is an experimental prescaler based on RAISR (Rapid and Accurate Image Super
