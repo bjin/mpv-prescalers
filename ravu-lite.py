@@ -202,6 +202,9 @@ vec4 hook() {
         self.save_tex(self.int_tex_name)
         self.set_components(4)
 
+        GLSL("""
+vec4 hook() {""")
+
         for i, gi in enumerate(self.gathered_groups):
             bx, by = self.gathered_group_base[i]
             if use_gather:
@@ -209,9 +212,6 @@ vec4 hook() {
             else:
                 to_fetch = ["HOOKED_texOff(vec2(%d.0, %d.0)).x" % (bx + ox, by + oy) for ox, oy in self.gather_offsets]
                 GLSL("vec4 g%d = vec4(%s);" % (i, ",".join(to_fetch)))
-
-        GLSL("""
-vec4 hook() {""")
 
         self.extract_key()
 
@@ -267,7 +267,7 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
 
         for i, gi in enumerate(self.gathered_groups):
             bx, by = self.gathered_group_base[i]
-            to_fetch = ["inp[gl_LocalInvocationID.x+%d][gl_LocalInvocationID.y+%d]" %
+            to_fetch = ["inp[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]" %
                         (bx + ox - offset_base, by + oy - offset_base) for ox, oy in self.gather_offsets]
             GLSL("vec4 g%d = vec4(%s);" % (i, ",".join(to_fetch)))
 

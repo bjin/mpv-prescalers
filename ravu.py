@@ -354,6 +354,9 @@ vec4 hook() {
 
         self.save_tex(self.tex_name[target_offset[0]][target_offset[1]])
 
+        GLSL("""
+vec4 hook() {""")
+
         sample_positions, gathered_positions, gathered_groups = self.get_sample_positions(target_offset, use_gather)
 
         gathered = 0
@@ -399,9 +402,6 @@ vec4 hook() {
                     offset_y = y * 2 + bound_tex_id[1] - chroma_offset[1]
                     # use bilinear sampling for luma downscaling
                     GLSL('float %s = LUMA_texOff(vec2(%s,%s)).x;' % (luma(i, j), offset_x, offset_y))
-
-        GLSL("""
-vec4 hook() {""")
 
         self.extract_key(luma)
 
@@ -477,7 +477,7 @@ return $hook_return_value;
                 mapping = sample_positions[tex]
                 for tex_offset in mapping.keys():
                     logical_offset = mapping[tex_offset]
-                    samples_mapping[logical_offset] = "inp%d[gl_LocalInvocationID.x+%d][gl_LocalInvocationID.y+%d]" % \
+                    samples_mapping[logical_offset] = "inp%d[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]" % \
                                                       (tex_idx, tex_offset[0] - minx, tex_offset[1] - miny)
 
         GLSL("""
@@ -549,7 +549,7 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
                 offset_base = offset_for_tex[tex_idx]
                 bound_tex_id = self.get_id_from_texname(tex)
                 pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d,%d)" % bound_tex_id
-                res = "inp%d[gl_LocalInvocationID.x+%d][gl_LocalInvocationID.y+%d]" % (tex_idx, -offset_base[0], -offset_base[1])
+                res = "inp%d[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]" % (tex_idx, -offset_base[0], -offset_base[1])
                 GLSL("res = %s;" % res)
                 GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
 
