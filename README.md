@@ -35,14 +35,5 @@ RAVU-Lite is a faster, slightly-lower-quality and luma-only variant of RAVU.
 
 # License
 
-`nnedi3` and `superxbr` were ported from [MPDN
-project](https://github.com/zachsaw/MPDN_Extensions), and were originally
-licensed under terms of [LGPLv3](https://www.gnu.org/licenses/lgpl-3.0.en.html).
-`superxbr` shader in addition was licensed under terms of a more permissive
-license ([MIT](https://opensource.org/licenses/MIT)).
-
-The ported shaders (in mpv) also include contributions licensed under terms of
-LGPLv2 or later (particularly, major part of `superxbr` was rewritten by
-@haasn).
-
-As a whole, shaders in this repo are licensed with LGPLv3.
+Shaders in this repo are licensed under terms of LGPLv3. Check the header of
+each file for details.
