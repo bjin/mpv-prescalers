@@ -147,8 +147,6 @@ class NNEDI3(userhook.UserHook):
         assert width % 2 == 0 and height % 2 == 0
         sample_count = width * height // 4
 
-        GLSL('#pragma optionNV(fastprecision on)')
-
         tex_name = [["HOOKED", self.int_tex_name + "01"],
                     [self.int_tex_name + "10", self.int_tex_name + "11"]]
 
