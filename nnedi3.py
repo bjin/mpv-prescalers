@@ -83,7 +83,7 @@ class NNEDI3(userhook.UserHook):
 
     weights_file = "nnedi3_weights.bin"
     weights_filesize = 83328 * 4
-    weights_dirs = [os.path.dirname(os.path.realpath(__file__)),
+    weights_dirs = [os.path.join(os.path.dirname(os.path.realpath(__file__)), "weights"),
                     os.path.realpath(os.getcwd())]
 
     weight_fmt = struct.Struct("<i")

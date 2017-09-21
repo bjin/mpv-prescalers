@@ -35,7 +35,7 @@ for target in luma chroma-left chroma-center yuv rgb; do
     [ "$target" = "luma" ] && suffix=""
     for radius in 2 3 4; do
         file_name="ravu-r$radius$suffix.hook"
-        weights_file="$DIR/ravu_weights-r$radius.py"
+        weights_file="$DIR/weights/ravu_weights-r$radius.py"
         "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl > "$file_name"
         if [ -d gather ]; then
             "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl --use-gather > "gather/$file_name"
@@ -48,7 +48,7 @@ done
 
 for radius in 2 3 4; do
     file_name="ravu-lite-r$radius.hook"
-    weights_file="$DIR/ravu-lite_weights-r$radius.py"
+    weights_file="$DIR/weights/ravu-lite_weights-r$radius.py"
     "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl > "$file_name"
     if [ -d gather ]; then
         "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl --use-gather > "gather/$file_name"
