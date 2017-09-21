@@ -15,23 +15,8 @@ Alternatively, you could generate shader with customized options:
 
 Or play video directly with scripts
 ```
-mpv --opengl-shaders=<(path/to/ravu.py --weights-file path/to/ravu_weights-r3.py --use-gather) video.mkv
+mpv --glsl-shaders=<(path/to/ravu.py --weights-file path/to/ravu_weights-r3.py --use-gather) video.mkv
 ```
-
-# About RAVU
-
-RAVU is an experimental prescaler based on RAISR (Rapid and Accurate Image Super
-Resolution). It adopts the core idea of RAISR for upscaling, without adopting
-any further refinement RAISR used for post-processing, including blending and
-sharpening.
-
-RAVU is a convolution kernel based upscaling algorithm. The kernels are trained
-from large amount of pictures with a straightforward linear regression model.
-From a high level view, it's kind of similar to EWA scalers, but more adaptive
-to local gradient features, and would produce lesser aliasing. Like EWA scalers,
-currently, plain RAVU would also produce noticeable ringings.
-
-RAVU-Lite is a faster, slightly-lower-quality and luma-only variant of RAVU.
 
 # License
 
