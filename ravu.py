@@ -477,9 +477,9 @@ return $hook_return_value;
             array_size = (maxx - minx + block_width, maxy - miny + block_height)
             array_size_for_tex.append(array_size)
 
-            GLSL("shared $sample_type inp%d[%d][%d];" % (tex_idx, array_size[0], array_size[1]))
+            GLSL("shared $sample_type inp%d[%d];" % (tex_idx, array_size[0] * array_size[1]))
             if self.profile != Profile.luma:
-                GLSL("shared float inp_luma%d[%d][%d];" % (tex_idx, array_size[0], array_size[1]))
+                GLSL("shared float inp_luma%d[%d];" % (tex_idx, array_size[0] * array_size[1]))
 
             # Samples mapping are different for different sample_positions
             for target_idx, sample_positions in enumerate(sample_positions_by_target):
@@ -487,8 +487,8 @@ return $hook_return_value;
                 mapping = sample_positions[tex]
                 for tex_offset in mapping.keys():
                     logical_offset = mapping[tex_offset]
-                    samples_mapping[logical_offset] = "inp%d[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]" % \
-                                                      (tex_idx, tex_offset[0] - minx, tex_offset[1] - miny)
+                    samples_mapping[logical_offset] = "inp%d[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]" % \
+                                                      (tex_idx, tex_offset[0] - minx, array_size[1], tex_offset[1] - miny)
 
         GLSL("""
 void hook() {""")
@@ -499,23 +499,24 @@ void hook() {""")
             offset_base = offset_for_tex[tex_idx]
             array_size = array_size_for_tex[tex_idx]
             GLSL("""
-for (int x = int(gl_LocalInvocationID.x); x < %d; x += int(gl_WorkGroupSize.x))
-for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) {""" % (array_size[0], array_size[1]))
+for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {""" % (array_size[0] * array_size[1]))
 
-            GLSL("inp%d[x][y] = %s_tex(%s_pt * vec2(float(group_base.x+x)+(%s), float(group_base.y+y)+(%s)))$comps_swizzle;" %
+            GLSL("int x = id / %d, y = id %% %d;" % (array_size[1], array_size[1]))
+
+            GLSL("inp%d[id] = %s_tex(%s_pt * vec2(float(group_base.x+x)+(%s), float(group_base.y+y)+(%s)))$comps_swizzle;" %
                  (tex_idx, tex, tex, offset_base[0] + 0.5, offset_base[1] + 0.5))
 
             if self.profile == Profile.yuv:
-                GLSL("inp_luma%d[x][y] = inp%d[x][y][0];" % (tex_idx, tex_idx))
+                GLSL("inp_luma%d[id] = inp%d[id].x;" % (tex_idx, tex_idx))
             elif self.profile == Profile.rgb:
-                GLSL("inp_luma%d[x][y] = dot(inp%d[x][y], color_primary);" % (tex_idx, tex_idx))
+                GLSL("inp_luma%d[id] = dot(inp%d[id], color_primary);" % (tex_idx, tex_idx))
             elif self.profile in [Profile.chroma_left, Profile.chroma_center]:
                 chroma_offset = self.get_chroma_offset()
                 bound_tex_id = self.get_id_from_texname(tex)
                 # |(group_base+(x,y)+offset_base)*2+bound_tex_id| is the luma texel id
                 offset_x = offset_base[0] * 2 + bound_tex_id[0] + 0.5 - chroma_offset[0]
                 offset_y = offset_base[1] * 2 + bound_tex_id[1] + 0.5 - chroma_offset[1]
-                GLSL('inp_luma%d[x][y] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(%s),float(group_base.y+y)*2.0+(%s))).x;' %
+                GLSL('inp_luma%d[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(%s),float(group_base.y+y)*2.0+(%s))).x;' %
                      (tex_idx, offset_x, offset_y))
 
             GLSL("""
@@ -559,7 +560,7 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
                 offset_base = offset_for_tex[tex_idx]
                 bound_tex_id = self.get_id_from_texname(tex)
                 pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d,%d)" % bound_tex_id
-                res = "inp%d[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]" % (tex_idx, -offset_base[0], -offset_base[1])
+                res = "inp%d[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]" % (tex_idx, -offset_base[0], array_size[1], -offset_base[1])
                 GLSL("res = %s;" % res)
                 GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
 

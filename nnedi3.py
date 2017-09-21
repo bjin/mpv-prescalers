@@ -294,7 +294,7 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
                 sample_type=["float", "vec2", "vec3"][components - 1],
                 comps_swizzle=[".x", ".xy", ".xyz"][components - 1])
 
-            GLSL("shared $sample_type inp[%d][%d];" % (array_size[0], array_size[1]))
+            GLSL("shared $sample_type inp[%d];" % (array_size[0] * array_size[1]))
 
 
         GLSL("""
@@ -303,9 +303,11 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
         if use_compute:
             GLSL("ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);")
             GLSL("""
-for (int x = int(gl_LocalInvocationID.x); x < %d; x += int(gl_WorkGroupSize.x))
-for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) {""" % (array_size[0], array_size[1]))
-            GLSL("inp[x][y] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x-(%d),y-(%d)), 0)$comps_swizzle;" % array_offset)
+for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {""" % (array_size[0] * array_size[1]))
+
+            GLSL("int x = id / %d, y = id %% %d;" % (array_size[1], array_size[1]))
+
+            GLSL("inp[id] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x-(%d),y-(%d)), 0)$comps_swizzle;" % array_offset)
 
             GLSL("""
 }""")
@@ -323,8 +325,8 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
                 global_pos, window_pos = sampling_info[i]
                 if use_compute:
                     for j, pos in enumerate(global_pos):
-                        to_fetch = "inp[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]"
-                        to_fetch = to_fetch % (pos[0] + array_offset[0], pos[1] + array_offset[1])
+                        to_fetch = "inp[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]"
+                        to_fetch = to_fetch % (pos[0] + array_offset[0], array_size[1], pos[1] + array_offset[1])
                         GLSL("samples%d[%d][%d] = %s%s;" % (comp, i, j, to_fetch, swizzle))
                 elif use_gather:
                     base = min(global_pos)
@@ -338,8 +340,8 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
                         GLSL("samples%d[%d][%d] = %s[%d];" % (comp, i, j, to_fetch, comp))
             GLSL("ret[%d] = nnedi3(samples%d);" % (comp, comp))
             if use_compute:
-                GLSL("ret0[%d] = inp[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]%s;" %
-                    (comp, array_offset[0], array_offset[1], swizzle))
+                GLSL("ret0[%d] = inp[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]%s;" %
+                    (comp, array_offset[0], array_size[1], array_offset[1], swizzle))
 
         if use_compute:
             GLSL("imageStore(out_image, ivec2(gl_GlobalInvocationID) * $double_mul, ret0);")

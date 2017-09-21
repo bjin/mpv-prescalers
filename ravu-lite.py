@@ -254,7 +254,7 @@ return res;
 
         offset_base = -(self.radius - 1)
         array_size = block_width + n - 1, block_height + n - 1
-        GLSL("shared float inp[%d][%d];" % (array_size[0], array_size[1]))
+        GLSL("shared float inp[%d];" % (array_size[0] * array_size[1]))
 
         GLSL("""
 void hook() {""")
@@ -263,10 +263,11 @@ void hook() {""")
         GLSL("ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);")
 
         GLSL("""
-for (int x = int(gl_LocalInvocationID.x); x < %d; x += int(gl_WorkGroupSize.x))
-for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) {""" % (array_size[0], array_size[1]))
+for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {""" % (array_size[0] * array_size[1]))
 
-        GLSL("inp[x][y] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(%s), float(group_base.y+y)+(%s))).x;" %
+        GLSL("int x = id / %d, y = id %% %d;" % (array_size[1], array_size[1]))
+
+        GLSL("inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(%s), float(group_base.y+y)+(%s))).x;" %
              (offset_base + 0.5, offset_base + 0.5))
 
         GLSL("""
@@ -277,8 +278,8 @@ for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) 
 
         for i, gi in enumerate(self.gathered_groups):
             bx, by = self.gathered_group_base[i]
-            to_fetch = ["inp[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]" %
-                        (bx + ox - offset_base, by + oy - offset_base) for ox, oy in self.gather_offsets]
+            to_fetch = ["inp[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]" %
+                        (bx + ox - offset_base, array_size[1], by + oy - offset_base) for ox, oy in self.gather_offsets]
             GLSL("vec4 g%d = vec4(%s);" % (i, ",".join(to_fetch)))
 
         self.extract_key()
