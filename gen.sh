@@ -16,6 +16,9 @@ for target in luma chroma yuv; do
             if [ -d gather ]; then
                 "$DIR/nnedi3.py" --target "$target" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
             fi
+            if [ -d compute ]; then
+                "$DIR/nnedi3.py" --target "$target" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" --use-compute-shader > "compute/$file_name"
+            fi
         done
     done
 done

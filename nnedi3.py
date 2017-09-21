@@ -133,13 +133,17 @@ class NNEDI3(userhook.UserHook):
               i
         return self.weight_at(ptr)
 
-    def generate(self, step, use_gather=False):
+    def generate(self, step, use_gather=False, use_compute=False, compute_shader_block_size=None):
         self.load_weights()
         self.reset()
         GLSL = self.add_glsl
 
         width = self.window_width
         height = self.window_height
+
+        if use_compute:
+            use_gather = False
+            block_width, block_height = compute_shader_block_size
 
         self.set_description("NNEDI3 (%s, %s, nns%d, win%dx%d)" %
                              (step.name, self.profile.name, self.neurons, width, height))
@@ -148,17 +152,33 @@ class NNEDI3(userhook.UserHook):
         sample_count = width * height // 4
 
         if step == Step.double_y or step == Step.combine_y:
+            self.add_mappings(
+                double_dir="y",
+                double_mul="ivec2(1, 2)",
+                double_offset="ivec2(0, 1)")
             self.set_skippable(mul_y=2)
+            if use_compute == (step == Step.double_y):
+                self.set_transform(1, 2, 0.0, -0.5)
+            if use_compute:
+                self.set_compute(
+                    block_width, block_height * 2,
+                    block_width, block_height)
         elif step == Step.double_x or step == Step.combine_x:
+            self.add_mappings(
+                double_dir="x",
+                double_mul="ivec2(2, 1)",
+                double_offset="ivec2(1, 0)")
             self.set_skippable(mul_x=2)
+            if use_compute == (step == Step.double_x):
+                self.set_transform(2, 1, -0.5, 0.0)
+            if use_compute:
+                self.set_compute(
+                    block_width * 2, block_height,
+                    block_width, block_height)
 
         if step == Step.combine_y or step == Step.combine_x:
-            if step == Step.combine_y:
-                double_dir = "y"
-                self.set_transform(1, 2, 0.0, -0.5)
-            else:
-                double_dir = "x"
-                self.set_transform(2, 1, -0.5, 0.0)
+            if use_compute:
+                return ""
 
             self.bind_tex(self.int_tex_name)
 
@@ -166,13 +186,13 @@ class NNEDI3(userhook.UserHook):
             GLSL("""
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-    if (dir.%s < 0.0) {
+    if (dir.$double_dir < 0.0) {
         return HOOKED_texOff(-dir);
     } else {
         return %s_texOff(-dir);
     }
 }
-""" % (double_dir, self.int_tex_name))
+""" % self.int_tex_name)
 
             return super().generate()
 
@@ -187,7 +207,8 @@ vec4 hook() {
         center_x = width // 2 - 1
         center_y = height // 2 - 1
 
-        self.save_tex(self.int_tex_name)
+        if not use_compute:
+            self.save_tex(self.int_tex_name)
 
         sample_positions = {}
         for y in range(height):
@@ -262,28 +283,71 @@ vsum += sum1*(sum2/(1.0+abs(sum2)));""")
 return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 }  // nnedi3""")
 
+        if use_compute:
+            minx = min(key[0][i][0] for key in sampling_info for i in range(4))
+            maxx = max(key[0][i][0] for key in sampling_info for i in range(4))
+            miny = min(key[0][i][1] for key in sampling_info for i in range(4))
+            maxy = max(key[0][i][1] for key in sampling_info for i in range(4))
+            array_size = (maxx - minx + block_width, maxy - miny + block_height)
+            array_offset = (-minx, -miny)
+            self.add_mappings(
+                sample_type=["float", "vec2", "vec3"][components - 1],
+                comps_swizzle=[".x", ".xy", ".xyz"][components - 1])
+
+            GLSL("shared $sample_type inp[%d][%d];" % (array_size[0], array_size[1]))
+
+
         GLSL("""
-vec4 hook() {""")
+%s hook() {""" % ("void" if use_compute else "vec4"))
+
+        if use_compute:
+            GLSL("ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);")
+            GLSL("""
+for (int x = int(gl_LocalInvocationID.x); x < %d; x += int(gl_WorkGroupSize.x))
+for (int y = int(gl_LocalInvocationID.y); y < %d; y += int(gl_WorkGroupSize.y)) {""" % (array_size[0], array_size[1]))
+            GLSL("inp[x][y] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x-(%d),y-(%d)), 0)$comps_swizzle;" % array_offset)
+
+            GLSL("""
+}""")
+
+            GLSL("groupMemoryBarrier();")
+            GLSL("barrier();")
 
         GLSL("vec4 ret = vec4(0.0);")
+        if use_compute:
+            GLSL("vec4 ret0 = vec4(0.0);")
         for comp in range(components):
             GLSL("vec4 samples%d[%d];" % (comp, sample_count))
+            swizzle = "" if components == 1 else [".x", ".y", ".z"][comp]
             for i in range(sample_count):
                 global_pos, window_pos = sampling_info[i]
-                if use_gather:
+                if use_compute:
+                    for j, pos in enumerate(global_pos):
+                        to_fetch = "inp[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]"
+                        to_fetch = to_fetch % (pos[0] + array_offset[0], pos[1] + array_offset[1])
+                        GLSL("samples%d[%d][%d] = %s%s;" % (comp, i, j, to_fetch, swizzle))
+                elif use_gather:
                     base = min(global_pos)
                     to_fetch = "HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), %d)"
                     to_fetch = to_fetch % (base[0], base[1], comp)
                     GLSL("samples%d[%d] = %s;" % (comp, i, to_fetch))
                 else:
                     for j, pos in enumerate(global_pos):
-                        to_fetch = "HOOKED_texOff(vec2(%d.0, %d.0))[%d]"
-                        to_fetch = to_fetch % (pos[0], pos[1], comp)
-                        GLSL("samples%d[%d][%d] = %s;" % (comp, i, j, to_fetch))
+                        to_fetch = "HOOKED_texOff(vec2(%d.0, %d.0))"
+                        to_fetch = to_fetch % (pos[0], pos[1])
+                        GLSL("samples%d[%d][%d] = %s[%d];" % (comp, i, j, to_fetch, comp))
             GLSL("ret[%d] = nnedi3(samples%d);" % (comp, comp))
+            if use_compute:
+                GLSL("ret0[%d] = inp[int(gl_LocalInvocationID.x)+%d][int(gl_LocalInvocationID.y)+%d]%s;" %
+                    (comp, array_offset[0], array_offset[1], swizzle))
+
+        if use_compute:
+            GLSL("imageStore(out_image, ivec2(gl_GlobalInvocationID) * $double_mul, ret0);")
+            GLSL("imageStore(out_image, ivec2(gl_GlobalInvocationID) * $double_mul + $double_offset, ret);")
+        else:
+            GLSL("return ret;")
 
         GLSL("""
-    return ret;
 }  // hook""")
 
         return super().generate()
@@ -337,6 +401,17 @@ if __name__ == "__main__":
     parser.add_argument('--use-gather',
                         action='store_true',
                         help="enable use of textureGatherOffset (requires OpenGL 4.0)")
+    parser.add_argument(
+        '--use-compute-shader',
+        action='store_true',
+        help="enable use of compute shader (requires OpenGL 4.3)")
+    parser.add_argument(
+        '--compute-shader-block-size',
+        nargs=2,
+        metavar=('block_width', 'block_height'),
+        default=[32, 8],
+        type=int,
+        help='specify the block size of compute shader (default: 32 8)')
 
     args = parser.parse_args()
     hook, profile = profile_mapping[args.target[0]]
@@ -344,6 +419,8 @@ if __name__ == "__main__":
     window = windows[args.win[0]]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
+    use_compute = args.use_compute_shader
+    compute_shader_block_size = args.compute_shader_block_size
 
     target_tex = "LUMA" if profile == Profile.chroma else "OUTPUT"
     gen = NNEDI3(profile,
@@ -355,4 +432,8 @@ if __name__ == "__main__":
 
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):
-        sys.stdout.write(gen.generate(step, use_gather=use_gather))
+        sys.stdout.write(gen.generate(
+            step,
+            use_gather=use_gather,
+            use_compute=use_compute,
+            compute_shader_block_size=compute_shader_block_size))
