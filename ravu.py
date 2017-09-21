@@ -36,6 +36,12 @@ class Profile(enum.Enum):
     chroma_center = 4
 
 
+class FloatFormat(enum.Enum):
+    float16gl = 0
+    float16vk = 1
+    float32 = 2
+
+
 class RAVU(userhook.UserHook):
     """
     An experimental prescaler inspired by RAISR (Rapid and Accurate Image Super
@@ -74,8 +80,14 @@ class RAVU(userhook.UserHook):
         self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence
         self.lut_width = ((self.radius * 2) ** 2 // 2 + 3) // 4
 
-    def generate_tex(self, use_float16=False):
+    def generate_tex(self, float_format=FloatFormat.float32):
         import struct
+
+        tex_format, item_format_str = {
+            FloatFormat.float16gl: ("rgba16f", 'f'),
+            FloatFormat.float16vk: ("rgba16hf", 'e'),
+            FloatFormat.float32:   ("rgba32f", 'f')
+        }[float_format]
 
         weights = []
         for i in range(self.quant_angle):
@@ -92,9 +104,7 @@ class RAVU(userhook.UserHook):
                         kernel2.append(0.0)
                     weights.extend(kernel2)
         assert len(weights) == self.lut_width * self.lut_height * 4
-        weights_raw = struct.pack('<%df' % len(weights), *weights).hex()
-
-        tex_format = "rgba%df" % (16 if use_float16 else 32)
+        weights_raw = struct.pack('<%d%s' % (len(weights), item_format_str), *weights).hex()
 
         headers = [
             "//!TEXTURE %s" % self.lut_name,
@@ -610,9 +620,11 @@ if __name__ == "__main__":
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
     parser.add_argument(
-        '--use-float16',
-        action='store_true',
-        help="use float16 as LUT texture format")
+        '--float-format',
+        nargs=1,
+        choices=FloatFormat.__members__,
+        default=["float32"],
+        help="specify the float format of LUT")
 
     args = parser.parse_args()
     target = args.target[0]
@@ -622,7 +634,7 @@ if __name__ == "__main__":
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
-    use_float16 = args.use_float16
+    float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU(hook=hook,
                profile=profile,
@@ -637,4 +649,4 @@ if __name__ == "__main__":
         else:
             shader = gen.generate(step, use_gather)
         sys.stdout.write(shader)
-    sys.stdout.write(gen.generate_tex(use_float16))
+    sys.stdout.write(gen.generate_tex(float_format))

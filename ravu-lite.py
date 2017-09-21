@@ -26,6 +26,12 @@ class Step(enum.Enum):
     step2 = 1
 
 
+class FloatFormat(enum.Enum):
+    float16gl = 0
+    float16vk = 1
+    float32 = 2
+
+
 class RAVU_Lite(userhook.UserHook):
     """
     A faster, slightly-lower-quality and luma-only variant of RAVU.
@@ -76,8 +82,14 @@ class RAVU_Lite(userhook.UserHook):
             for j in range(4):
                 self.luma[gi[j]] = "g%d.%s" % (i, "xyzw"[j])
 
-    def generate_tex(self, use_float16=False):
+    def generate_tex(self, float_format=FloatFormat.float32):
         import struct
+
+        tex_format, item_format_str = {
+            FloatFormat.float16gl: ("rgba16f", 'f'),
+            FloatFormat.float16vk: ("rgba16hf", 'e'),
+            FloatFormat.float32:   ("rgba32f", 'f')
+        }[float_format]
 
         height = self.quant_angle * self.quant_strength * self.quant_coherence
         width = len(self.gathered_groups) * 3
@@ -91,9 +103,7 @@ class RAVU_Lite(userhook.UserHook):
                             for idx in group:
                                 weights.append(self.model_weights[i][j][k][z][idx])
         assert len(weights) == width * height * 4
-        weights_raw = struct.pack('<%df' % len(weights), *weights).hex()
-
-        tex_format = "rgba%df" % (16 if use_float16 else 32)
+        weights_raw = struct.pack('<%d%s' % (len(weights), item_format_str), *weights).hex()
 
         headers = [
             "//!TEXTURE %s" % self.lut_name,
@@ -321,9 +331,11 @@ if __name__ == "__main__":
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
     parser.add_argument(
-        '--use-float16',
-        action='store_true',
-        help="use float16 as LUT texture format")
+        '--float-format',
+        nargs=1,
+        choices=FloatFormat.__members__,
+        default=["float32"],
+        help="specify the float format of LUT")
 
     args = parser.parse_args()
     weights_file = args.weights_file[0]
@@ -331,7 +343,7 @@ if __name__ == "__main__":
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
-    use_float16 = args.use_float16
+    float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU_Lite(hook=["LUMA"],
                     weights_file=weights_file,
@@ -345,4 +357,4 @@ if __name__ == "__main__":
         else:
             shader = gen.generate(step, use_gather)
         sys.stdout.write(shader)
-    sys.stdout.write(gen.generate_tex(use_float16))
+    sys.stdout.write(gen.generate_tex(float_format))

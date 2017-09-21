@@ -33,12 +33,12 @@ for target in luma chroma-left chroma-center yuv rgb; do
     for radius in 2 3 4; do
         file_name="ravu-r$radius$suffix.hook"
         weights_file="$DIR/ravu_weights-r$radius.py"
-        "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 > "$file_name"
+        "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl > "$file_name"
         if [ -d gather ]; then
-            "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 --use-gather > "gather/$file_name"
+            "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl --use-gather > "gather/$file_name"
         fi
         if [ -d compute ]; then
-            "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 --use-compute-shader > "compute/$file_name"
+            "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl --use-compute-shader > "compute/$file_name"
         fi
     done
 done
@@ -46,11 +46,11 @@ done
 for radius in 2 3 4; do
     file_name="ravu-lite-r$radius.hook"
     weights_file="$DIR/ravu-lite_weights-r$radius.py"
-    "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 > "$file_name"
+    "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl > "$file_name"
     if [ -d gather ]; then
-        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 --use-gather > "gather/$file_name"
+        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl --use-gather > "gather/$file_name"
     fi
     if [ -d compute ]; then
-        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --use-float16 --use-compute-shader > "compute/$file_name"
+        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format float16gl --use-compute-shader > "compute/$file_name"
     fi
 done
