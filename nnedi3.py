@@ -64,10 +64,10 @@ class Window(enum.Enum):
 
 
 class Step(enum.Enum):
-    step1 = 0
-    step2 = 1
-    step3 = 2
-    step4 = 3
+    double_y = 0
+    combine_y = 1
+    double_x = 2
+    combine_x = 3
 
 
 class Profile(enum.Enum):
@@ -147,35 +147,32 @@ class NNEDI3(userhook.UserHook):
         assert width % 2 == 0 and height % 2 == 0
         sample_count = width * height // 4
 
-        tex_name = [["HOOKED", self.int_tex_name + "01"],
-                    [self.int_tex_name + "10", self.int_tex_name + "11"]]
+        if step == Step.double_y or step == Step.combine_y:
+            self.set_skippable(mul_y=2)
+        elif step == Step.double_x or step == Step.combine_x:
+            self.set_skippable(mul_x=2)
 
-        # This checks against all passes, and works since "HOOKED" is same for
-        # all of them.
-        self.set_skippable(2, 2)
+        if step == Step.combine_y or step == Step.combine_x:
+            if step == Step.combine_y:
+                double_dir = "y"
+                self.set_transform(1, 2, 0.0, -0.5)
+            else:
+                double_dir = "x"
+                self.set_transform(2, 1, -0.5, 0.0)
 
-        if step == Step.step4:
-            self.set_transform(2, 2, -0.5, -0.5)
-
-            self.bind_tex(tex_name[0][1])
-            self.bind_tex(tex_name[1][0])
-            self.bind_tex(tex_name[1][1])
+            self.bind_tex(self.int_tex_name)
 
             # FIXME: get rid of branching (is it even possible?)
             GLSL("""
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
-    if (dir.x < 0.0) {
-        if (dir.y < 0.0)
-            return %s_texOff(-dir);
-        return %s_texOff(-dir);
+    if (dir.%s < 0.0) {
+        return HOOKED_texOff(-dir);
     } else {
-        if (dir.y < 0.0)
-            return %s_texOff(-dir);
         return %s_texOff(-dir);
     }
 }
-""" % (tex_name[0][0], tex_name[0][1], tex_name[1][0], tex_name[1][1]))
+""" % (double_dir, self.int_tex_name))
 
             return super().generate()
 
@@ -187,45 +184,33 @@ vec4 hook() {
             components = 3
             self.assert_yuv()
 
-        center_x = (width // 2 - 1) * 2
-        center_y = (height // 2 - 1) * 2 + 1
+        center_x = width // 2 - 1
+        center_y = height // 2 - 1
 
-        if step == Step.step1:
-            offset_x, offset_y = 0, 1
-            get_position = lambda x, y: (x * 2 - center_x, y * 2 - center_y)
-        else:
-            self.bind_tex(tex_name[0][1])
-            if step == Step.step2:
-                offset_x, offset_y = 1, 0
-            elif step == Step.step3:
-                offset_x, offset_y = 1, 1
-            get_position = lambda x, y: (y * 2 - center_y, x - center_x // 2)
-
-        self.save_tex(tex_name[offset_x][offset_y])
+        self.save_tex(self.int_tex_name)
 
         sample_positions = {}
         for y in range(height):
             for x in range(width):
-                nx, ny = get_position(x, y)
-                nx += offset_x
-                ny += offset_y
-                tex = tex_name[nx % 2][ny % 2]
-                sample_positions.setdefault(tex, {})[nx // 2, ny // 2] = x, y
+                if step == Step.double_y:
+                    nx, ny = x - center_x, y - center_y
+                else:
+                    ny, nx = x - center_x, y - center_y
+                sample_positions[nx, ny] = x, y
 
         gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
 
         sampling_info = []
-        for tex in sorted(sample_positions.keys()):
-            mapping = sample_positions[tex]
-            while len(mapping) > 0:
-                base = min(mapping.keys())
-                global_pos = []
-                window_pos = []
-                for dx, dy in gather_offsets:
-                    npos = base[0] + dx, base[1] + dy
-                    global_pos.append(npos)
-                    window_pos.append(mapping.pop(npos))
-                sampling_info.append((tex, global_pos, window_pos))
+        while len(sample_positions) > 0:
+            if use_gather:
+                base = min(sample_positions.keys())
+                global_pos = [(base[0] + dx, base[1] + dy) for dx, dy in gather_offsets]
+            else:
+                global_pos = sorted(sample_positions.keys())[:4]
+            window_pos = []
+            for npos in global_pos:
+                window_pos.append(sample_positions.pop(npos))
+            sampling_info.append((global_pos, window_pos))
 
         assert len(sampling_info) == sample_count
 
@@ -261,7 +246,7 @@ vsum += sum1*(sum2/(1.0+abs(sum2)));""")
             for s in range(2):
                 line.append("sum%d" % (s + 1))
                 for i in range(sample_count):
-                    tex, global_pos, window_pos = sampling_info[i]
+                    global_pos, window_pos = sampling_info[i]
                     weights = []
                     for x, y in window_pos:
                         weights.append(self.weightW(n, s, x, y))
@@ -284,16 +269,16 @@ vec4 hook() {""")
         for comp in range(components):
             GLSL("vec4 samples%d[%d];" % (comp, sample_count))
             for i in range(sample_count):
-                tex, global_pos, window_pos = sampling_info[i]
+                global_pos, window_pos = sampling_info[i]
                 if use_gather:
                     base = min(global_pos)
-                    to_fetch = "%s_mul * textureGatherOffset(%s_raw, %s_pos, ivec2(%d, %d), %d)"
-                    to_fetch = to_fetch % (tex, tex, tex, base[0], base[1], comp)
+                    to_fetch = "HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), %d)"
+                    to_fetch = to_fetch % (base[0], base[1], comp)
                     GLSL("samples%d[%d] = %s;" % (comp, i, to_fetch))
                 else:
                     for j, pos in enumerate(global_pos):
-                        to_fetch = "%s_texOff(vec2(%d.0, %d.0))[%d]"
-                        to_fetch = to_fetch % (tex, pos[0], pos[1], comp)
+                        to_fetch = "HOOKED_texOff(vec2(%d.0, %d.0))[%d]"
+                        to_fetch = to_fetch % (pos[0], pos[1], comp)
                         GLSL("samples%d[%d][%d] = %s;" % (comp, i, j, to_fetch))
             GLSL("ret[%d] = nnedi3(samples%d);" % (comp, comp))
 
