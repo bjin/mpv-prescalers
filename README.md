@@ -15,11 +15,11 @@ You only need to download shaders you actually use. The following part of this
 section assumes that they are in `shaders` directory in the `mpv` configure
 folder (usually `~/.config/mpv/shaders` on Linux).
 
-Use `opengl-shaders="prescaler.hook"` option to load those shaders. (This will
-override other user shaders, use `opengl-shaders-append` in that case)
+Use `glsl-shaders="prescaler.hook"` option to load those shaders. (This will
+override other user shaders, use `glsl-shaders-append` in that case)
 
 ```
-opengl-shaders="~~/shaders/ravu-r3.hook"
+glsl-shaders="~~/shaders/ravu-r3.hook"
 ```
 
 All shaders are for one pass only. If you want to have `4x` upscaling, trigger
@@ -27,8 +27,8 @@ the same shader twice. All the shaders here are generated with
 `max-downscaling-ratio` set to `1.6`. They will be disabled if upscaling is not necessary.
 
 ```
-opengl-shaders-append="~~/shaders/ravu-r3.hook"
-opengl-shaders-append="~~/shaders/ravu-r3.hook"
+glsl-shaders-append="~~/shaders/ravu-r3.hook"
+glsl-shaders-append="~~/shaders/ravu-r3.hook"
 ```
 
 Suffix in the filename indicates the planes that the prescaler will upscale.
@@ -68,28 +68,13 @@ caveats for using those shaders:
 
 # Known Issue
 
-1. `ravu-lite` is incompatible with `--opengl-fbo-format=rgb10_a2` (default
+1. `ravu-lite` is incompatible with `--fbo-format=rgb10_a2` (default
    for some OpenGL ES implementation). Use `rgba16f` or `rgba16` if available.
 2. `ravu-r4-{rgb,yuv}` causes distortion with lower-end intel card.
 3.  All `ravu` and `ravu-lite` shaders are generated with `rgba16f` LUT.
     However, while it's a safe fallback choice, it's not universally
-    available as well. Generate shaders without `--use-float16` option to use
+    available as well. Generate shaders without `--float-format` option to use
     `rgba32f` LUT in those cases.
-
-# About RAVU
-
-RAVU is an experimental prescaler based on RAISR (Rapid and Accurate Image Super
-Resolution). It adopts the core idea of RAISR for upscaling, without adopting
-any further refinement RAISR used for post-processing, including blending and
-sharpening.
-
-RAVU is a convolution kernel based upscaling algorithm. The kernels are trained
-from large amount of pictures with a straightforward linear regression model.
-From a high level view, it's kind of similar to EWA scalers, but more adaptive
-to local gradient features, and would produce lesser aliasing. Like EWA scalers,
-currently, plain RAVU would also produce noticeable ringings.
-
-RAVU-Lite is a faster, slightly-lower-quality and luma-only variant of RAVU.
 
 # License
 
