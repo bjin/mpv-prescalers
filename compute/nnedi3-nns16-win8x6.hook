@@ -58,7 +58,7 @@ ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
 int local_pos = int(gl_LocalInvocationID.x) * 13 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 507; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 13, y = id % 13;
-inp[id] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x-(3),y-(2)), 0).x;
+inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x-(3))+0.5,float(group_base.y+y-(2))+0.5)).x;
 }
 groupMemoryBarrier();
 barrier();
@@ -164,7 +164,7 @@ ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
 int local_pos = int(gl_LocalInvocationID.x) * 15 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 555; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 15, y = id % 15;
-inp[id] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x-(2),y-(3)), 0).x;
+inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x-(2))+0.5,float(group_base.y+y-(3))+0.5)).x;
 }
 groupMemoryBarrier();
 barrier();
