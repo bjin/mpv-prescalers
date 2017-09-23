@@ -328,7 +328,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
 
             GLSL("int x = id / %d, y = id %% %d;" % (array_size[1], array_size[1]))
 
-            GLSL("inp[id] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x-(%d),y-(%d)), 0)$comps_swizzle;" % array_offset)
+            GLSL("inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x-(%d))+0.5,float(group_base.y+y-(%d))+0.5))$comps_swizzle;" % array_offset)
 
             GLSL("""
 }""")
