@@ -24,28 +24,29 @@
 shared float inp[585];
 void hook() {
 ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
+int local_pos = int(gl_LocalInvocationID.x) * 15 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 585; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 15, y = id % 15;
 inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-2.5), float(group_base.y+y)+(-2.5))).x;
 }
 groupMemoryBarrier();
 barrier();
-vec4 g0 = vec4(inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+0)],inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+0)]);
-vec4 g1 = vec4(inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+2)],inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+2)]);
-vec4 g2 = vec4(inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+4)],inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+4)]);
-vec4 g3 = vec4(inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+1)*15+(int(gl_LocalInvocationID.y)+6)],inp[(int(gl_LocalInvocationID.x)+0)*15+(int(gl_LocalInvocationID.y)+6)]);
-vec4 g4 = vec4(inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+0)],inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+0)]);
-vec4 g5 = vec4(inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+2)],inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+2)]);
-vec4 g6 = vec4(inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+4)],inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+4)]);
-vec4 g7 = vec4(inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+3)*15+(int(gl_LocalInvocationID.y)+6)],inp[(int(gl_LocalInvocationID.x)+2)*15+(int(gl_LocalInvocationID.y)+6)]);
-vec4 g8 = vec4(inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+0)],inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+0)]);
-vec4 g9 = vec4(inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+2)],inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+2)]);
-vec4 g10 = vec4(inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+4)],inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+4)]);
-vec4 g11 = vec4(inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+5)*15+(int(gl_LocalInvocationID.y)+6)],inp[(int(gl_LocalInvocationID.x)+4)*15+(int(gl_LocalInvocationID.y)+6)]);
-vec4 g12 = vec4(inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+0)],inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+0)]);
-vec4 g13 = vec4(inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+2)],inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+2)]);
-vec4 g14 = vec4(inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+5)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+4)],inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+4)]);
-vec4 g15 = vec4(inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+7)],inp[(int(gl_LocalInvocationID.x)+7)*15+(int(gl_LocalInvocationID.y)+6)],inp[(int(gl_LocalInvocationID.x)+6)*15+(int(gl_LocalInvocationID.y)+6)]);
+vec4 g0 = vec4(inp[local_pos + 1],inp[local_pos + 16],inp[local_pos + 15],inp[local_pos + 0]);
+vec4 g1 = vec4(inp[local_pos + 3],inp[local_pos + 18],inp[local_pos + 17],inp[local_pos + 2]);
+vec4 g2 = vec4(inp[local_pos + 5],inp[local_pos + 20],inp[local_pos + 19],inp[local_pos + 4]);
+vec4 g3 = vec4(inp[local_pos + 7],inp[local_pos + 22],inp[local_pos + 21],inp[local_pos + 6]);
+vec4 g4 = vec4(inp[local_pos + 31],inp[local_pos + 46],inp[local_pos + 45],inp[local_pos + 30]);
+vec4 g5 = vec4(inp[local_pos + 33],inp[local_pos + 48],inp[local_pos + 47],inp[local_pos + 32]);
+vec4 g6 = vec4(inp[local_pos + 35],inp[local_pos + 50],inp[local_pos + 49],inp[local_pos + 34]);
+vec4 g7 = vec4(inp[local_pos + 37],inp[local_pos + 52],inp[local_pos + 51],inp[local_pos + 36]);
+vec4 g8 = vec4(inp[local_pos + 61],inp[local_pos + 76],inp[local_pos + 75],inp[local_pos + 60]);
+vec4 g9 = vec4(inp[local_pos + 63],inp[local_pos + 78],inp[local_pos + 77],inp[local_pos + 62]);
+vec4 g10 = vec4(inp[local_pos + 65],inp[local_pos + 80],inp[local_pos + 79],inp[local_pos + 64]);
+vec4 g11 = vec4(inp[local_pos + 67],inp[local_pos + 82],inp[local_pos + 81],inp[local_pos + 66]);
+vec4 g12 = vec4(inp[local_pos + 91],inp[local_pos + 106],inp[local_pos + 105],inp[local_pos + 90]);
+vec4 g13 = vec4(inp[local_pos + 93],inp[local_pos + 108],inp[local_pos + 107],inp[local_pos + 92]);
+vec4 g14 = vec4(inp[local_pos + 95],inp[local_pos + 110],inp[local_pos + 109],inp[local_pos + 94]);
+vec4 g15 = vec4(inp[local_pos + 97],inp[local_pos + 112],inp[local_pos + 111],inp[local_pos + 96]);
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (g4.x-g0.x)/2.0;

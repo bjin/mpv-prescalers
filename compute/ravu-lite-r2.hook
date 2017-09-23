@@ -24,16 +24,17 @@
 shared float inp[385];
 void hook() {
 ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
+int local_pos = int(gl_LocalInvocationID.x) * 11 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 385; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 11, y = id % 11;
 inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-0.5), float(group_base.y+y)+(-0.5))).x;
 }
 groupMemoryBarrier();
 barrier();
-vec4 g0 = vec4(inp[(int(gl_LocalInvocationID.x)+0)*11+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+1)*11+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+1)*11+(int(gl_LocalInvocationID.y)+0)],inp[(int(gl_LocalInvocationID.x)+0)*11+(int(gl_LocalInvocationID.y)+0)]);
-vec4 g1 = vec4(inp[(int(gl_LocalInvocationID.x)+0)*11+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+1)*11+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+1)*11+(int(gl_LocalInvocationID.y)+2)],inp[(int(gl_LocalInvocationID.x)+0)*11+(int(gl_LocalInvocationID.y)+2)]);
-vec4 g2 = vec4(inp[(int(gl_LocalInvocationID.x)+2)*11+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+3)*11+(int(gl_LocalInvocationID.y)+1)],inp[(int(gl_LocalInvocationID.x)+3)*11+(int(gl_LocalInvocationID.y)+0)],inp[(int(gl_LocalInvocationID.x)+2)*11+(int(gl_LocalInvocationID.y)+0)]);
-vec4 g3 = vec4(inp[(int(gl_LocalInvocationID.x)+2)*11+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+3)*11+(int(gl_LocalInvocationID.y)+3)],inp[(int(gl_LocalInvocationID.x)+3)*11+(int(gl_LocalInvocationID.y)+2)],inp[(int(gl_LocalInvocationID.x)+2)*11+(int(gl_LocalInvocationID.y)+2)]);
+vec4 g0 = vec4(inp[local_pos + 1],inp[local_pos + 12],inp[local_pos + 11],inp[local_pos + 0]);
+vec4 g1 = vec4(inp[local_pos + 3],inp[local_pos + 14],inp[local_pos + 13],inp[local_pos + 2]);
+vec4 g2 = vec4(inp[local_pos + 23],inp[local_pos + 34],inp[local_pos + 33],inp[local_pos + 22]);
+vec4 g3 = vec4(inp[local_pos + 25],inp[local_pos + 36],inp[local_pos + 35],inp[local_pos + 24]);
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (g0.z-g0.w);
