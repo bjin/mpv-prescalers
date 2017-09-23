@@ -487,14 +487,15 @@ return $hook_return_value;
                 mapping = sample_positions[tex]
                 for tex_offset in mapping.keys():
                     logical_offset = mapping[tex_offset]
-                    samples_mapping[logical_offset] = "inp%d[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]" % \
-                                                      (tex_idx, tex_offset[0] - minx, array_size[1], tex_offset[1] - miny)
+                    samples_mapping[logical_offset] = "inp%d[local_pos + %d]" % \
+                                                      (tex_idx, (tex_offset[0] - minx) * array_size[1] + (tex_offset[1] - miny))
 
         GLSL("""
 void hook() {""")
 
         # load all samples
         GLSL("ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);")
+        GLSL("int local_pos = int(gl_LocalInvocationID.x) * %d + int(gl_LocalInvocationID.y);" % array_size[1])
         for tex_idx, tex in enumerate(bound_tex_names):
             offset_base = offset_for_tex[tex_idx]
             array_size = array_size_for_tex[tex_idx]
@@ -560,7 +561,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
                 offset_base = offset_for_tex[tex_idx]
                 bound_tex_id = self.get_id_from_texname(tex)
                 pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d,%d)" % bound_tex_id
-                res = "inp%d[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]" % (tex_idx, -offset_base[0], array_size[1], -offset_base[1])
+                res = "inp%d[local_pos + %d]" % (tex_idx, (-offset_base[0]) * array_size[1] + (-offset_base[1]))
                 GLSL("res = %s;" % res)
                 GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
 

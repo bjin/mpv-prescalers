@@ -261,6 +261,7 @@ void hook() {""")
 
         # load all samples
         GLSL("ivec2 group_base = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);")
+        GLSL("int local_pos = int(gl_LocalInvocationID.x) * %d + int(gl_LocalInvocationID.y);" % array_size[1])
 
         GLSL("""
 for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {""" % (array_size[0] * array_size[1]))
@@ -278,8 +279,8 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
 
         for i, gi in enumerate(self.gathered_groups):
             bx, by = self.gathered_group_base[i]
-            to_fetch = ["inp[(int(gl_LocalInvocationID.x)+%d)*%d+(int(gl_LocalInvocationID.y)+%d)]" %
-                        (bx + ox - offset_base, array_size[1], by + oy - offset_base) for ox, oy in self.gather_offsets]
+            to_fetch = ["inp[local_pos + %d]" %
+                        ((bx + ox - offset_base) * array_size[1] + (by + oy - offset_base)) for ox, oy in self.gather_offsets]
             GLSL("vec4 g%d = vec4(%s);" % (i, ",".join(to_fetch)))
 
         self.extract_key()
