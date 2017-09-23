@@ -145,6 +145,25 @@ class NNEDI3(userhook.UserHook):
             use_gather = False
             block_width, block_height = compute_shader_block_size
 
+            # Don't inline the nnedi3() function. The benefits of inlining is
+            # negligible but could confuse the nvidia's shader compiler.
+            #
+            # Without this, the performance on nvidia's card is unpredictable.
+            # Even expanding expression could make whole shader several
+            # times slower.
+            #
+            # This workaround is obtained by trial and error, and could be broken
+            # again anytime nvidia updates its driver.
+            #
+            # Applied only to compute shader since:
+            #   1. Only compute shader suffers from the performance issue with
+            #      my setup at this moment.
+            #   2. gather version failed to compile without inlining (a compiler bug)
+            #      "error C5213: Component must be a constant in the range [0..3]"
+            #   3. regular version is too slow without inlining
+            #
+            GLSL('#pragma optionNV(inline none)')
+
         self.set_description("NNEDI3 (%s, %s, nns%d, win%dx%d)" %
                              (step.name, self.profile.name, self.neurons, width, height))
 
