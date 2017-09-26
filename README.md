@@ -10,7 +10,7 @@ current work directory.
 
 Alternatively, you could generate shader with customized options:
 ```
-./nnedi3.py --target luma --nns 32 --win 8x4 --max-downscaling-ratio 1.8 > ~/.config/mpv/shaders/nnedi3.hook
+./nnedi3.py --nns 32 --win 8x4 --max-downscaling-ratio 1.8 > ~/.config/mpv/shaders/nnedi3.hook
 ```
 
 Or play video directly with scripts

@@ -70,12 +70,6 @@ class Step(enum.Enum):
     combine_x = 3
 
 
-class Profile(enum.Enum):
-    luma = 0
-    chroma = 1
-    yuv = 2
-
-
 class NNEDI3(userhook.UserHook):
 
     weight_offsets = [0, 1088, 3264, 7616, 16320, 33728, 35328, 38528, 44928, 57728]
@@ -89,10 +83,9 @@ class NNEDI3(userhook.UserHook):
     weight_fmt = struct.Struct("<i")
     assert weight_fmt.size == 4
 
-    def __init__(self, profile, neurons, window, int_tex_name = "nnedi3_int", **args):
+    def __init__(self, neurons, window, int_tex_name = "nnedi3_int", **args):
         super().__init__(**args)
 
-        self.profile = profile
         self.neurons = neurons.get_neurons()
         self.window_width = window.get_width()
         self.window_height = window.get_height()
@@ -164,8 +157,8 @@ class NNEDI3(userhook.UserHook):
             #
             GLSL('#pragma optionNV(inline none)')
 
-        self.set_description("NNEDI3 (%s, %s, nns%d, win%dx%d)" %
-                             (step.name, self.profile.name, self.neurons, width, height))
+        self.set_description("NNEDI3 (%s, nns%d, win%dx%d)" %
+                             (step.name, self.neurons, width, height))
 
         assert width % 2 == 0 and height % 2 == 0
         sample_count = width * height // 4
@@ -214,14 +207,6 @@ vec4 hook() {
 """ % self.int_tex_name)
 
             return super().generate()
-
-        if self.profile == Profile.luma:
-            components = 1
-        elif self.profile == Profile.chroma:
-            components = 2
-        elif self.profile == Profile.yuv:
-            components = 3
-            self.assert_yuv()
 
         center_x = width // 2 - 1
         center_y = height // 2 - 1
@@ -309,11 +294,8 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
             maxy = max(key[0][i][1] for key in sampling_info for i in range(4))
             array_size = (maxx - minx + block_width, maxy - miny + block_height)
             array_offset = (-minx, -miny)
-            self.add_mappings(
-                sample_type=["float", "vec2", "vec3"][components - 1],
-                comps_swizzle=[".x", ".xy", ".xyz"][components - 1])
 
-            GLSL("shared $sample_type inp[%d];" % (array_size[0] * array_size[1]))
+            GLSL("shared float inp[%d];" % (array_size[0] * array_size[1]))
 
 
         GLSL("""
@@ -328,7 +310,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
 
             GLSL("int x = id / %d, y = id %% %d;" % (array_size[1], array_size[1]))
 
-            GLSL("inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x-(%d))+0.5,float(group_base.y+y-(%d))+0.5))$comps_swizzle;" % array_offset)
+            GLSL("inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x-(%d))+0.5,float(group_base.y+y-(%d))+0.5)).x;" % array_offset)
 
             GLSL("""
 }""")
@@ -339,30 +321,28 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
         GLSL("vec4 ret = vec4(0.0);")
         if use_compute:
             GLSL("vec4 ret0 = vec4(0.0);")
-        for comp in range(components):
-            GLSL("vec4 samples%d[%d];" % (comp, sample_count))
-            swizzle = "" if components == 1 else [".x", ".y", ".z"][comp]
-            for i in range(sample_count):
-                global_pos, window_pos = sampling_info[i]
-                if use_compute:
-                    for j, pos in enumerate(global_pos):
-                        to_fetch = "inp[local_pos + %d]"
-                        to_fetch = to_fetch % ((pos[0] + array_offset[0]) * array_size[1] + (pos[1] + array_offset[1]))
-                        GLSL("samples%d[%d][%d] = %s%s;" % (comp, i, j, to_fetch, swizzle))
-                elif use_gather:
-                    base = min(global_pos)
-                    to_fetch = "HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), %d)"
-                    to_fetch = to_fetch % (base[0], base[1], comp)
-                    GLSL("samples%d[%d] = %s;" % (comp, i, to_fetch))
-                else:
-                    for j, pos in enumerate(global_pos):
-                        to_fetch = "HOOKED_texOff(vec2(%d.0, %d.0))"
-                        to_fetch = to_fetch % (pos[0], pos[1])
-                        GLSL("samples%d[%d][%d] = %s[%d];" % (comp, i, j, to_fetch, comp))
-            GLSL("ret[%d] = nnedi3(samples%d);" % (comp, comp))
+        GLSL("vec4 samples[%d];" % sample_count)
+        for i in range(sample_count):
+            global_pos, window_pos = sampling_info[i]
             if use_compute:
-                GLSL("ret0[%d] = inp[local_pos + %d]%s;" %
-                    (comp, array_offset[0] * array_size[1] + array_offset[1], swizzle))
+                for j, pos in enumerate(global_pos):
+                    to_fetch = "inp[local_pos + %d]"
+                    to_fetch = to_fetch % ((pos[0] + array_offset[0]) * array_size[1] + (pos[1] + array_offset[1]))
+                    GLSL("samples[%d][%d] = %s;" % (i, j, to_fetch))
+            elif use_gather:
+                base = min(global_pos)
+                to_fetch = "HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), 0)"
+                to_fetch = to_fetch % (base[0], base[1])
+                GLSL("samples[%d] = %s;" % (i, to_fetch))
+            else:
+                for j, pos in enumerate(global_pos):
+                    to_fetch = "HOOKED_texOff(vec2(%d.0, %d.0)).x"
+                    to_fetch = to_fetch % (pos[0], pos[1])
+                    GLSL("samples[%d][%d] = %s;" % (i, j, to_fetch))
+        GLSL("ret[0] = nnedi3(samples);")
+        if use_compute:
+            GLSL("ret0[0] = inp[local_pos + %d];" %
+                (array_offset[0] * array_size[1] + array_offset[1]))
 
         if use_compute:
             GLSL("imageStore(out_image, ivec2(gl_GlobalInvocationID) * $double_mul, ret0);")
@@ -380,12 +360,6 @@ if __name__ == "__main__":
     import argparse
     import sys
 
-    profile_mapping = {
-        "luma": (["LUMA"], Profile.luma),
-        "chroma": (["CHROMA"], Profile.chroma),
-        "yuv": (["NATIVE"], Profile.yuv)
-    }
-
     neurons = {16: Neurons.nns16,
                32: Neurons.nns32,
                64: Neurons.nns64,
@@ -396,12 +370,6 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
         description="generate NNEDI3 user shader for mpv")
-    parser.add_argument('-t',
-                        '--target',
-                        nargs=1,
-                        choices=sorted(profile_mapping.keys()),
-                        default=["luma"],
-                        help='target that shader is hooked on (default: luma)')
     parser.add_argument('-n',
                         '--nns',
                         nargs=1,
@@ -437,7 +405,6 @@ if __name__ == "__main__":
         help='specify the block size of compute shader (default: 32 8)')
 
     args = parser.parse_args()
-    hook, profile = profile_mapping[args.target[0]]
     neuron = neurons[args.nns[0]]
     window = windows[args.win[0]]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
@@ -445,12 +412,10 @@ if __name__ == "__main__":
     use_compute = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
 
-    target_tex = "LUMA" if profile == Profile.chroma else "OUTPUT"
-    gen = NNEDI3(profile,
-                 neuron,
+    gen = NNEDI3(neuron,
                  window,
-                 hook=hook,
-                 target_tex=target_tex,
+                 hook=["LUMA"],
+                 target_tex="OUTPUT",
                  max_downscaling_ratio=max_downscaling_ratio)
 
     sys.stdout.write(userhook.LICENSE_HEADER)
