@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC NNEDI3 (double_y, luma, nns64, win8x4)
+//!DESC NNEDI3 (double_y, nns64, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int
@@ -99,43 +99,43 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 }  // nnedi3
 vec4 hook() {
 vec4 ret = vec4(0.0);
-vec4 samples0[8];
-samples0[0][0] = HOOKED_texOff(vec2(-3.0, -1.0))[0];
-samples0[0][1] = HOOKED_texOff(vec2(-3.0, 0.0))[0];
-samples0[0][2] = HOOKED_texOff(vec2(-3.0, 1.0))[0];
-samples0[0][3] = HOOKED_texOff(vec2(-3.0, 2.0))[0];
-samples0[1][0] = HOOKED_texOff(vec2(-2.0, -1.0))[0];
-samples0[1][1] = HOOKED_texOff(vec2(-2.0, 0.0))[0];
-samples0[1][2] = HOOKED_texOff(vec2(-2.0, 1.0))[0];
-samples0[1][3] = HOOKED_texOff(vec2(-2.0, 2.0))[0];
-samples0[2][0] = HOOKED_texOff(vec2(-1.0, -1.0))[0];
-samples0[2][1] = HOOKED_texOff(vec2(-1.0, 0.0))[0];
-samples0[2][2] = HOOKED_texOff(vec2(-1.0, 1.0))[0];
-samples0[2][3] = HOOKED_texOff(vec2(-1.0, 2.0))[0];
-samples0[3][0] = HOOKED_texOff(vec2(0.0, -1.0))[0];
-samples0[3][1] = HOOKED_texOff(vec2(0.0, 0.0))[0];
-samples0[3][2] = HOOKED_texOff(vec2(0.0, 1.0))[0];
-samples0[3][3] = HOOKED_texOff(vec2(0.0, 2.0))[0];
-samples0[4][0] = HOOKED_texOff(vec2(1.0, -1.0))[0];
-samples0[4][1] = HOOKED_texOff(vec2(1.0, 0.0))[0];
-samples0[4][2] = HOOKED_texOff(vec2(1.0, 1.0))[0];
-samples0[4][3] = HOOKED_texOff(vec2(1.0, 2.0))[0];
-samples0[5][0] = HOOKED_texOff(vec2(2.0, -1.0))[0];
-samples0[5][1] = HOOKED_texOff(vec2(2.0, 0.0))[0];
-samples0[5][2] = HOOKED_texOff(vec2(2.0, 1.0))[0];
-samples0[5][3] = HOOKED_texOff(vec2(2.0, 2.0))[0];
-samples0[6][0] = HOOKED_texOff(vec2(3.0, -1.0))[0];
-samples0[6][1] = HOOKED_texOff(vec2(3.0, 0.0))[0];
-samples0[6][2] = HOOKED_texOff(vec2(3.0, 1.0))[0];
-samples0[6][3] = HOOKED_texOff(vec2(3.0, 2.0))[0];
-samples0[7][0] = HOOKED_texOff(vec2(4.0, -1.0))[0];
-samples0[7][1] = HOOKED_texOff(vec2(4.0, 0.0))[0];
-samples0[7][2] = HOOKED_texOff(vec2(4.0, 1.0))[0];
-samples0[7][3] = HOOKED_texOff(vec2(4.0, 2.0))[0];
-ret[0] = nnedi3(samples0);
+vec4 samples[8];
+samples[0][0] = HOOKED_texOff(vec2(-3.0, -1.0)).x;
+samples[0][1] = HOOKED_texOff(vec2(-3.0, 0.0)).x;
+samples[0][2] = HOOKED_texOff(vec2(-3.0, 1.0)).x;
+samples[0][3] = HOOKED_texOff(vec2(-3.0, 2.0)).x;
+samples[1][0] = HOOKED_texOff(vec2(-2.0, -1.0)).x;
+samples[1][1] = HOOKED_texOff(vec2(-2.0, 0.0)).x;
+samples[1][2] = HOOKED_texOff(vec2(-2.0, 1.0)).x;
+samples[1][3] = HOOKED_texOff(vec2(-2.0, 2.0)).x;
+samples[2][0] = HOOKED_texOff(vec2(-1.0, -1.0)).x;
+samples[2][1] = HOOKED_texOff(vec2(-1.0, 0.0)).x;
+samples[2][2] = HOOKED_texOff(vec2(-1.0, 1.0)).x;
+samples[2][3] = HOOKED_texOff(vec2(-1.0, 2.0)).x;
+samples[3][0] = HOOKED_texOff(vec2(0.0, -1.0)).x;
+samples[3][1] = HOOKED_texOff(vec2(0.0, 0.0)).x;
+samples[3][2] = HOOKED_texOff(vec2(0.0, 1.0)).x;
+samples[3][3] = HOOKED_texOff(vec2(0.0, 2.0)).x;
+samples[4][0] = HOOKED_texOff(vec2(1.0, -1.0)).x;
+samples[4][1] = HOOKED_texOff(vec2(1.0, 0.0)).x;
+samples[4][2] = HOOKED_texOff(vec2(1.0, 1.0)).x;
+samples[4][3] = HOOKED_texOff(vec2(1.0, 2.0)).x;
+samples[5][0] = HOOKED_texOff(vec2(2.0, -1.0)).x;
+samples[5][1] = HOOKED_texOff(vec2(2.0, 0.0)).x;
+samples[5][2] = HOOKED_texOff(vec2(2.0, 1.0)).x;
+samples[5][3] = HOOKED_texOff(vec2(2.0, 2.0)).x;
+samples[6][0] = HOOKED_texOff(vec2(3.0, -1.0)).x;
+samples[6][1] = HOOKED_texOff(vec2(3.0, 0.0)).x;
+samples[6][2] = HOOKED_texOff(vec2(3.0, 1.0)).x;
+samples[6][3] = HOOKED_texOff(vec2(3.0, 2.0)).x;
+samples[7][0] = HOOKED_texOff(vec2(4.0, -1.0)).x;
+samples[7][1] = HOOKED_texOff(vec2(4.0, 0.0)).x;
+samples[7][2] = HOOKED_texOff(vec2(4.0, 1.0)).x;
+samples[7][3] = HOOKED_texOff(vec2(4.0, 2.0)).x;
+ret[0] = nnedi3(samples);
 return ret;
 }  // hook
-//!DESC NNEDI3 (combine_y, luma, nns64, win8x4)
+//!DESC NNEDI3 (combine_y, nns64, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int
@@ -150,7 +150,7 @@ vec4 hook() {
         return nnedi3_int_texOff(-dir);
     }
 }
-//!DESC NNEDI3 (double_x, luma, nns64, win8x4)
+//!DESC NNEDI3 (double_x, nns64, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int
@@ -237,43 +237,43 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 }  // nnedi3
 vec4 hook() {
 vec4 ret = vec4(0.0);
-vec4 samples0[8];
-samples0[0][0] = HOOKED_texOff(vec2(-1.0, -3.0))[0];
-samples0[0][1] = HOOKED_texOff(vec2(-1.0, -2.0))[0];
-samples0[0][2] = HOOKED_texOff(vec2(-1.0, -1.0))[0];
-samples0[0][3] = HOOKED_texOff(vec2(-1.0, 0.0))[0];
-samples0[1][0] = HOOKED_texOff(vec2(-1.0, 1.0))[0];
-samples0[1][1] = HOOKED_texOff(vec2(-1.0, 2.0))[0];
-samples0[1][2] = HOOKED_texOff(vec2(-1.0, 3.0))[0];
-samples0[1][3] = HOOKED_texOff(vec2(-1.0, 4.0))[0];
-samples0[2][0] = HOOKED_texOff(vec2(0.0, -3.0))[0];
-samples0[2][1] = HOOKED_texOff(vec2(0.0, -2.0))[0];
-samples0[2][2] = HOOKED_texOff(vec2(0.0, -1.0))[0];
-samples0[2][3] = HOOKED_texOff(vec2(0.0, 0.0))[0];
-samples0[3][0] = HOOKED_texOff(vec2(0.0, 1.0))[0];
-samples0[3][1] = HOOKED_texOff(vec2(0.0, 2.0))[0];
-samples0[3][2] = HOOKED_texOff(vec2(0.0, 3.0))[0];
-samples0[3][3] = HOOKED_texOff(vec2(0.0, 4.0))[0];
-samples0[4][0] = HOOKED_texOff(vec2(1.0, -3.0))[0];
-samples0[4][1] = HOOKED_texOff(vec2(1.0, -2.0))[0];
-samples0[4][2] = HOOKED_texOff(vec2(1.0, -1.0))[0];
-samples0[4][3] = HOOKED_texOff(vec2(1.0, 0.0))[0];
-samples0[5][0] = HOOKED_texOff(vec2(1.0, 1.0))[0];
-samples0[5][1] = HOOKED_texOff(vec2(1.0, 2.0))[0];
-samples0[5][2] = HOOKED_texOff(vec2(1.0, 3.0))[0];
-samples0[5][3] = HOOKED_texOff(vec2(1.0, 4.0))[0];
-samples0[6][0] = HOOKED_texOff(vec2(2.0, -3.0))[0];
-samples0[6][1] = HOOKED_texOff(vec2(2.0, -2.0))[0];
-samples0[6][2] = HOOKED_texOff(vec2(2.0, -1.0))[0];
-samples0[6][3] = HOOKED_texOff(vec2(2.0, 0.0))[0];
-samples0[7][0] = HOOKED_texOff(vec2(2.0, 1.0))[0];
-samples0[7][1] = HOOKED_texOff(vec2(2.0, 2.0))[0];
-samples0[7][2] = HOOKED_texOff(vec2(2.0, 3.0))[0];
-samples0[7][3] = HOOKED_texOff(vec2(2.0, 4.0))[0];
-ret[0] = nnedi3(samples0);
+vec4 samples[8];
+samples[0][0] = HOOKED_texOff(vec2(-1.0, -3.0)).x;
+samples[0][1] = HOOKED_texOff(vec2(-1.0, -2.0)).x;
+samples[0][2] = HOOKED_texOff(vec2(-1.0, -1.0)).x;
+samples[0][3] = HOOKED_texOff(vec2(-1.0, 0.0)).x;
+samples[1][0] = HOOKED_texOff(vec2(-1.0, 1.0)).x;
+samples[1][1] = HOOKED_texOff(vec2(-1.0, 2.0)).x;
+samples[1][2] = HOOKED_texOff(vec2(-1.0, 3.0)).x;
+samples[1][3] = HOOKED_texOff(vec2(-1.0, 4.0)).x;
+samples[2][0] = HOOKED_texOff(vec2(0.0, -3.0)).x;
+samples[2][1] = HOOKED_texOff(vec2(0.0, -2.0)).x;
+samples[2][2] = HOOKED_texOff(vec2(0.0, -1.0)).x;
+samples[2][3] = HOOKED_texOff(vec2(0.0, 0.0)).x;
+samples[3][0] = HOOKED_texOff(vec2(0.0, 1.0)).x;
+samples[3][1] = HOOKED_texOff(vec2(0.0, 2.0)).x;
+samples[3][2] = HOOKED_texOff(vec2(0.0, 3.0)).x;
+samples[3][3] = HOOKED_texOff(vec2(0.0, 4.0)).x;
+samples[4][0] = HOOKED_texOff(vec2(1.0, -3.0)).x;
+samples[4][1] = HOOKED_texOff(vec2(1.0, -2.0)).x;
+samples[4][2] = HOOKED_texOff(vec2(1.0, -1.0)).x;
+samples[4][3] = HOOKED_texOff(vec2(1.0, 0.0)).x;
+samples[5][0] = HOOKED_texOff(vec2(1.0, 1.0)).x;
+samples[5][1] = HOOKED_texOff(vec2(1.0, 2.0)).x;
+samples[5][2] = HOOKED_texOff(vec2(1.0, 3.0)).x;
+samples[5][3] = HOOKED_texOff(vec2(1.0, 4.0)).x;
+samples[6][0] = HOOKED_texOff(vec2(2.0, -3.0)).x;
+samples[6][1] = HOOKED_texOff(vec2(2.0, -2.0)).x;
+samples[6][2] = HOOKED_texOff(vec2(2.0, -1.0)).x;
+samples[6][3] = HOOKED_texOff(vec2(2.0, 0.0)).x;
+samples[7][0] = HOOKED_texOff(vec2(2.0, 1.0)).x;
+samples[7][1] = HOOKED_texOff(vec2(2.0, 2.0)).x;
+samples[7][2] = HOOKED_texOff(vec2(2.0, 3.0)).x;
+samples[7][3] = HOOKED_texOff(vec2(2.0, 4.0)).x;
+ret[0] = nnedi3(samples);
 return ret;
 }  // hook
-//!DESC NNEDI3 (combine_x, luma, nns64, win8x4)
+//!DESC NNEDI3 (combine_x, nns64, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int

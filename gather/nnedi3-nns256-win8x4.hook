@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC NNEDI3 (double_y, luma, nns256, win8x4)
+//!DESC NNEDI3 (double_y, nns256, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int
@@ -291,19 +291,19 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 }  // nnedi3
 vec4 hook() {
 vec4 ret = vec4(0.0);
-vec4 samples0[8];
-samples0[0] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -1), 0);
-samples0[1] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 1), 0);
-samples0[2] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 0);
-samples0[3] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 1), 0);
-samples0[4] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 0);
-samples0[5] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 0);
-samples0[6] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, -1), 0);
-samples0[7] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, 1), 0);
-ret[0] = nnedi3(samples0);
+vec4 samples[8];
+samples[0] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -1), 0);
+samples[1] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 1), 0);
+samples[2] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 0);
+samples[3] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 1), 0);
+samples[4] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 0);
+samples[5] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 0);
+samples[6] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, -1), 0);
+samples[7] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(3, 1), 0);
+ret[0] = nnedi3(samples);
 return ret;
 }  // hook
-//!DESC NNEDI3 (combine_y, luma, nns256, win8x4)
+//!DESC NNEDI3 (combine_y, nns256, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int
@@ -318,7 +318,7 @@ vec4 hook() {
         return nnedi3_int_texOff(-dir);
     }
 }
-//!DESC NNEDI3 (double_x, luma, nns256, win8x4)
+//!DESC NNEDI3 (double_x, nns256, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int
@@ -597,19 +597,19 @@ return clamp(mstd0 + 5.0 * vsum / wsum * mstd1, 0.0, 1.0);
 }  // nnedi3
 vec4 hook() {
 vec4 ret = vec4(0.0);
-vec4 samples0[8];
-samples0[0] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -3), 0);
-samples0[1] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 0);
-samples0[2] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 1), 0);
-samples0[3] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 3), 0);
-samples0[4] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -3), 0);
-samples0[5] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 0);
-samples0[6] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 0);
-samples0[7] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 3), 0);
-ret[0] = nnedi3(samples0);
+vec4 samples[8];
+samples[0] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -3), 0);
+samples[1] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 0);
+samples[2] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 1), 0);
+samples[3] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 3), 0);
+samples[4] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -3), 0);
+samples[5] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 0);
+samples[6] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 0);
+samples[7] = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 3), 0);
+ret[0] = nnedi3(samples);
 return ret;
 }  // hook
-//!DESC NNEDI3 (combine_x, luma, nns256, win8x4)
+//!DESC NNEDI3 (combine_x, nns256, win8x4)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND nnedi3_int
