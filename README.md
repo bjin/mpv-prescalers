@@ -36,9 +36,6 @@ Suffix in the filename indicates the planes that the prescaler will upscale.
 * Without any suffix: Works on `YUV` video, upscale only luma plane. (like the old `prescale-luma=...` option in `mpv`).
 * `-chroma*`: Works on `YUV` video, upscale only chroma plane.
 * `-yuv`: Works on `YUV` video, upscale all planes after they are merged.
-  (If you really want to use these shaders for `RGB` video, you can use `--vf-add format=fmt=yuv444p16`.
-  But be aware that there is no guarantee of colorspace/depth conversion
-  correctness from `mpv` then.)
 * `-rgb`: Works on all video, upscale all planes after they are merged and
   converted to `RGB`.
 
@@ -71,10 +68,9 @@ caveats for using those shaders:
 1. `ravu-lite` is incompatible with `--fbo-format=rgb10_a2` (default
    for some OpenGL ES implementation). Use `rgba16f` or `rgba16` if available.
 2. `ravu-r4-{rgb,yuv}` causes distortion with lower-end intel card.
-3.  All `ravu` and `ravu-lite` shaders are generated with `rgba16f` LUT.
-    However, while it's a safe fallback choice, it's not universally
-    available as well. Generate shaders without `--float-format` option to use
-    `rgba32f` LUT in those cases.
+3.  All `ravu` and `ravu-lite` shaders are generated with `rgba16f` LUT. It's
+    supported by most OpenGL/GLES implementation, but not Vulkan. Generate
+    shaders with `--float-format float16vk` in that case.
 
 # License
 
