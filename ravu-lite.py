@@ -34,8 +34,9 @@ class FloatFormat(enum.Enum):
 
 class RAVU_Lite(userhook.UserHook):
     """
-    A faster, slightly-lower-quality and luma-only variant of RAVU.
+    A faster and luma-only variant of RAVU
     """
+
 
     def __init__(self,
                  weights_file=None,
@@ -62,25 +63,10 @@ class RAVU_Lite(userhook.UserHook):
         self.lut_name = "%s%d" % (lut_name, self.radius)
         self.int_tex_name = int_tex_name
 
-        self.gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
-        self.prepare_positions()
+        n = self.radius * 2 - 1
 
-    def prepare_positions(self):
-        n = self.radius * 2
-
-        self.gathered_groups = []
-        self.gathered_group_base = []
-        for i in range(0, n, 2):
-            for j in range(0, n, 2):
-                group = []
-                for ox, oy in self.gather_offsets:
-                    group.append((i + ox) * n + (j + oy))
-                self.gathered_groups.append(group)
-                self.gathered_group_base.append((i - self.radius + 1, j - self.radius + 1))
-        self.luma = {}
-        for i, gi in enumerate(self.gathered_groups):
-            for j in range(4):
-                self.luma[gi[j]] = "g%d.%s" % (i, "xyzw"[j])
+        self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence
+        self.lut_width = (n * n + 1) // 2
 
     def generate_tex(self, float_format=FloatFormat.float32):
         import struct
@@ -91,32 +77,30 @@ class RAVU_Lite(userhook.UserHook):
             FloatFormat.float32:   ("rgba32f", 'f')
         }[float_format]
 
-        height = self.quant_angle * self.quant_strength * self.quant_coherence
-        width = len(self.gathered_groups) * 3
-
         weights = []
         for i in range(self.quant_angle):
             for j in range(self.quant_strength):
                 for k in range(self.quant_coherence):
-                    for group in self.gathered_groups:
-                        for z in range(3):
-                            for idx in group:
-                                weights.append(self.model_weights[i][j][k][z][idx])
-        assert len(weights) == width * height * 4
+                    w = self.model_weights[i][j][k]
+                    for pos in range(self.lut_width):
+                        for z in range(4):
+                            assert abs(w[z][pos] - w[~z][~pos]) < 1e-6, "filter kernel is not symmetric"
+                            weights.append(w[z][pos])
+        assert len(weights) == self.lut_width * self.lut_height * 4
         weights_raw = struct.pack('<%d%s' % (len(weights), item_format_str), *weights).hex()
 
         headers = [
             "//!TEXTURE %s" % self.lut_name,
-            "//!SIZE %d %d" % (width, height),
+            "//!SIZE %d %d" % (self.lut_width, self.lut_height),
             "//!FORMAT %s" % tex_format,
             "//!FILTER NEAREST"
         ]
 
         return "\n".join(headers + [weights_raw, ""])
 
-    def extract_key(self):
+    def extract_key(self, samples_list):
         GLSL = self.add_glsl
-        n = self.radius * 2
+        n = self.radius * 2 - 1
 
         # Calculate local gradient
         gradient_left = self.radius - self.gradient_radius
@@ -135,9 +119,9 @@ class RAVU_Lite(userhook.UserHook):
                     return "(%s-%s)/2.0" % (f(x + 1), f(x - 1))
 
                 GLSL("gx = %s;" % numerial_differential(
-                    lambda i2: self.luma[i2 * n + j], i))
+                    lambda i2: samples_list[i2 * n + j], i))
                 GLSL("gy = %s;" % numerial_differential(
-                    lambda j2: self.luma[i * n + j2], j))
+                    lambda j2: samples_list[i * n + j2], j))
                 gw = self.gaussian[i - gradient_left][j - gradient_left]
                 GLSL("abd += vec3(gx * gx, gx * gy, gy * gy) * %s;" % gw)
 
@@ -168,33 +152,37 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL("float strength = %s;" % quantize("lambda", self.min_strength, 0, self.quant_strength - 1))
         GLSL("float coherence = %s;" % quantize("mu", self.min_coherence, 0, self.quant_coherence - 1))
 
-    def apply_convolution_kernel(self):
+    def apply_convolution_kernel(self, samples_list):
         GLSL = self.add_glsl
-        n = self.radius * 2
+        n = self.radius * 2 - 1
 
         GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
              (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
 
-        GLSL("float r0 = 0.0, r1 = 0.0, r2 = 0.0;")
-        blocks = len(self.gathered_groups) * 3
-        for i, gi in enumerate(self.gathered_groups):
-            for j in range(3):
-                coord_x = (float(i * 3 + j) + 0.5) / float(blocks)
-                GLSL("r%d += dot(g%d, texture(%s, vec2(%s, coord_y)));" % (j, i, self.lut_name, coord_x))
+        GLSL("vec4 res = vec4(0.0), w;")
 
-        GLSL("vec4 res = clamp(vec4(%s, r0, r1, r2), 0.0, 1.0);" % self.luma[(self.radius - 1) * n + (self.radius - 1)])
+        for i in range(self.lut_width):
+            coord_x = (float(i) + 0.5) / float(self.lut_width)
+            GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
+            j = n * n - 1 - i
+            if i < j:
+                GLSL("res += %s * w + %s * w.wzyx;" % (samples_list[i], samples_list[j]))
+            elif i == j:
+                GLSL("res += %s * w;" % samples_list[i])
+
+        GLSL("res = clamp(res, 0.0, 1.0);")
 
     def generate(self, step, use_gather=False):
         self.reset()
         GLSL = self.add_glsl
-        n = self.radius * 2
+        n = self.radius * 2 - 1
 
         self.set_description("RAVU-Lite (%s, r%d)" % (step.name, self.radius))
 
         self.set_skippable(2, 2)
 
         if step == Step.step2:
-            self.set_transform(2, 2, -0.5, -0.5)
+            self.set_transform(2, 2, 0.0, 0.0)
 
             self.bind_tex(self.int_tex_name)
 
@@ -215,17 +203,29 @@ vec4 hook() {
         GLSL("""
 vec4 hook() {""")
 
-        for i, gi in enumerate(self.gathered_groups):
-            bx, by = self.gathered_group_base[i]
-            if use_gather:
-                GLSL("vec4 g%d = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), 0);" % (i, bx, by))
-            else:
-                to_fetch = ["HOOKED_texOff(vec2(%d.0, %d.0)).x" % (bx + ox, by + oy) for ox, oy in self.gather_offsets]
-                GLSL("vec4 g%d = vec4(%s);" % (i, ",".join(to_fetch)))
+        gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
 
-        self.extract_key()
+        samples_list = {}
+        for i in range(n):
+            for j in range(n):
+                dx, dy = i - (self.radius - 1), j - (self.radius - 1)
+                idx = i * n + j
+                if idx in samples_list:
+                    continue
+                if use_gather and i + 1 < n and j + 1 < n:
+                    gather_name = "gather%d" % idx
+                    GLSL("vec4 %s = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), 0);" % (gather_name, dx, dy))
+                    for k in range(4):
+                        ox, oy = gather_offsets[k]
+                        samples_list[(i + ox) * n + (j + oy)] = "%s.%s" % (gather_name, "xyzw"[k])
+                else:
+                    sample_name = "luma%d" % idx
+                    GLSL("float %s = HOOKED_texOff(vec2(%d.0, %d.0)).x;" % (sample_name, dx, dy))
+                    samples_list[idx] = sample_name
 
-        self.apply_convolution_kernel()
+        self.extract_key(samples_list)
+
+        self.apply_convolution_kernel(samples_list)
 
         GLSL("""
 return res;
@@ -240,14 +240,14 @@ return res;
 
         self.reset()
         GLSL = self.add_glsl
-        n = self.radius * 2
+        n = self.radius * 2 - 1
 
         self.set_description("RAVU-Lite (r%d, compute)" % self.radius)
 
         block_width, block_height = block_size
 
         self.set_skippable(2, 2)
-        self.set_transform(2, 2, -0.5, -0.5)
+        self.set_transform(2, 2, 0.0, 0.0)
         self.bind_tex(self.lut_name)
         self.set_compute(block_width * 2, block_height * 2,
                          block_width, block_height)
@@ -277,15 +277,15 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
         GLSL("groupMemoryBarrier();")
         GLSL("barrier();")
 
-        for i, gi in enumerate(self.gathered_groups):
-            bx, by = self.gathered_group_base[i]
-            to_fetch = ["inp[local_pos + %d]" %
-                        ((bx + ox - offset_base) * array_size[1] + (by + oy - offset_base)) for ox, oy in self.gather_offsets]
-            GLSL("vec4 g%d = vec4(%s);" % (i, ",".join(to_fetch)))
+        samples_list = []
+        for dx in range(1 - self.radius, self.radius):
+            for dy in range(1 - self.radius, self.radius):
+                offset = (dx - offset_base) * array_size[1] + (dy - offset_base)
+                samples_list.append("inp[local_pos + %d]" % offset)
 
-        self.extract_key()
+        self.extract_key(samples_list)
 
-        self.apply_convolution_kernel()
+        self.apply_convolution_kernel(samples_list)
 
         for i in range(4):
             pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d, %d)" % (i / 2, i % 2)

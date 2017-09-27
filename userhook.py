@@ -95,7 +95,8 @@ class UserHook:
             self.header[WIDTH] = "%d %s.w *" % (mul_x, HOOKED)
         if mul_y != 1:
             self.header[HEIGHT] = "%d %s.h *" % (mul_y, HOOKED)
-        self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
+        if offset_x != 0.0 or offset_y != 0.0:
+            self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
 
     # Use this with caution. This will skip only current step.
     def set_skippable(self, mul_x=0, mul_y=0, source_tex=HOOKED):
