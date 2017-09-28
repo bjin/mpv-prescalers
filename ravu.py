@@ -560,7 +560,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
             for tex_idx, tex in enumerate(bound_tex_names):
                 offset_base = offset_for_tex[tex_idx]
                 bound_tex_id = self.get_id_from_texname(tex)
-                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d,%d)" % bound_tex_id
+                pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d, %d)" % bound_tex_id
                 res = "inp%d[local_pos + %d]" % (tex_idx, (-offset_base[0]) * array_size[1] + (-offset_base[1]))
                 GLSL("res = %s;" % res)
                 GLSL("imageStore(out_image, %s, $hook_return_value);" % pos)
