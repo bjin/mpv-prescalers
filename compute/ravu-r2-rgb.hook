@@ -347,9 +347,9 @@ imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(1, 0), vec4(res, 
 }
 vec3 res;
 res = inp0[local_pos + 24];
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(1,1), vec4(res, 0.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(1, 1), vec4(res, 0.0));
 res = inp1[local_pos + 12];
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(0,0), vec4(res, 0.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(0, 0), vec4(res, 0.0));
 }
 //!TEXTURE ravu_lut2
 //!SIZE 2 648
