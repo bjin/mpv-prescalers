@@ -70,8 +70,9 @@ caveats for using those shaders:
    for some OpenGL ES implementation). Use `rgba16f` or `rgba16` if available.
 2. `ravu-r4-{rgb,yuv}` causes distortion with lower-end intel card.
 3.  All `ravu` and `ravu-lite` shaders are generated with `rgba16f` LUT. It's
-    supported by most OpenGL/GLES implementation, but not Vulkan. Generate
-    shaders with `--float-format float16vk` in that case.
+    supported by most OpenGL/GLES implementation, but not Vulkan. Use shaders
+    in [`vulkan/` directory](https://github.com/bjin/mpv-prescalers/tree/master/vulkan)
+    in that case.
 
 # License
 
