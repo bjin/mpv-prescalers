@@ -27,12 +27,20 @@ class FloatFormat(enum.Enum):
     float16vk = 1
     float32 = 2
 
+
+class Profile(enum.Enum):
+    luma = 0
+    rgb = 1
+    yuv = 2
+
+
 class RAVU_3x(userhook.UserHook):
     """
     3x upscaling variant of RAVU-Lite, compute shader only
     """
 
     def __init__(self,
+                 profile=Profile.luma,
                  weights_file=None,
                  lut_name="ravu_3x_lut",
                  int_tex_name="ravu_3x_int",
@@ -54,6 +62,7 @@ class RAVU_3x(userhook.UserHook):
         assert len(self.min_strength) + 1 == self.quant_strength
         assert len(self.min_coherence) + 1 == self.quant_coherence
 
+        self.profile = profile
         self.lut_name = "%s%d" % (lut_name, self.radius)
         self.int_tex_name = int_tex_name
 
@@ -92,7 +101,41 @@ class RAVU_3x(userhook.UserHook):
 
         return "\n".join(headers + [weights_raw, ""])
 
-    def extract_key(self, samples_list):
+    def is_luma_required(self, x, y):
+        n = self.radius * 2 - 1
+
+        border_width = self.radius - self.gradient_radius
+
+        return min(x, n - 1 - x) >= border_width or min(y, n - 1 - y) >= border_width
+
+    def setup_profile(self):
+        GLSL = self.add_glsl
+
+        if self.profile == Profile.luma:
+            self.add_mappings(
+                sample_type="float",
+                sample_zero="0.0",
+                sample4_type="vec4",
+                sample4_zero="vec4(0.0)",
+                comps_swizzle = ".x")
+            self.wrap_sample = lambda res: "vec4(%s, 0.0, 0.0, 0.0)" % res
+            self.outer_product = lambda x, y: "%s * %s" % (x, y)
+        else:
+            self.add_mappings(
+                sample_type="vec3",
+                sample_zero="vec3(0.0)",
+                sample4_type="mat4x3",
+                sample4_zero="mat4x3(0.0)",
+                comps_swizzle = ".xyz")
+            self.wrap_sample = lambda res: "vec4(%s, 0.0)" % res
+            self.outer_product = lambda x, y: "outerProduct(%s, %s)" % (x, y)
+            if self.profile == Profile.rgb:
+                # Assumes Rec. 709
+                GLSL("const vec3 color_primary = vec3(0.2126, 0.7152, 0.0722);")
+            elif self.profile == Profile.yuv:
+                self.assert_yuv()
+
+    def extract_key(self, luma):
         GLSL = self.add_glsl
         n = self.radius * 2 - 1
 
@@ -112,10 +155,8 @@ class RAVU_3x(userhook.UserHook):
                         return "(%s-%s)" % (f(x), f(x - 1))
                     return "(%s-%s)/2.0" % (f(x + 1), f(x - 1))
 
-                GLSL("gx = %s;" % numerial_differential(
-                    lambda i2: samples_list[i2 * n + j], i))
-                GLSL("gy = %s;" % numerial_differential(
-                    lambda j2: samples_list[i * n + j2], j))
+                GLSL("gx = %s;" % numerial_differential(lambda i2: luma(i2, j), i))
+                GLSL("gy = %s;" % numerial_differential(lambda j2: luma(i, j2), j))
                 gw = self.gaussian[i - gradient_left][j - gradient_left]
                 GLSL("abd += vec3(gx * gx, gx * gy, gy * gy) * %s;" % gw)
 
@@ -153,7 +194,8 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
              (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
 
-        GLSL("vec4 res0 = vec4(0.0), res1 = vec4(0.0), w0, w1;")
+        GLSL("$sample4_type res0 = $sample4_zero, res1 = $sample4_zero;")
+        GLSL("vec4 w0, w1;")
 
         for i in range(self.lut_width // 2):
             for j in range(2):
@@ -161,21 +203,31 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                 GLSL("w%d = texture(%s, vec2(%s, coord_y));" % (j, self.lut_name, coord_x))
             j = n * n - 1 - i
             if i < j:
-                GLSL("res0 += %s * w0 + %s * w1.wzyx;" % (samples_list[i], samples_list[j]))
-                GLSL("res1 += %s * w1 + %s * w0.wzyx;" % (samples_list[i], samples_list[j]))
+                GLSL("res0 += %s + %s;" %
+                    (self.outer_product(samples_list[i], "w0"),
+                     self.outer_product(samples_list[j], "w1.wzyx")))
+                GLSL("res1 += %s + %s;" %
+                    (self.outer_product(samples_list[i], "w1"),
+                     self.outer_product(samples_list[j], "w0.wzyx")))
             elif i == j:
-                GLSL("res0 += %s * w0;" % (samples_list[i]))
-                GLSL("res1 += %s * w1;" % (samples_list[i]))
+                GLSL("res0 += %s;" %
+                    self.outer_product(samples_list[i], "w0"))
+                GLSL("res1 += %s;" %
+                    self.outer_product(samples_list[i], "w1"))
 
-        GLSL("res0 = clamp(res0, 0.0, 1.0);")
-        GLSL("res1 = clamp(res1, 0.0, 1.0);")
+        for i in range(2):
+            if self.profile == Profile.luma:
+                GLSL("res%d = clamp(res%d, 0.0, 1.0);" % (i, i))
+            else:
+                for j in range(4):
+                    GLSL("res%d[%d] = clamp(res%d[%d], 0.0, 1.0);" % (i, j, i, j))
 
     def generate(self, block_size):
         self.reset()
         GLSL = self.add_glsl
         n = self.radius * 2 - 1
 
-        self.set_description("RAVU-3x (r%d)" % self.radius)
+        self.set_description("RAVU-3x (%s, r%d)" % (self.profile.name, self.radius))
 
         block_width, block_height = block_size
 
@@ -185,9 +237,13 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         self.set_compute(block_width * 3, block_height * 3,
                          block_width, block_height)
 
+        self.setup_profile()
+
         offset_base = -(self.radius - 1)
         array_size = block_width + n - 1, block_height + n - 1
-        GLSL("shared float inp[%d];" % (array_size[0] * array_size[1]))
+        GLSL("shared $sample_type inp[%d];" % (array_size[0] * array_size[1]))
+        if self.profile != Profile.luma:
+            GLSL("shared float inp_luma[%d];" % (array_size[0] * array_size[1]))
 
         GLSL("""
 void hook() {""")
@@ -201,8 +257,13 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
 
         GLSL("int x = id / %d, y = id %% %d;" % (array_size[1], array_size[1]))
 
-        GLSL("inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(%s), float(group_base.y+y)+(%s))).x;" %
+        GLSL("inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(%s), float(group_base.y+y)+(%s)))$comps_swizzle;" %
              (offset_base + 0.5, offset_base + 0.5))
+
+        if self.profile == Profile.yuv:
+            GLSL("inp_luma[id] = inp[id].x;")
+        elif self.profile == Profile.rgb:
+            GLSL("inp_luma[id] = dot(inp[id], color_primary);")
 
         GLSL("""
 }""")
@@ -216,7 +277,22 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
                 offset = (dx - offset_base) * array_size[1] + (dy - offset_base)
                 samples_list.append("inp[local_pos + %d]" % offset)
 
-        self.extract_key(samples_list)
+        luma = lambda x, y: "luma%d" % (x * n + y)
+        for x in range(n):
+            for y in range(n):
+                if self.profile != Profile.luma and not self.is_luma_required(x, y):
+                    continue
+                luma_xy = luma(x, y)
+                sample_xy = samples_list[x * n + y]
+                if self.profile == Profile.luma:
+                    GLSL("float %s = %s;" % (luma_xy, sample_xy))
+                else:
+                    GLSL("float %s = %s;" % (luma_xy, sample_xy.replace("inp", "inp_luma")))
+
+                if self.profile == Profile.luma:
+                    samples_list[x * n + y] = luma_xy
+
+        self.extract_key(luma)
 
         self.apply_convolution_kernel(samples_list)
 
@@ -228,7 +304,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
                 output = samples_list[len(samples_list) // 2]
             else:
                 output = "res1[%d]" % (i - 5)
-            GLSL("imageStore(out_image, %s, vec4(%s, 0.0, 0.0, 0.0));" % (pos, output))
+            GLSL("imageStore(out_image, %s, %s);" % (pos, self.wrap_sample(output)))
 
         GLSL("""
 }""")
@@ -240,8 +316,21 @@ if __name__ == "__main__":
     import argparse
     import sys
 
+    profile_mapping = {
+        "luma": (["LUMA"], Profile.luma),
+        "rgb": (["MAIN"], Profile.rgb),
+        "yuv": (["NATIVE"], Profile.yuv),
+    }
+
     parser = argparse.ArgumentParser(
         description="generate RAVU-3x user shader for mpv")
+    parser.add_argument(
+        '-t',
+        '--target',
+        nargs=1,
+        choices=sorted(profile_mapping.keys()),
+        default=["luma"],
+        help='target that shader is hooked on (default: luma)')
     parser.add_argument(
         '-w',
         '--weights-file',
@@ -271,12 +360,15 @@ if __name__ == "__main__":
         help="specify the float format of LUT")
 
     args = parser.parse_args()
+    target = args.target[0]
+    hook, profile = profile_mapping[target]
     weights_file = args.weights_file[0]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     compute_shader_block_size = args.compute_shader_block_size
     float_format = FloatFormat[args.float_format[0]]
 
-    gen = RAVU_3x(hook=["LUMA"],
+    gen = RAVU_3x(hook=hook,
+                  profile=profile,
                   weights_file=weights_file,
                   target_tex="OUTPUT",
                   max_downscaling_ratio=max_downscaling_ratio)
