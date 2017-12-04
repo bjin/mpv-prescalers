@@ -4,7 +4,7 @@ set -e
 
 DIR="$(dirname "$0")"
 
-max_downscaling_ratio=1.6
+max_downscaling_ratio=1.414213
 
 for nns in 16 32 64 128 256; do
     for win in 8x4 8x6; do
