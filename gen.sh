@@ -55,6 +55,18 @@ gen_ravu() {
             "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-compute-shader > "compute/$file_name"
         fi
     done
+
+    if [ -d compute ]; then
+        for target in luma yuv rgb; do
+            suffix="-$target"
+            [ "$target" = "luma" ] && suffix=""
+            for radius in 2 3 4; do
+                file_name="ravu-3x-r$radius$suffix.hook"
+                weights_file="$DIR/weights/ravu-3x_weights-r$radius.py"
+                "$DIR/ravu-3x.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" > "compute/$file_name"
+            done
+        done
+    fi
 }
 
 gen_ravu float16gl

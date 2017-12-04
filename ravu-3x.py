@@ -87,7 +87,7 @@ class RAVU_3x(userhook.UserHook):
                     w = self.model_weights[i][j][k]
                     for pos in range(self.lut_width // 2):
                         for z in range(8):
-                            assert abs(w[z][pos] - w[~z][~pos]) < 1e-6, "filter kernel is not symmetric"
+                            assert abs(w[z][pos] - w[~z][~pos]) < 1e-5, "filter kernel is not symmetric"
                             weights.append(w[z][pos])
         assert len(weights) == self.lut_width * self.lut_height * 4
         weights_raw = struct.pack('<%d%s' % (len(weights), item_format_str), *weights).hex()
