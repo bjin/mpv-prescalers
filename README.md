@@ -25,7 +25,7 @@ glsl-shaders="~~/shaders/ravu-r3.hook"
 
 All shaders are for one pass only. If you want to have `4x` upscaling, trigger
 the same shader twice. All the shaders here are generated with
-`max-downscaling-ratio` set to `1.6`. They will be disabled if upscaling is not necessary.
+`max-downscaling-ratio` set to `1.414213`. They will be disabled if upscaling is not necessary.
 
 ```
 glsl-shaders-append="~~/shaders/ravu-r3.hook"

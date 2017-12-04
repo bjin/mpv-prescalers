@@ -17,7 +17,7 @@
 //!BIND HOOKED
 //!BIND ravu_lut3
 //!SAVE ravu_int11
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
 vec4 hook() {
 vec4 gathered0 = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, -2), 0);
 vec4 gathered1 = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, 0), 0);
@@ -124,7 +124,7 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!BIND ravu_lut3
 //!BIND ravu_int11
 //!SAVE ravu_int10
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
 vec4 hook() {
 vec4 gathered0 = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 0);
 vec4 gathered1 = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(0, 1), 0);
@@ -240,7 +240,7 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!BIND ravu_lut3
 //!BIND ravu_int11
 //!SAVE ravu_int01
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
 vec4 hook() {
 vec4 gathered0 = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, 0), 0);
 vec4 gathered1 = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(0, -1), 0);
@@ -359,7 +359,7 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.600000 < HOOKED.h 2 * OUTPUT.h / 1.600000 < *
+//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0.0) {
