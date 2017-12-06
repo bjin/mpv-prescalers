@@ -43,7 +43,6 @@ class RAVU_3x(userhook.UserHook):
                  profile=Profile.luma,
                  weights_file=None,
                  lut_name="ravu_3x_lut",
-                 int_tex_name="ravu_3x_int",
                  **args):
         super().__init__(**args)
 
@@ -64,7 +63,6 @@ class RAVU_3x(userhook.UserHook):
 
         self.profile = profile
         self.lut_name = "%s%d" % (lut_name, self.radius)
-        self.int_tex_name = int_tex_name
 
         n = self.radius * 2 - 1
 
