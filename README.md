@@ -10,6 +10,14 @@ and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/co
 are **generally faster** but requires recent version of OpenGL.
 Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
 
+Shaders in [`vulkan/` directory](https://github.com/bjin/mpv-prescalers/tree/master/vulkan)
+are using `rgba16hf` LUT, and required by `gpu-api=vulkan` and
+`gpu-api=d3d11`. Use these shaders if you encountered the following error:
+
+```
+[vo/gpu] Unrecognized/unavailable FORMAT name: 'rgba16f'!
+```
+
 # Usage
 
 You only need to download shaders you actually use. The following part of this
@@ -69,10 +77,6 @@ caveats for using those shaders:
 1. `ravu-lite` is incompatible with `--fbo-format=rgb10_a2` (default
    for some OpenGL ES implementation). Use `rgba16f` or `rgba16` if available.
 2. `ravu-r4-{rgb,yuv}` causes distortion with lower-end intel card.
-3.  All `ravu` and `ravu-lite` shaders are generated with `rgba16f` LUT. It's
-    supported by most OpenGL/GLES implementation, but not Vulkan. Use shaders
-    in [`vulkan/` directory](https://github.com/bjin/mpv-prescalers/tree/master/vulkan)
-    in that case.
 
 # License
 
