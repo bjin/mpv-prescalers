@@ -65,7 +65,7 @@ caveats for using those shaders:
 3. You need to explicitly state the chroma location, by choosing one of those
    `chroma-left` and `chroma-center` shaders. If you don't know how to/don't
    bother to check chroma location of video, or don't watch ancient videos,
-   just choose `chroma-left`. If you are using [auto-profiles.lua](https://github.com/wm4/mpv-scripts/blob/master/auto-profiles.lua),
+   just choose `chroma-left`. If you are using [auto-profiles.lua](https://github.com/wiiaboo/mpv-scripts/blob/master/auto-profiles.lua),
    you can use `cond:get('video-params/chroma-location','unknown')=='mpeg2/4/h264'`
    for `chroma-left` shader and `cond:get('video-params/chroma-location','unknown')=='mpeg1/jpeg'`
    for `chroma-center` shader.
