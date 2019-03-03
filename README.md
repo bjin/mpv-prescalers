@@ -40,28 +40,38 @@ glsl-shaders-append="~~/shaders/ravu-r3.hook"
 glsl-shaders-append="~~/shaders/ravu-r3.hook"
 ```
 
-Suffix in the filename indicates the planes that the prescaler will upscale.
-
-* Without any suffix: Works on `YUV` video, upscale only luma plane. (like the old `prescale-luma=...` option in `mpv`).
-* `-chroma*`: Works on `YUV` video, upscale only chroma plane.
-* `-yuv`: Works on `YUV` video, upscale all planes after they are merged.
-* `-rgb`: Works on all video, upscale all planes after they are merged and
-  converted to `RGB`.
-
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
 
 For `ravu` prescaler, `radius` setting is indicated in the filename.
 
-`ravu-*-chroma-{center,left}` are implementations of `ravu`, that
-will use downscaled luma plane to calculate gradient and guide chroma planes
-upscaling. Due to current limitation of `mpv`'s hook system, there are some
-caveats for using those shaders:
+# Which variant of RAVU should I use?
+
+TLDR: Use `ravu-lite-r{2,3}.hook` if you are using integrated GPU or care about
+performance/battery usage, but still want some improvement with minimal cost.
+Use `ravu-r{3,4}-rgb.hook` if you could live with higher GPU usage, and wish to
+find a idiot-proof setting.
+
+`ravu` and `ravu-lite` upscale only luma plane (of a YUV video), which means
+chroma planes will be handled by `--cscale` later. `ravu-lite` should be faster.
+
+`ravu-yuv` and `ravu-rgb` upscale video after all planes are merged. This happens
+after `--cscale` (or other chroma prescaler) is applied. `ravu-yuv` assumes YUV
+video and will fail on others (for example, PNG picture).
+
+`ravu-3x` is just like its `ravu`/`ravu-yuv`/`ravu-rgb` counterpart. But
+instead of double the size of video, it triple the size. It also requires
+compute shader OpenGL capability, which means decent GPU and driver.
+
+`ravu-chroma` is a chroma prescaler (could be considered as replacement of `--cscale`).
+It uses downscaled luma plane to calculate gradient and guide chroma planes upscaling.
+
+Due to current limitation of `mpv`'s hook system, there are some caveats for using `ravu-chroma`:
 
 1. It works with `YUV 4:2:0` format only, and will disable itself if size is not
    matched exactly, this includes odd width/height of luma plane.
-2. It will **NOT** work with luma prescalers (for example `ravu-r3.hook`).
-   You should use `rgb` and `yuv` shaders for further upscaling.
+2. It will **NOT** work with luma prescalers. However you could use `ravu-rgb`
+   or `ravu-yuv` for further upscaling.
 3. You need to explicitly state the chroma location, by choosing one of those
    `chroma-left` and `chroma-center` shaders. If you don't know how to/don't
    bother to check chroma location of video, or don't watch ancient videos,
@@ -69,8 +79,13 @@ caveats for using those shaders:
    you can use `cond:get('video-params/chroma-location','unknown')=='mpeg2/4/h264'`
    for `chroma-left` shader and `cond:get('video-params/chroma-location','unknown')=='mpeg1/jpeg'`
    for `chroma-center` shader.
-4. `cscale` will still be used to correct minor offset. An EWA scaler like
-   `haasnsoft` is recommended for the `cscale` setting.
+4. `cscale` will still be used to correct minor offset.
+
+`ravu-ar` (under [`antiring/` directory](https://github.com/bjin/mpv-prescalers/tree/master/antiring))
+is a experimental implementation of RAVU that utilize smooth functions to combat
+[ringing artifacts](https://en.wikipedia.org/wiki/Ringing_artifacts). It uses an
+additional kernel for this purpose, so it will be slower. `ravu-ar2` is more
+aggressive on anti-ringing (compare to `ravu-ar1`), with more loss of details.
 
 # Known Issue
 
