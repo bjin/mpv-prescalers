@@ -50,10 +50,13 @@ For `ravu` prescaler, `radius` setting is indicated in the filename.
 TLDR: Use `ravu-lite-r{2,3}.hook` if you are using integrated GPU or care about
 performance/battery usage, but still want some improvement with minimal cost.
 Use `ravu-r{3,4}-rgb.hook` if you could live with higher GPU usage, and wish to
-find a idiot-proof setting.
+find an idiot-proof setting.
 
 `ravu` and `ravu-lite` upscale only luma plane (of a YUV video), which means
-chroma planes will be handled by `--cscale` later. `ravu-lite` should be faster.
+chroma planes will be handled by `--cscale` later. `ravu-lite` should be faster,
+and it introduces no half-pixel offset. The quality (and also performance) of
+`ravu-lite-rN` should roughly be same as `ravu-r(N-0.5)` (so `ravu-lite-r3` could
+be considered `ravu-r2.5`).
 
 `ravu-yuv` and `ravu-rgb` upscale video after all planes are merged. This happens
 after `--cscale` (or other chroma prescaler) is applied. `ravu-yuv` assumes YUV
@@ -82,7 +85,7 @@ Due to current limitation of `mpv`'s hook system, there are some caveats for usi
 4. `cscale` will still be used to correct minor offset.
 
 `ravu-ar` (under [`antiring/` directory](https://github.com/bjin/mpv-prescalers/tree/master/antiring))
-is a experimental implementation of RAVU that utilize smooth functions to combat
+is an experimental implementation of RAVU that utilize smooth functions to combat
 [ringing artifacts](https://en.wikipedia.org/wiki/Ringing_artifacts). It uses an
 additional kernel for this purpose, so it will be slower. `ravu-ar2` is more
 aggressive on anti-ringing (compare to `ravu-ar1`), with more loss of details.
