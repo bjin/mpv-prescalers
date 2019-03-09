@@ -64,10 +64,6 @@ gen_ravu() {
                 file_name="ravu-3x-r$radius$suffix.hook"
                 weights_file="$DIR/weights/ravu-3x_weights-r$radius.py"
                 "$DIR/ravu-3x.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" > "compute/$file_name"
-
-                file_name="ravu-1.5x-r$radius$suffix.hook"
-                weights_file="$DIR/weights/ravu-1.5x_weights-r$radius.py"
-                "$DIR/ravu-1.5x.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "1.2" --float-format "$float_format" > "compute/$file_name"
             done
         done
     fi
