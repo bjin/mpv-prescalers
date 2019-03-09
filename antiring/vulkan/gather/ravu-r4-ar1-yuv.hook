@@ -15,9 +15,9 @@
 //!DESC RAVU (step1, yuv, r4)
 //!HOOK NATIVE
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest1_4
+//!BIND ravu_lut_ar1_4
 //!SAVE ravu_int11
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < * LUMA.w 0 > *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < * LUMA.w 0 > *
 vec4 hook() {
 vec4 gathered0_y = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -3), 0);
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, -3), 1);
@@ -191,48 +191,48 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec3 res = vec3(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.03125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.03125, coord_y));
 res += (vec3(gathered0_y[3], gathered0_u[3], gathered0_v[3]) + vec3(gathered15_y[1], gathered15_u[1], gathered15_v[1])) * w[0];
 res += (vec3(gathered0_y[0], gathered0_u[0], gathered0_v[0]) + vec3(gathered15_y[2], gathered15_u[2], gathered15_v[2])) * w[1];
 res += (vec3(gathered1_y[3], gathered1_u[3], gathered1_v[3]) + vec3(gathered14_y[1], gathered14_u[1], gathered14_v[1])) * w[2];
 res += (vec3(gathered1_y[0], gathered1_u[0], gathered1_v[0]) + vec3(gathered14_y[2], gathered14_u[2], gathered14_v[2])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.09375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.09375, coord_y));
 res += (vec3(gathered2_y[3], gathered2_u[3], gathered2_v[3]) + vec3(gathered13_y[1], gathered13_u[1], gathered13_v[1])) * w[0];
 res += (vec3(gathered2_y[0], gathered2_u[0], gathered2_v[0]) + vec3(gathered13_y[2], gathered13_u[2], gathered13_v[2])) * w[1];
 res += (vec3(gathered3_y[3], gathered3_u[3], gathered3_v[3]) + vec3(gathered12_y[1], gathered12_u[1], gathered12_v[1])) * w[2];
 res += (vec3(gathered3_y[0], gathered3_u[0], gathered3_v[0]) + vec3(gathered12_y[2], gathered12_u[2], gathered12_v[2])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.15625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.15625, coord_y));
 res += (vec3(gathered0_y[2], gathered0_u[2], gathered0_v[2]) + vec3(gathered15_y[0], gathered15_u[0], gathered15_v[0])) * w[0];
 res += (vec3(gathered0_y[1], gathered0_u[1], gathered0_v[1]) + vec3(gathered15_y[3], gathered15_u[3], gathered15_v[3])) * w[1];
 res += (vec3(gathered1_y[2], gathered1_u[2], gathered1_v[2]) + vec3(gathered14_y[0], gathered14_u[0], gathered14_v[0])) * w[2];
 res += (vec3(gathered1_y[1], gathered1_u[1], gathered1_v[1]) + vec3(gathered14_y[3], gathered14_u[3], gathered14_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.21875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.21875, coord_y));
 res += (vec3(gathered2_y[2], gathered2_u[2], gathered2_v[2]) + vec3(gathered13_y[0], gathered13_u[0], gathered13_v[0])) * w[0];
 res += (vec3(gathered2_y[1], gathered2_u[1], gathered2_v[1]) + vec3(gathered13_y[3], gathered13_u[3], gathered13_v[3])) * w[1];
 res += (vec3(gathered3_y[2], gathered3_u[2], gathered3_v[2]) + vec3(gathered12_y[0], gathered12_u[0], gathered12_v[0])) * w[2];
 res += (vec3(gathered3_y[1], gathered3_u[1], gathered3_v[1]) + vec3(gathered12_y[3], gathered12_u[3], gathered12_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.28125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.28125, coord_y));
 res += (vec3(gathered4_y[3], gathered4_u[3], gathered4_v[3]) + vec3(gathered11_y[1], gathered11_u[1], gathered11_v[1])) * w[0];
 res += (vec3(gathered4_y[0], gathered4_u[0], gathered4_v[0]) + vec3(gathered11_y[2], gathered11_u[2], gathered11_v[2])) * w[1];
 res += (vec3(gathered5_y[3], gathered5_u[3], gathered5_v[3]) + vec3(gathered10_y[1], gathered10_u[1], gathered10_v[1])) * w[2];
 res += (vec3(gathered5_y[0], gathered5_u[0], gathered5_v[0]) + vec3(gathered10_y[2], gathered10_u[2], gathered10_v[2])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.34375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.34375, coord_y));
 res += (vec3(gathered6_y[3], gathered6_u[3], gathered6_v[3]) + vec3(gathered9_y[1], gathered9_u[1], gathered9_v[1])) * w[0];
 res += (vec3(gathered6_y[0], gathered6_u[0], gathered6_v[0]) + vec3(gathered9_y[2], gathered9_u[2], gathered9_v[2])) * w[1];
 res += (vec3(gathered7_y[3], gathered7_u[3], gathered7_v[3]) + vec3(gathered8_y[1], gathered8_u[1], gathered8_v[1])) * w[2];
 res += (vec3(gathered7_y[0], gathered7_u[0], gathered7_v[0]) + vec3(gathered8_y[2], gathered8_u[2], gathered8_v[2])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.40625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.40625, coord_y));
 res += (vec3(gathered4_y[2], gathered4_u[2], gathered4_v[2]) + vec3(gathered11_y[0], gathered11_u[0], gathered11_v[0])) * w[0];
 res += (vec3(gathered4_y[1], gathered4_u[1], gathered4_v[1]) + vec3(gathered11_y[3], gathered11_u[3], gathered11_v[3])) * w[1];
 res += (vec3(gathered5_y[2], gathered5_u[2], gathered5_v[2]) + vec3(gathered10_y[0], gathered10_u[0], gathered10_v[0])) * w[2];
 res += (vec3(gathered5_y[1], gathered5_u[1], gathered5_v[1]) + vec3(gathered10_y[3], gathered10_u[3], gathered10_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.46875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.46875, coord_y));
 res += (vec3(gathered6_y[2], gathered6_u[2], gathered6_v[2]) + vec3(gathered9_y[0], gathered9_u[0], gathered9_v[0])) * w[0];
 res += (vec3(gathered6_y[1], gathered6_u[1], gathered6_v[1]) + vec3(gathered9_y[3], gathered9_u[3], gathered9_v[3])) * w[1];
 res += (vec3(gathered7_y[2], gathered7_u[2], gathered7_v[2]) + vec3(gathered8_y[0], gathered8_u[0], gathered8_v[0])) * w[2];
 res += (vec3(gathered7_y[1], gathered7_u[1], gathered7_v[1]) + vec3(gathered8_y[3], gathered8_u[3], gathered8_v[3])) * w[3];
 vec3 res0 = res, diff;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.53125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.53125, coord_y));
 diff = vec3(gathered0_y[3], gathered0_u[3], gathered0_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered15_y[1], gathered15_u[1], gathered15_v[1]) - res0;
@@ -249,7 +249,7 @@ diff = vec3(gathered1_y[0], gathered1_u[0], gathered1_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered14_y[2], gathered14_u[2], gathered14_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.59375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.59375, coord_y));
 diff = vec3(gathered2_y[3], gathered2_u[3], gathered2_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered13_y[1], gathered13_u[1], gathered13_v[1]) - res0;
@@ -266,7 +266,7 @@ diff = vec3(gathered3_y[0], gathered3_u[0], gathered3_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered12_y[2], gathered12_u[2], gathered12_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.65625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.65625, coord_y));
 diff = vec3(gathered0_y[2], gathered0_u[2], gathered0_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered15_y[0], gathered15_u[0], gathered15_v[0]) - res0;
@@ -283,7 +283,7 @@ diff = vec3(gathered1_y[1], gathered1_u[1], gathered1_v[1]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered14_y[3], gathered14_u[3], gathered14_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.71875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.71875, coord_y));
 diff = vec3(gathered2_y[2], gathered2_u[2], gathered2_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered13_y[0], gathered13_u[0], gathered13_v[0]) - res0;
@@ -300,7 +300,7 @@ diff = vec3(gathered3_y[1], gathered3_u[1], gathered3_v[1]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered12_y[3], gathered12_u[3], gathered12_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.78125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.78125, coord_y));
 diff = vec3(gathered4_y[3], gathered4_u[3], gathered4_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered11_y[1], gathered11_u[1], gathered11_v[1]) - res0;
@@ -317,7 +317,7 @@ diff = vec3(gathered5_y[0], gathered5_u[0], gathered5_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered10_y[2], gathered10_u[2], gathered10_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.84375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.84375, coord_y));
 diff = vec3(gathered6_y[3], gathered6_u[3], gathered6_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered9_y[1], gathered9_u[1], gathered9_v[1]) - res0;
@@ -334,7 +334,7 @@ diff = vec3(gathered7_y[0], gathered7_u[0], gathered7_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered8_y[2], gathered8_u[2], gathered8_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.90625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.90625, coord_y));
 diff = vec3(gathered4_y[2], gathered4_u[2], gathered4_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered11_y[0], gathered11_u[0], gathered11_v[0]) - res0;
@@ -351,7 +351,7 @@ diff = vec3(gathered5_y[1], gathered5_u[1], gathered5_v[1]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered10_y[3], gathered10_u[3], gathered10_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.96875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.96875, coord_y));
 diff = vec3(gathered6_y[2], gathered6_u[2], gathered6_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered9_y[0], gathered9_u[0], gathered9_v[0]) - res0;
@@ -374,10 +374,10 @@ return vec4(res, 0.0);
 //!DESC RAVU (step2, yuv, r4)
 //!HOOK NATIVE
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest1_4
+//!BIND ravu_lut_ar1_4
 //!BIND ravu_int11
 //!SAVE ravu_int10
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < * LUMA.w 0 > *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < * LUMA.w 0 > *
 vec4 hook() {
 vec4 gathered0_y = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, -1), 0);
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-2, -1), 1);
@@ -555,48 +555,48 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec3 res = vec3(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.03125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.03125, coord_y));
 res += (sample0 + sample63) * w[0];
 res += (vec3(gathered6_y[0], gathered6_u[0], gathered6_v[0]) + sample62) * w[1];
 res += (sample2 + vec3(gathered5_y[2], gathered5_u[2], gathered5_v[2])) * w[2];
 res += (sample3 + vec3(gathered10_y[2], gathered10_u[2], gathered10_v[2])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.09375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.09375, coord_y));
 res += (vec3(gathered1_y[0], gathered1_u[0], gathered1_v[0]) + sample59) * w[0];
 res += (vec3(gathered9_y[0], gathered9_u[0], gathered9_v[0]) + sample58) * w[1];
 res += (sample6 + vec3(gathered2_y[2], gathered2_u[2], gathered2_v[2])) * w[2];
 res += (sample7 + sample56) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.15625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.15625, coord_y));
 res += (vec3(gathered6_y[3], gathered6_u[3], gathered6_v[3]) + sample55) * w[0];
 res += (vec3(gathered0_y[0], gathered0_u[0], gathered0_v[0]) + vec3(gathered5_y[1], gathered5_u[1], gathered5_v[1])) * w[1];
 res += (vec3(gathered6_y[1], gathered6_u[1], gathered6_v[1]) + vec3(gathered10_y[1], gathered10_u[1], gathered10_v[1])) * w[2];
 res += (vec3(gathered1_y[3], gathered1_u[3], gathered1_v[3]) + vec3(gathered5_y[3], gathered5_u[3], gathered5_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.21875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.21875, coord_y));
 res += (vec3(gathered9_y[3], gathered9_u[3], gathered9_v[3]) + vec3(gathered10_y[3], gathered10_u[3], gathered10_v[3])) * w[0];
 res += (vec3(gathered1_y[1], gathered1_u[1], gathered1_v[1]) + vec3(gathered2_y[1], gathered2_u[1], gathered2_v[1])) * w[1];
 res += (vec3(gathered9_y[1], gathered9_u[1], gathered9_v[1]) + vec3(gathered7_y[2], gathered7_u[2], gathered7_v[2])) * w[2];
 res += (sample15 + vec3(gathered2_y[3], gathered2_u[3], gathered2_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.28125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.28125, coord_y));
 res += (vec3(gathered0_y[3], gathered0_u[3], gathered0_v[3]) + sample47) * w[0];
 res += (vec3(gathered6_y[2], gathered6_u[2], gathered6_v[2]) + vec3(gathered11_y[2], gathered11_u[2], gathered11_v[2])) * w[1];
 res += (vec3(gathered0_y[1], gathered0_u[1], gathered0_v[1]) + vec3(gathered5_y[0], gathered5_u[0], gathered5_v[0])) * w[2];
 res += (vec3(gathered8_y[0], gathered8_u[0], gathered8_v[0]) + vec3(gathered10_y[0], gathered10_u[0], gathered10_v[0])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.34375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.34375, coord_y));
 res += (vec3(gathered1_y[2], gathered1_u[2], gathered1_v[2]) + vec3(gathered3_y[2], gathered3_u[2], gathered3_v[2])) * w[0];
 res += (vec3(gathered9_y[2], gathered9_u[2], gathered9_v[2]) + vec3(gathered7_y[1], gathered7_u[1], gathered7_v[1])) * w[1];
 res += (vec3(gathered4_y[0], gathered4_u[0], gathered4_v[0]) + vec3(gathered2_y[0], gathered2_u[0], gathered2_v[0])) * w[2];
 res += (sample23 + vec3(gathered7_y[3], gathered7_u[3], gathered7_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.40625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.40625, coord_y));
 res += (sample24 + vec3(gathered11_y[1], gathered11_u[1], gathered11_v[1])) * w[0];
 res += (vec3(gathered0_y[2], gathered0_u[2], gathered0_v[2]) + vec3(gathered4_y[2], gathered4_u[2], gathered4_v[2])) * w[1];
 res += (vec3(gathered8_y[3], gathered8_u[3], gathered8_v[3]) + vec3(gathered11_y[3], gathered11_u[3], gathered11_v[3])) * w[2];
 res += (vec3(gathered3_y[0], gathered3_u[0], gathered3_v[0]) + vec3(gathered3_y[1], gathered3_u[1], gathered3_v[1])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.46875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.46875, coord_y));
 res += (vec3(gathered8_y[1], gathered8_u[1], gathered8_v[1]) + vec3(gathered8_y[2], gathered8_u[2], gathered8_v[2])) * w[0];
 res += (vec3(gathered4_y[3], gathered4_u[3], gathered4_v[3]) + vec3(gathered3_y[3], gathered3_u[3], gathered3_v[3])) * w[1];
 res += (vec3(gathered11_y[0], gathered11_u[0], gathered11_v[0]) + vec3(gathered7_y[0], gathered7_u[0], gathered7_v[0])) * w[2];
 res += (vec3(gathered4_y[1], gathered4_u[1], gathered4_v[1]) + sample32) * w[3];
 vec3 res0 = res, diff;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.53125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.53125, coord_y));
 diff = sample0 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample63 - res0;
@@ -613,7 +613,7 @@ diff = sample3 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered10_y[2], gathered10_u[2], gathered10_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.59375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.59375, coord_y));
 diff = vec3(gathered1_y[0], gathered1_u[0], gathered1_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample59 - res0;
@@ -630,7 +630,7 @@ diff = sample7 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample56 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.65625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.65625, coord_y));
 diff = vec3(gathered6_y[3], gathered6_u[3], gathered6_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample55 - res0;
@@ -647,7 +647,7 @@ diff = vec3(gathered1_y[3], gathered1_u[3], gathered1_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered5_y[3], gathered5_u[3], gathered5_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.71875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.71875, coord_y));
 diff = vec3(gathered9_y[3], gathered9_u[3], gathered9_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered10_y[3], gathered10_u[3], gathered10_v[3]) - res0;
@@ -664,7 +664,7 @@ diff = sample15 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered2_y[3], gathered2_u[3], gathered2_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.78125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.78125, coord_y));
 diff = vec3(gathered0_y[3], gathered0_u[3], gathered0_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample47 - res0;
@@ -681,7 +681,7 @@ diff = vec3(gathered8_y[0], gathered8_u[0], gathered8_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered10_y[0], gathered10_u[0], gathered10_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.84375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.84375, coord_y));
 diff = vec3(gathered1_y[2], gathered1_u[2], gathered1_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered3_y[2], gathered3_u[2], gathered3_v[2]) - res0;
@@ -698,7 +698,7 @@ diff = sample23 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered7_y[3], gathered7_u[3], gathered7_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.90625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.90625, coord_y));
 diff = sample24 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered11_y[1], gathered11_u[1], gathered11_v[1]) - res0;
@@ -715,7 +715,7 @@ diff = vec3(gathered3_y[0], gathered3_u[0], gathered3_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered3_y[1], gathered3_u[1], gathered3_v[1]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.96875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.96875, coord_y));
 diff = vec3(gathered8_y[1], gathered8_u[1], gathered8_v[1]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered8_y[2], gathered8_u[2], gathered8_v[2]) - res0;
@@ -738,10 +738,10 @@ return vec4(res, 0.0);
 //!DESC RAVU (step3, yuv, r4)
 //!HOOK NATIVE
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest1_4
+//!BIND ravu_lut_ar1_4
 //!BIND ravu_int11
 //!SAVE ravu_int01
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < * LUMA.w 0 > *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < * LUMA.w 0 > *
 vec4 hook() {
 vec4 gathered0_y = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 0), 0);
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-3, 0), 1);
@@ -919,48 +919,48 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec3 res = vec3(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.03125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.03125, coord_y));
 res += (sample0 + sample63) * w[0];
 res += (vec3(gathered0_y[0], gathered0_u[0], gathered0_v[0]) + sample62) * w[1];
 res += (sample2 + vec3(gathered11_y[2], gathered11_u[2], gathered11_v[2])) * w[2];
 res += (sample3 + vec3(gathered4_y[2], gathered4_u[2], gathered4_v[2])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.09375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.09375, coord_y));
 res += (vec3(gathered7_y[0], gathered7_u[0], gathered7_v[0]) + sample59) * w[0];
 res += (vec3(gathered3_y[0], gathered3_u[0], gathered3_v[0]) + sample58) * w[1];
 res += (sample6 + vec3(gathered8_y[2], gathered8_u[2], gathered8_v[2])) * w[2];
 res += (sample7 + sample56) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.15625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.15625, coord_y));
 res += (vec3(gathered0_y[3], gathered0_u[3], gathered0_v[3]) + sample55) * w[0];
 res += (vec3(gathered6_y[0], gathered6_u[0], gathered6_v[0]) + vec3(gathered11_y[1], gathered11_u[1], gathered11_v[1])) * w[1];
 res += (vec3(gathered0_y[1], gathered0_u[1], gathered0_v[1]) + vec3(gathered4_y[1], gathered4_u[1], gathered4_v[1])) * w[2];
 res += (vec3(gathered7_y[3], gathered7_u[3], gathered7_v[3]) + vec3(gathered11_y[3], gathered11_u[3], gathered11_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.21875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.21875, coord_y));
 res += (vec3(gathered3_y[3], gathered3_u[3], gathered3_v[3]) + vec3(gathered4_y[3], gathered4_u[3], gathered4_v[3])) * w[0];
 res += (vec3(gathered7_y[1], gathered7_u[1], gathered7_v[1]) + vec3(gathered8_y[1], gathered8_u[1], gathered8_v[1])) * w[1];
 res += (vec3(gathered3_y[1], gathered3_u[1], gathered3_v[1]) + vec3(gathered1_y[2], gathered1_u[2], gathered1_v[2])) * w[2];
 res += (sample15 + vec3(gathered8_y[3], gathered8_u[3], gathered8_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.28125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.28125, coord_y));
 res += (vec3(gathered6_y[3], gathered6_u[3], gathered6_v[3]) + sample47) * w[0];
 res += (vec3(gathered0_y[2], gathered0_u[2], gathered0_v[2]) + vec3(gathered5_y[2], gathered5_u[2], gathered5_v[2])) * w[1];
 res += (vec3(gathered6_y[1], gathered6_u[1], gathered6_v[1]) + vec3(gathered11_y[0], gathered11_u[0], gathered11_v[0])) * w[2];
 res += (vec3(gathered2_y[0], gathered2_u[0], gathered2_v[0]) + vec3(gathered4_y[0], gathered4_u[0], gathered4_v[0])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.34375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.34375, coord_y));
 res += (vec3(gathered7_y[2], gathered7_u[2], gathered7_v[2]) + vec3(gathered9_y[2], gathered9_u[2], gathered9_v[2])) * w[0];
 res += (vec3(gathered3_y[2], gathered3_u[2], gathered3_v[2]) + vec3(gathered1_y[1], gathered1_u[1], gathered1_v[1])) * w[1];
 res += (vec3(gathered10_y[0], gathered10_u[0], gathered10_v[0]) + vec3(gathered8_y[0], gathered8_u[0], gathered8_v[0])) * w[2];
 res += (sample23 + vec3(gathered1_y[3], gathered1_u[3], gathered1_v[3])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.40625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.40625, coord_y));
 res += (sample24 + vec3(gathered5_y[1], gathered5_u[1], gathered5_v[1])) * w[0];
 res += (vec3(gathered6_y[2], gathered6_u[2], gathered6_v[2]) + vec3(gathered10_y[2], gathered10_u[2], gathered10_v[2])) * w[1];
 res += (vec3(gathered2_y[3], gathered2_u[3], gathered2_v[3]) + vec3(gathered5_y[3], gathered5_u[3], gathered5_v[3])) * w[2];
 res += (vec3(gathered9_y[0], gathered9_u[0], gathered9_v[0]) + vec3(gathered9_y[1], gathered9_u[1], gathered9_v[1])) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.46875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.46875, coord_y));
 res += (vec3(gathered2_y[1], gathered2_u[1], gathered2_v[1]) + vec3(gathered2_y[2], gathered2_u[2], gathered2_v[2])) * w[0];
 res += (vec3(gathered10_y[3], gathered10_u[3], gathered10_v[3]) + vec3(gathered9_y[3], gathered9_u[3], gathered9_v[3])) * w[1];
 res += (vec3(gathered5_y[0], gathered5_u[0], gathered5_v[0]) + vec3(gathered1_y[0], gathered1_u[0], gathered1_v[0])) * w[2];
 res += (vec3(gathered10_y[1], gathered10_u[1], gathered10_v[1]) + sample32) * w[3];
 vec3 res0 = res, diff;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.53125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.53125, coord_y));
 diff = sample0 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample63 - res0;
@@ -977,7 +977,7 @@ diff = sample3 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered4_y[2], gathered4_u[2], gathered4_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.59375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.59375, coord_y));
 diff = vec3(gathered7_y[0], gathered7_u[0], gathered7_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample59 - res0;
@@ -994,7 +994,7 @@ diff = sample7 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample56 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.65625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.65625, coord_y));
 diff = vec3(gathered0_y[3], gathered0_u[3], gathered0_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample55 - res0;
@@ -1011,7 +1011,7 @@ diff = vec3(gathered7_y[3], gathered7_u[3], gathered7_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered11_y[3], gathered11_u[3], gathered11_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.71875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.71875, coord_y));
 diff = vec3(gathered3_y[3], gathered3_u[3], gathered3_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered4_y[3], gathered4_u[3], gathered4_v[3]) - res0;
@@ -1028,7 +1028,7 @@ diff = sample15 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered8_y[3], gathered8_u[3], gathered8_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.78125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.78125, coord_y));
 diff = vec3(gathered6_y[3], gathered6_u[3], gathered6_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample47 - res0;
@@ -1045,7 +1045,7 @@ diff = vec3(gathered2_y[0], gathered2_u[0], gathered2_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered4_y[0], gathered4_u[0], gathered4_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.84375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.84375, coord_y));
 diff = vec3(gathered7_y[2], gathered7_u[2], gathered7_v[2]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered9_y[2], gathered9_u[2], gathered9_v[2]) - res0;
@@ -1062,7 +1062,7 @@ diff = sample23 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered1_y[3], gathered1_u[3], gathered1_v[3]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.90625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.90625, coord_y));
 diff = sample24 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered5_y[1], gathered5_u[1], gathered5_v[1]) - res0;
@@ -1079,7 +1079,7 @@ diff = vec3(gathered9_y[0], gathered9_u[0], gathered9_v[0]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = vec3(gathered9_y[1], gathered9_u[1], gathered9_v[1]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.96875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.96875, coord_y));
 diff = vec3(gathered2_y[1], gathered2_u[1], gathered2_v[1]) - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = vec3(gathered2_y[2], gathered2_u[2], gathered2_v[2]) - res0;
@@ -1108,7 +1108,7 @@ return vec4(res, 0.0);
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0.0) {
@@ -1121,7 +1121,7 @@ vec4 hook() {
         return ravu_int11_texOff(-dir);
     }
 }
-//!TEXTURE ravu_lut_smoothtest1_4
+//!TEXTURE ravu_lut_ar1_4
 //!SIZE 16 648
 //!FORMAT rgba16hf
 //!FILTER NEAREST

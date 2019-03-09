@@ -15,43 +15,43 @@
 //!DESC RAVU (step1, chroma_left, r2)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest2_2
+//!BIND ravu_lut_ar2_2
 //!BIND LUMA
 //!SAVE ravu_int11
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
 vec2 sample0 = HOOKED_texOff(vec2(-1.0, -1.0)).xy;
-float luma0 = LUMA_texOff(vec2(-1.5,-2.0)).x;
+float luma0 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,-2.0)+tex_offset)).x;
 vec2 sample1 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
-float luma1 = LUMA_texOff(vec2(-1.5,0.0)).x;
+float luma1 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,0.0)+tex_offset)).x;
 vec2 sample2 = HOOKED_texOff(vec2(-1.0, 1.0)).xy;
-float luma2 = LUMA_texOff(vec2(-1.5,2.0)).x;
+float luma2 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,2.0)+tex_offset)).x;
 vec2 sample3 = HOOKED_texOff(vec2(-1.0, 2.0)).xy;
-float luma3 = LUMA_texOff(vec2(-1.5,4.0)).x;
+float luma3 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,4.0)+tex_offset)).x;
 vec2 sample4 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
-float luma4 = LUMA_texOff(vec2(0.5,-2.0)).x;
+float luma4 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,-2.0)+tex_offset)).x;
 vec2 sample5 = HOOKED_texOff(vec2(0.0, 0.0)).xy;
-float luma5 = LUMA_texOff(vec2(0.5,0.0)).x;
+float luma5 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,0.0)+tex_offset)).x;
 vec2 sample6 = HOOKED_texOff(vec2(0.0, 1.0)).xy;
-float luma6 = LUMA_texOff(vec2(0.5,2.0)).x;
+float luma6 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,2.0)+tex_offset)).x;
 vec2 sample7 = HOOKED_texOff(vec2(0.0, 2.0)).xy;
-float luma7 = LUMA_texOff(vec2(0.5,4.0)).x;
+float luma7 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,4.0)+tex_offset)).x;
 vec2 sample8 = HOOKED_texOff(vec2(1.0, -1.0)).xy;
-float luma8 = LUMA_texOff(vec2(2.5,-2.0)).x;
+float luma8 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,-2.0)+tex_offset)).x;
 vec2 sample9 = HOOKED_texOff(vec2(1.0, 0.0)).xy;
-float luma9 = LUMA_texOff(vec2(2.5,0.0)).x;
+float luma9 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,0.0)+tex_offset)).x;
 vec2 sample10 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
-float luma10 = LUMA_texOff(vec2(2.5,2.0)).x;
+float luma10 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,2.0)+tex_offset)).x;
 vec2 sample11 = HOOKED_texOff(vec2(1.0, 2.0)).xy;
-float luma11 = LUMA_texOff(vec2(2.5,4.0)).x;
+float luma11 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,4.0)+tex_offset)).x;
 vec2 sample12 = HOOKED_texOff(vec2(2.0, -1.0)).xy;
-float luma12 = LUMA_texOff(vec2(4.5,-2.0)).x;
+float luma12 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,-2.0)+tex_offset)).x;
 vec2 sample13 = HOOKED_texOff(vec2(2.0, 0.0)).xy;
-float luma13 = LUMA_texOff(vec2(4.5,0.0)).x;
+float luma13 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,0.0)+tex_offset)).x;
 vec2 sample14 = HOOKED_texOff(vec2(2.0, 1.0)).xy;
-float luma14 = LUMA_texOff(vec2(4.5,2.0)).x;
+float luma14 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,2.0)+tex_offset)).x;
 vec2 sample15 = HOOKED_texOff(vec2(2.0, 2.0)).xy;
-float luma15 = LUMA_texOff(vec2(4.5,4.0)).x;
+float luma15 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,4.0)+tex_offset)).x;
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -116,18 +116,18 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest2_2, vec2(0.125, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.125, coord_y));
 res += (sample0 + sample15) * w[0];
 res += (sample1 + sample14) * w[1];
 res += (sample2 + sample13) * w[2];
 res += (sample3 + sample12) * w[3];
-w = texture(ravu_lut_smoothtest2_2, vec2(0.375, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.375, coord_y));
 res += (sample4 + sample11) * w[0];
 res += (sample5 + sample10) * w[1];
 res += (sample6 + sample9) * w[2];
 res += (sample7 + sample8) * w[3];
 vec2 res0 = res, diff;
-w = texture(ravu_lut_smoothtest2_2, vec2(0.625, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.625, coord_y));
 diff = clamp(sample0 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(sample15 - res0, -0.5, 0.5);
@@ -144,7 +144,7 @@ diff = clamp(sample3 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(sample12 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_2, vec2(0.875, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.875, coord_y));
 diff = clamp(sample4 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(sample11 - res0, -0.5, 0.5);
@@ -167,44 +167,44 @@ return vec4(res, 0.0, 0.0);
 //!DESC RAVU (step2, chroma_left, r2)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest2_2
+//!BIND ravu_lut_ar2_2
 //!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int10
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
 vec2 sample0 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
-float luma0 = LUMA_texOff(vec2(-1.5,0.0)).x;
+float luma0 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,0.0)+tex_offset)).x;
 vec2 sample8 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
-float luma8 = LUMA_texOff(vec2(0.5,-2.0)).x;
+float luma8 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,-2.0)+tex_offset)).x;
 vec2 sample5 = HOOKED_texOff(vec2(0.0, 0.0)).xy;
-float luma5 = LUMA_texOff(vec2(0.5,0.0)).x;
+float luma5 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,0.0)+tex_offset)).x;
 vec2 sample2 = HOOKED_texOff(vec2(0.0, 1.0)).xy;
-float luma2 = LUMA_texOff(vec2(0.5,2.0)).x;
+float luma2 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,2.0)+tex_offset)).x;
 vec2 sample13 = HOOKED_texOff(vec2(1.0, -1.0)).xy;
-float luma13 = LUMA_texOff(vec2(2.5,-2.0)).x;
+float luma13 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,-2.0)+tex_offset)).x;
 vec2 sample10 = HOOKED_texOff(vec2(1.0, 0.0)).xy;
-float luma10 = LUMA_texOff(vec2(2.5,0.0)).x;
+float luma10 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,0.0)+tex_offset)).x;
 vec2 sample7 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
-float luma7 = LUMA_texOff(vec2(2.5,2.0)).x;
+float luma7 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,2.0)+tex_offset)).x;
 vec2 sample15 = HOOKED_texOff(vec2(2.0, 0.0)).xy;
-float luma15 = LUMA_texOff(vec2(4.5,0.0)).x;
+float luma15 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,0.0)+tex_offset)).x;
 vec2 sample4 = ravu_int11_texOff(vec2(-1.0, -1.0)).xy;
-float luma4 = LUMA_texOff(vec2(-0.5,-1.0)).x;
+float luma4 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,-1.0)+tex_offset)).x;
 vec2 sample1 = ravu_int11_texOff(vec2(-1.0, 0.0)).xy;
-float luma1 = LUMA_texOff(vec2(-0.5,1.0)).x;
+float luma1 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,1.0)+tex_offset)).x;
 vec2 sample12 = ravu_int11_texOff(vec2(0.0, -2.0)).xy;
-float luma12 = LUMA_texOff(vec2(1.5,-3.0)).x;
+float luma12 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,-3.0)+tex_offset)).x;
 vec2 sample9 = ravu_int11_texOff(vec2(0.0, -1.0)).xy;
-float luma9 = LUMA_texOff(vec2(1.5,-1.0)).x;
+float luma9 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,-1.0)+tex_offset)).x;
 vec2 sample6 = ravu_int11_texOff(vec2(0.0, 0.0)).xy;
-float luma6 = LUMA_texOff(vec2(1.5,1.0)).x;
+float luma6 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,1.0)+tex_offset)).x;
 vec2 sample3 = ravu_int11_texOff(vec2(0.0, 1.0)).xy;
-float luma3 = LUMA_texOff(vec2(1.5,3.0)).x;
+float luma3 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,3.0)+tex_offset)).x;
 vec2 sample14 = ravu_int11_texOff(vec2(1.0, -1.0)).xy;
-float luma14 = LUMA_texOff(vec2(3.5,-1.0)).x;
+float luma14 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(3.5,-1.0)+tex_offset)).x;
 vec2 sample11 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
-float luma11 = LUMA_texOff(vec2(3.5,1.0)).x;
+float luma11 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(3.5,1.0)+tex_offset)).x;
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -269,18 +269,18 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest2_2, vec2(0.125, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.125, coord_y));
 res += (sample0 + sample15) * w[0];
 res += (sample1 + sample14) * w[1];
 res += (sample2 + sample13) * w[2];
 res += (sample3 + sample12) * w[3];
-w = texture(ravu_lut_smoothtest2_2, vec2(0.375, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.375, coord_y));
 res += (sample4 + sample11) * w[0];
 res += (sample5 + sample10) * w[1];
 res += (sample6 + sample9) * w[2];
 res += (sample7 + sample8) * w[3];
 vec2 res0 = res, diff;
-w = texture(ravu_lut_smoothtest2_2, vec2(0.625, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.625, coord_y));
 diff = clamp(sample0 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(sample15 - res0, -0.5, 0.5);
@@ -297,7 +297,7 @@ diff = clamp(sample3 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(sample12 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_2, vec2(0.875, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.875, coord_y));
 diff = clamp(sample4 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(sample11 - res0, -0.5, 0.5);
@@ -320,44 +320,44 @@ return vec4(res, 0.0, 0.0);
 //!DESC RAVU (step3, chroma_left, r2)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest2_2
+//!BIND ravu_lut_ar2_2
 //!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int01
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
 vec2 sample4 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
-float luma4 = LUMA_texOff(vec2(-1.5,0.0)).x;
+float luma4 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,0.0)+tex_offset)).x;
 vec2 sample1 = HOOKED_texOff(vec2(-1.0, 1.0)).xy;
-float luma1 = LUMA_texOff(vec2(-1.5,2.0)).x;
+float luma1 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,2.0)+tex_offset)).x;
 vec2 sample12 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
-float luma12 = LUMA_texOff(vec2(0.5,-2.0)).x;
+float luma12 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,-2.0)+tex_offset)).x;
 vec2 sample9 = HOOKED_texOff(vec2(0.0, 0.0)).xy;
-float luma9 = LUMA_texOff(vec2(0.5,0.0)).x;
+float luma9 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,0.0)+tex_offset)).x;
 vec2 sample6 = HOOKED_texOff(vec2(0.0, 1.0)).xy;
-float luma6 = LUMA_texOff(vec2(0.5,2.0)).x;
+float luma6 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,2.0)+tex_offset)).x;
 vec2 sample3 = HOOKED_texOff(vec2(0.0, 2.0)).xy;
-float luma3 = LUMA_texOff(vec2(0.5,4.0)).x;
+float luma3 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,4.0)+tex_offset)).x;
 vec2 sample14 = HOOKED_texOff(vec2(1.0, 0.0)).xy;
-float luma14 = LUMA_texOff(vec2(2.5,0.0)).x;
+float luma14 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,0.0)+tex_offset)).x;
 vec2 sample11 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
-float luma11 = LUMA_texOff(vec2(2.5,2.0)).x;
+float luma11 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,2.0)+tex_offset)).x;
 vec2 sample0 = ravu_int11_texOff(vec2(-2.0, 0.0)).xy;
-float luma0 = LUMA_texOff(vec2(-2.5,1.0)).x;
+float luma0 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-2.5,1.0)+tex_offset)).x;
 vec2 sample8 = ravu_int11_texOff(vec2(-1.0, -1.0)).xy;
-float luma8 = LUMA_texOff(vec2(-0.5,-1.0)).x;
+float luma8 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,-1.0)+tex_offset)).x;
 vec2 sample5 = ravu_int11_texOff(vec2(-1.0, 0.0)).xy;
-float luma5 = LUMA_texOff(vec2(-0.5,1.0)).x;
+float luma5 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,1.0)+tex_offset)).x;
 vec2 sample2 = ravu_int11_texOff(vec2(-1.0, 1.0)).xy;
-float luma2 = LUMA_texOff(vec2(-0.5,3.0)).x;
+float luma2 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,3.0)+tex_offset)).x;
 vec2 sample13 = ravu_int11_texOff(vec2(0.0, -1.0)).xy;
-float luma13 = LUMA_texOff(vec2(1.5,-1.0)).x;
+float luma13 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,-1.0)+tex_offset)).x;
 vec2 sample10 = ravu_int11_texOff(vec2(0.0, 0.0)).xy;
-float luma10 = LUMA_texOff(vec2(1.5,1.0)).x;
+float luma10 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,1.0)+tex_offset)).x;
 vec2 sample7 = ravu_int11_texOff(vec2(0.0, 1.0)).xy;
-float luma7 = LUMA_texOff(vec2(1.5,3.0)).x;
+float luma7 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,3.0)+tex_offset)).x;
 vec2 sample15 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
-float luma15 = LUMA_texOff(vec2(3.5,1.0)).x;
+float luma15 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(3.5,1.0)+tex_offset)).x;
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -422,18 +422,18 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest2_2, vec2(0.125, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.125, coord_y));
 res += (sample0 + sample15) * w[0];
 res += (sample1 + sample14) * w[1];
 res += (sample2 + sample13) * w[2];
 res += (sample3 + sample12) * w[3];
-w = texture(ravu_lut_smoothtest2_2, vec2(0.375, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.375, coord_y));
 res += (sample4 + sample11) * w[0];
 res += (sample5 + sample10) * w[1];
 res += (sample6 + sample9) * w[2];
 res += (sample7 + sample8) * w[3];
 vec2 res0 = res, diff;
-w = texture(ravu_lut_smoothtest2_2, vec2(0.625, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.625, coord_y));
 diff = clamp(sample0 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(sample15 - res0, -0.5, 0.5);
@@ -450,7 +450,7 @@ diff = clamp(sample3 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(sample12 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_2, vec2(0.875, coord_y));
+w = texture(ravu_lut_ar2_2, vec2(0.875, coord_y));
 diff = clamp(sample4 - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(sample11 - res0, -0.5, 0.5);
@@ -479,7 +479,7 @@ return vec4(res, 0.0, 0.0);
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0.0) {
@@ -492,7 +492,7 @@ vec4 hook() {
         return ravu_int11_texOff(-dir);
     }
 }
-//!TEXTURE ravu_lut_smoothtest2_2
+//!TEXTURE ravu_lut_ar2_2
 //!SIZE 4 648
 //!FORMAT rgba16f
 //!FILTER NEAREST

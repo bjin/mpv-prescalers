@@ -15,10 +15,10 @@
 //!DESC RAVU (step1, chroma_center, r3, compute)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest2_3
+//!BIND ravu_lut_ar2_3
 //!BIND LUMA
 //!SAVE ravu_int11
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 //!COMPUTE 32 8
 shared vec2 inp0[481];
 shared float inp_luma0[481];
@@ -28,7 +28,7 @@ int local_pos = int(gl_LocalInvocationID.x) * 13 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 481; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 13, y = id % 13;
 inp0[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-1.5), float(group_base.y+y)+(-1.5))).xy;
-inp_luma0[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(-3.5),float(group_base.y+y)*2.0+(-3.5))).x;
+inp_luma0[id] = LUMA_tex(LUMA_pt * (vec2(float(group_base.x+x)*2.0+(-3.5),float(group_base.y+y)*2.0+(-3.5))+tex_offset)).x;
 }
 groupMemoryBarrier();
 barrier();
@@ -129,31 +129,31 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest2_3, vec2(0.05, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.05, coord_y));
 res += (inp0[local_pos + 0] + inp0[local_pos + 70]) * w[0];
 res += (inp0[local_pos + 1] + inp0[local_pos + 69]) * w[1];
 res += (inp0[local_pos + 2] + inp0[local_pos + 68]) * w[2];
 res += (inp0[local_pos + 3] + inp0[local_pos + 67]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.15, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.15, coord_y));
 res += (inp0[local_pos + 4] + inp0[local_pos + 66]) * w[0];
 res += (inp0[local_pos + 5] + inp0[local_pos + 65]) * w[1];
 res += (inp0[local_pos + 13] + inp0[local_pos + 57]) * w[2];
 res += (inp0[local_pos + 14] + inp0[local_pos + 56]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.25, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.25, coord_y));
 res += (inp0[local_pos + 15] + inp0[local_pos + 55]) * w[0];
 res += (inp0[local_pos + 16] + inp0[local_pos + 54]) * w[1];
 res += (inp0[local_pos + 17] + inp0[local_pos + 53]) * w[2];
 res += (inp0[local_pos + 18] + inp0[local_pos + 52]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.35, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.35, coord_y));
 res += (inp0[local_pos + 26] + inp0[local_pos + 44]) * w[0];
 res += (inp0[local_pos + 27] + inp0[local_pos + 43]) * w[1];
 res += (inp0[local_pos + 28] + inp0[local_pos + 42]) * w[2];
 res += (inp0[local_pos + 29] + inp0[local_pos + 41]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.45, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.45, coord_y));
 res += (inp0[local_pos + 30] + inp0[local_pos + 40]) * w[0];
 res += (inp0[local_pos + 31] + inp0[local_pos + 39]) * w[1];
 vec2 res0 = res, diff;
-w = texture(ravu_lut_smoothtest2_3, vec2(0.55, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.55, coord_y));
 diff = clamp(inp0[local_pos + 0] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 70] - res0, -0.5, 0.5);
@@ -170,7 +170,7 @@ diff = clamp(inp0[local_pos + 3] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 67] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.65, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.65, coord_y));
 diff = clamp(inp0[local_pos + 4] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 66] - res0, -0.5, 0.5);
@@ -187,7 +187,7 @@ diff = clamp(inp0[local_pos + 14] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 56] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.75, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.75, coord_y));
 diff = clamp(inp0[local_pos + 15] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 55] - res0, -0.5, 0.5);
@@ -204,7 +204,7 @@ diff = clamp(inp0[local_pos + 18] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 52] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.85, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.85, coord_y));
 diff = clamp(inp0[local_pos + 26] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 44] - res0, -0.5, 0.5);
@@ -221,7 +221,7 @@ diff = clamp(inp0[local_pos + 29] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 41] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.95, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.95, coord_y));
 diff = clamp(inp0[local_pos + 30] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 40] - res0, -0.5, 0.5);
@@ -237,13 +237,13 @@ imageStore(out_image, ivec2(gl_GlobalInvocationID), vec4(res, 0.0, 0.0));
 //!DESC RAVU (step2, chroma_center, r3, compute)
 //!HOOK CHROMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest2_3
+//!BIND ravu_lut_ar2_3
 //!BIND LUMA
 //!BIND ravu_int11
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 //!COMPUTE 64 16 32 8
 shared vec2 inp0[481];
 shared float inp_luma0[481];
@@ -255,12 +255,12 @@ int local_pos = int(gl_LocalInvocationID.x) * 13 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 481; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 13, y = id % 13;
 inp0[id] = ravu_int11_tex(ravu_int11_pt * vec2(float(group_base.x+x)+(-2.5), float(group_base.y+y)+(-2.5))).xy;
-inp_luma0[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(-4.5),float(group_base.y+y)*2.0+(-4.5))).x;
+inp_luma0[id] = LUMA_tex(LUMA_pt * (vec2(float(group_base.x+x)*2.0+(-4.5),float(group_base.y+y)*2.0+(-4.5))+tex_offset)).x;
 }
 for (int id = int(gl_LocalInvocationIndex); id < 481; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 13, y = id % 13;
 inp1[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-1.5), float(group_base.y+y)+(-1.5))).xy;
-inp_luma1[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(-3.5),float(group_base.y+y)*2.0+(-3.5))).x;
+inp_luma1[id] = LUMA_tex(LUMA_pt * (vec2(float(group_base.x+x)*2.0+(-3.5),float(group_base.y+y)*2.0+(-3.5))+tex_offset)).x;
 }
 groupMemoryBarrier();
 barrier();
@@ -361,31 +361,31 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest2_3, vec2(0.05, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.05, coord_y));
 res += (inp0[local_pos + 3] + inp0[local_pos + 68]) * w[0];
 res += (inp1[local_pos + 3] + inp1[local_pos + 54]) * w[1];
 res += (inp0[local_pos + 17] + inp0[local_pos + 54]) * w[2];
 res += (inp1[local_pos + 17] + inp1[local_pos + 40]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.15, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.15, coord_y));
 res += (inp0[local_pos + 31] + inp0[local_pos + 40]) * w[0];
 res += (inp1[local_pos + 31] + inp1[local_pos + 26]) * w[1];
 res += (inp1[local_pos + 2] + inp1[local_pos + 55]) * w[2];
 res += (inp0[local_pos + 16] + inp0[local_pos + 55]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.25, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.25, coord_y));
 res += (inp1[local_pos + 16] + inp1[local_pos + 41]) * w[0];
 res += (inp0[local_pos + 30] + inp0[local_pos + 41]) * w[1];
 res += (inp1[local_pos + 30] + inp1[local_pos + 27]) * w[2];
 res += (inp0[local_pos + 44] + inp0[local_pos + 27]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.35, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.35, coord_y));
 res += (inp0[local_pos + 15] + inp0[local_pos + 56]) * w[0];
 res += (inp1[local_pos + 15] + inp1[local_pos + 42]) * w[1];
 res += (inp0[local_pos + 29] + inp0[local_pos + 42]) * w[2];
 res += (inp1[local_pos + 29] + inp1[local_pos + 28]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.45, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.45, coord_y));
 res += (inp0[local_pos + 43] + inp0[local_pos + 28]) * w[0];
 res += (inp1[local_pos + 43] + inp1[local_pos + 14]) * w[1];
 vec2 res0 = res, diff;
-w = texture(ravu_lut_smoothtest2_3, vec2(0.55, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.55, coord_y));
 diff = clamp(inp0[local_pos + 3] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 68] - res0, -0.5, 0.5);
@@ -402,7 +402,7 @@ diff = clamp(inp1[local_pos + 17] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp1[local_pos + 40] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.65, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.65, coord_y));
 diff = clamp(inp0[local_pos + 31] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 40] - res0, -0.5, 0.5);
@@ -419,7 +419,7 @@ diff = clamp(inp0[local_pos + 16] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 55] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.75, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.75, coord_y));
 diff = clamp(inp1[local_pos + 16] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp1[local_pos + 41] - res0, -0.5, 0.5);
@@ -436,7 +436,7 @@ diff = clamp(inp0[local_pos + 44] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 27] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.85, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.85, coord_y));
 diff = clamp(inp0[local_pos + 15] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 56] - res0, -0.5, 0.5);
@@ -453,7 +453,7 @@ diff = clamp(inp1[local_pos + 29] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp1[local_pos + 28] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.95, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.95, coord_y));
 diff = clamp(inp0[local_pos + 43] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 28] - res0, -0.5, 0.5);
@@ -562,31 +562,31 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 vec2 res = vec2(0.0);
 vec4 w;
-w = texture(ravu_lut_smoothtest2_3, vec2(0.05, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.05, coord_y));
 res += (inp1[local_pos + 2] + inp1[local_pos + 67]) * w[0];
 res += (inp0[local_pos + 16] + inp0[local_pos + 67]) * w[1];
 res += (inp1[local_pos + 16] + inp1[local_pos + 53]) * w[2];
 res += (inp0[local_pos + 30] + inp0[local_pos + 53]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.15, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.15, coord_y));
 res += (inp1[local_pos + 30] + inp1[local_pos + 39]) * w[0];
 res += (inp0[local_pos + 44] + inp0[local_pos + 39]) * w[1];
 res += (inp0[local_pos + 15] + inp0[local_pos + 68]) * w[2];
 res += (inp1[local_pos + 15] + inp1[local_pos + 54]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.25, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.25, coord_y));
 res += (inp0[local_pos + 29] + inp0[local_pos + 54]) * w[0];
 res += (inp1[local_pos + 29] + inp1[local_pos + 40]) * w[1];
 res += (inp0[local_pos + 43] + inp0[local_pos + 40]) * w[2];
 res += (inp1[local_pos + 43] + inp1[local_pos + 26]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.35, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.35, coord_y));
 res += (inp1[local_pos + 14] + inp1[local_pos + 55]) * w[0];
 res += (inp0[local_pos + 28] + inp0[local_pos + 55]) * w[1];
 res += (inp1[local_pos + 28] + inp1[local_pos + 41]) * w[2];
 res += (inp0[local_pos + 42] + inp0[local_pos + 41]) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.45, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.45, coord_y));
 res += (inp1[local_pos + 42] + inp1[local_pos + 27]) * w[0];
 res += (inp0[local_pos + 56] + inp0[local_pos + 27]) * w[1];
 vec2 res0 = res, diff;
-w = texture(ravu_lut_smoothtest2_3, vec2(0.55, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.55, coord_y));
 diff = clamp(inp1[local_pos + 2] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp1[local_pos + 67] - res0, -0.5, 0.5);
@@ -603,7 +603,7 @@ diff = clamp(inp0[local_pos + 30] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 53] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.65, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.65, coord_y));
 diff = clamp(inp1[local_pos + 30] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp1[local_pos + 39] - res0, -0.5, 0.5);
@@ -620,7 +620,7 @@ diff = clamp(inp1[local_pos + 15] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp1[local_pos + 54] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.75, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.75, coord_y));
 diff = clamp(inp0[local_pos + 29] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp0[local_pos + 54] - res0, -0.5, 0.5);
@@ -637,7 +637,7 @@ diff = clamp(inp1[local_pos + 43] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp1[local_pos + 26] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.85, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.85, coord_y));
 diff = clamp(inp1[local_pos + 14] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp1[local_pos + 55] - res0, -0.5, 0.5);
@@ -654,7 +654,7 @@ diff = clamp(inp0[local_pos + 42] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
 diff = clamp(inp0[local_pos + 41] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest2_3, vec2(0.95, coord_y));
+w = texture(ravu_lut_ar2_3, vec2(0.95, coord_y));
 diff = clamp(inp1[local_pos + 42] - res0, -0.5, 0.5);
 res += diff * (4.0 * diff * diff - 4.0 * abs(diff) + 1.0) * w[0];
 diff = clamp(inp1[local_pos + 27] - res0, -0.5, 0.5);
@@ -672,7 +672,7 @@ imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(1, 1), vec4(res, 
 res = inp1[local_pos + 28];
 imageStore(out_image, ivec2(gl_GlobalInvocationID) * 2 + ivec2(0, 0), vec4(res, 0.0, 0.0));
 }
-//!TEXTURE ravu_lut_smoothtest2_3
+//!TEXTURE ravu_lut_ar2_3
 //!SIZE 10 648
 //!FORMAT rgba16hf
 //!FILTER NEAREST

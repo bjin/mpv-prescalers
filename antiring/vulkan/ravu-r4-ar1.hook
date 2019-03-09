@@ -15,9 +15,9 @@
 //!DESC RAVU (step1, luma, r4)
 //!HOOK LUMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest1_4
+//!BIND ravu_lut_ar1_4
 //!SAVE ravu_int11
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < *
 vec4 hook() {
 float sample0 = HOOKED_texOff(vec2(-3.0, -3.0)).x;
 float sample1 = HOOKED_texOff(vec2(-3.0, -2.0)).x;
@@ -207,48 +207,48 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 float res = 0.0;
 vec4 w;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.03125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.03125, coord_y));
 res += (sample0 + sample63) * w[0];
 res += (sample1 + sample62) * w[1];
 res += (sample2 + sample61) * w[2];
 res += (sample3 + sample60) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.09375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.09375, coord_y));
 res += (sample4 + sample59) * w[0];
 res += (sample5 + sample58) * w[1];
 res += (sample6 + sample57) * w[2];
 res += (sample7 + sample56) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.15625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.15625, coord_y));
 res += (sample8 + sample55) * w[0];
 res += (sample9 + sample54) * w[1];
 res += (sample10 + sample53) * w[2];
 res += (sample11 + sample52) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.21875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.21875, coord_y));
 res += (sample12 + sample51) * w[0];
 res += (sample13 + sample50) * w[1];
 res += (sample14 + sample49) * w[2];
 res += (sample15 + sample48) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.28125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.28125, coord_y));
 res += (sample16 + sample47) * w[0];
 res += (sample17 + sample46) * w[1];
 res += (sample18 + sample45) * w[2];
 res += (sample19 + sample44) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.34375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.34375, coord_y));
 res += (sample20 + sample43) * w[0];
 res += (sample21 + sample42) * w[1];
 res += (sample22 + sample41) * w[2];
 res += (sample23 + sample40) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.40625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.40625, coord_y));
 res += (sample24 + sample39) * w[0];
 res += (sample25 + sample38) * w[1];
 res += (sample26 + sample37) * w[2];
 res += (sample27 + sample36) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.46875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.46875, coord_y));
 res += (sample28 + sample35) * w[0];
 res += (sample29 + sample34) * w[1];
 res += (sample30 + sample33) * w[2];
 res += (sample31 + sample32) * w[3];
 float res0 = res, diff;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.53125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.53125, coord_y));
 diff = sample0 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample63 - res0;
@@ -265,7 +265,7 @@ diff = sample3 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample60 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.59375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.59375, coord_y));
 diff = sample4 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample59 - res0;
@@ -282,7 +282,7 @@ diff = sample7 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample56 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.65625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.65625, coord_y));
 diff = sample8 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample55 - res0;
@@ -299,7 +299,7 @@ diff = sample11 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample52 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.71875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.71875, coord_y));
 diff = sample12 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample51 - res0;
@@ -316,7 +316,7 @@ diff = sample15 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample48 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.78125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.78125, coord_y));
 diff = sample16 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample47 - res0;
@@ -333,7 +333,7 @@ diff = sample19 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample44 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.84375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.84375, coord_y));
 diff = sample20 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample43 - res0;
@@ -350,7 +350,7 @@ diff = sample23 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample40 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.90625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.90625, coord_y));
 diff = sample24 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample39 - res0;
@@ -367,7 +367,7 @@ diff = sample27 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample36 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.96875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.96875, coord_y));
 diff = sample28 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample35 - res0;
@@ -390,10 +390,10 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!DESC RAVU (step2, luma, r4)
 //!HOOK LUMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest1_4
+//!BIND ravu_lut_ar1_4
 //!BIND ravu_int11
 //!SAVE ravu_int10
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < *
 vec4 hook() {
 float sample0 = HOOKED_texOff(vec2(-3.0, 0.0)).x;
 float sample16 = HOOKED_texOff(vec2(-2.0, -1.0)).x;
@@ -583,48 +583,48 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 float res = 0.0;
 vec4 w;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.03125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.03125, coord_y));
 res += (sample0 + sample63) * w[0];
 res += (sample1 + sample62) * w[1];
 res += (sample2 + sample61) * w[2];
 res += (sample3 + sample60) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.09375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.09375, coord_y));
 res += (sample4 + sample59) * w[0];
 res += (sample5 + sample58) * w[1];
 res += (sample6 + sample57) * w[2];
 res += (sample7 + sample56) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.15625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.15625, coord_y));
 res += (sample8 + sample55) * w[0];
 res += (sample9 + sample54) * w[1];
 res += (sample10 + sample53) * w[2];
 res += (sample11 + sample52) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.21875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.21875, coord_y));
 res += (sample12 + sample51) * w[0];
 res += (sample13 + sample50) * w[1];
 res += (sample14 + sample49) * w[2];
 res += (sample15 + sample48) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.28125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.28125, coord_y));
 res += (sample16 + sample47) * w[0];
 res += (sample17 + sample46) * w[1];
 res += (sample18 + sample45) * w[2];
 res += (sample19 + sample44) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.34375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.34375, coord_y));
 res += (sample20 + sample43) * w[0];
 res += (sample21 + sample42) * w[1];
 res += (sample22 + sample41) * w[2];
 res += (sample23 + sample40) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.40625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.40625, coord_y));
 res += (sample24 + sample39) * w[0];
 res += (sample25 + sample38) * w[1];
 res += (sample26 + sample37) * w[2];
 res += (sample27 + sample36) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.46875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.46875, coord_y));
 res += (sample28 + sample35) * w[0];
 res += (sample29 + sample34) * w[1];
 res += (sample30 + sample33) * w[2];
 res += (sample31 + sample32) * w[3];
 float res0 = res, diff;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.53125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.53125, coord_y));
 diff = sample0 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample63 - res0;
@@ -641,7 +641,7 @@ diff = sample3 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample60 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.59375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.59375, coord_y));
 diff = sample4 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample59 - res0;
@@ -658,7 +658,7 @@ diff = sample7 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample56 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.65625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.65625, coord_y));
 diff = sample8 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample55 - res0;
@@ -675,7 +675,7 @@ diff = sample11 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample52 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.71875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.71875, coord_y));
 diff = sample12 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample51 - res0;
@@ -692,7 +692,7 @@ diff = sample15 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample48 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.78125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.78125, coord_y));
 diff = sample16 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample47 - res0;
@@ -709,7 +709,7 @@ diff = sample19 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample44 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.84375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.84375, coord_y));
 diff = sample20 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample43 - res0;
@@ -726,7 +726,7 @@ diff = sample23 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample40 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.90625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.90625, coord_y));
 diff = sample24 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample39 - res0;
@@ -743,7 +743,7 @@ diff = sample27 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample36 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.96875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.96875, coord_y));
 diff = sample28 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample35 - res0;
@@ -766,10 +766,10 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!DESC RAVU (step3, luma, r4)
 //!HOOK LUMA
 //!BIND HOOKED
-//!BIND ravu_lut_smoothtest1_4
+//!BIND ravu_lut_ar1_4
 //!BIND ravu_int11
 //!SAVE ravu_int01
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < *
 vec4 hook() {
 float sample8 = HOOKED_texOff(vec2(-3.0, 0.0)).x;
 float sample1 = HOOKED_texOff(vec2(-3.0, 1.0)).x;
@@ -959,48 +959,48 @@ float coherence = mix(mix(0.0, 1.0, mu >= 0.25), 2.0, mu >= 0.5);
 float coord_y = ((angle * 9.0 + strength) * 3.0 + coherence + 0.5) / 648.0;
 float res = 0.0;
 vec4 w;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.03125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.03125, coord_y));
 res += (sample0 + sample63) * w[0];
 res += (sample1 + sample62) * w[1];
 res += (sample2 + sample61) * w[2];
 res += (sample3 + sample60) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.09375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.09375, coord_y));
 res += (sample4 + sample59) * w[0];
 res += (sample5 + sample58) * w[1];
 res += (sample6 + sample57) * w[2];
 res += (sample7 + sample56) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.15625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.15625, coord_y));
 res += (sample8 + sample55) * w[0];
 res += (sample9 + sample54) * w[1];
 res += (sample10 + sample53) * w[2];
 res += (sample11 + sample52) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.21875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.21875, coord_y));
 res += (sample12 + sample51) * w[0];
 res += (sample13 + sample50) * w[1];
 res += (sample14 + sample49) * w[2];
 res += (sample15 + sample48) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.28125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.28125, coord_y));
 res += (sample16 + sample47) * w[0];
 res += (sample17 + sample46) * w[1];
 res += (sample18 + sample45) * w[2];
 res += (sample19 + sample44) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.34375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.34375, coord_y));
 res += (sample20 + sample43) * w[0];
 res += (sample21 + sample42) * w[1];
 res += (sample22 + sample41) * w[2];
 res += (sample23 + sample40) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.40625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.40625, coord_y));
 res += (sample24 + sample39) * w[0];
 res += (sample25 + sample38) * w[1];
 res += (sample26 + sample37) * w[2];
 res += (sample27 + sample36) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.46875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.46875, coord_y));
 res += (sample28 + sample35) * w[0];
 res += (sample29 + sample34) * w[1];
 res += (sample30 + sample33) * w[2];
 res += (sample31 + sample32) * w[3];
 float res0 = res, diff;
-w = texture(ravu_lut_smoothtest1_4, vec2(0.53125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.53125, coord_y));
 diff = sample0 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample63 - res0;
@@ -1017,7 +1017,7 @@ diff = sample3 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample60 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.59375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.59375, coord_y));
 diff = sample4 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample59 - res0;
@@ -1034,7 +1034,7 @@ diff = sample7 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample56 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.65625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.65625, coord_y));
 diff = sample8 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample55 - res0;
@@ -1051,7 +1051,7 @@ diff = sample11 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample52 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.71875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.71875, coord_y));
 diff = sample12 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample51 - res0;
@@ -1068,7 +1068,7 @@ diff = sample15 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample48 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.78125, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.78125, coord_y));
 diff = sample16 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample47 - res0;
@@ -1085,7 +1085,7 @@ diff = sample19 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample44 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.84375, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.84375, coord_y));
 diff = sample20 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample43 - res0;
@@ -1102,7 +1102,7 @@ diff = sample23 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample40 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.90625, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.90625, coord_y));
 diff = sample24 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample39 - res0;
@@ -1119,7 +1119,7 @@ diff = sample27 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
 diff = sample36 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[3];
-w = texture(ravu_lut_smoothtest1_4, vec2(0.96875, coord_y));
+w = texture(ravu_lut_ar1_4, vec2(0.96875, coord_y));
 diff = sample28 - res0;
 res += diff * (diff * diff - 2.0 * abs(diff) + 1.0) * w[0];
 diff = sample35 - res0;
@@ -1148,7 +1148,7 @@ return vec4(res, 0.0, 0.0, 0.0);
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 < HOOKED.h 2 * OUTPUT.h / 1.414213 < *
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 < HOOKED.h OUTPUT.h / 0.707106 < *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0.0) {
@@ -1161,7 +1161,7 @@ vec4 hook() {
         return ravu_int11_texOff(-dir);
     }
 }
-//!TEXTURE ravu_lut_smoothtest1_4
+//!TEXTURE ravu_lut_ar1_4
 //!SIZE 16 648
 //!FORMAT rgba16hf
 //!FILTER NEAREST
