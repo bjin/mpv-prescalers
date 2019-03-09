@@ -87,12 +87,10 @@ class UserHook:
             self.header[WHEN] = cond_str
 
     def add_cond_eq(self, lhs, rhs):
-        self.add_cond("%s %s > !" % (lhs, rhs))
-        self.add_cond("%s %s < !" % (lhs, rhs))
+        self.add_cond("%s %s =" % (lhs, rhs))
 
     def add_cond_even(self, sz):
-        # use single precision float overflow to verify even numbers
-        self.add_cond("%s 16777216 + 16777216 - %s - !" % (sz, sz))
+        self.add_cond("%s 2 %% !" % sz)
 
     def set_transform(self, mul_x, mul_y, offset_x, offset_y):
         if mul_x != 1:
