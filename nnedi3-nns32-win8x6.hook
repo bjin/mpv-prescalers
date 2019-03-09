@@ -16,7 +16,7 @@
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int
-//!WHEN HOOKED.h 2 * OUTPUT.h / 1.414213 <
+//!WHEN HOOKED.h OUTPUT.h / 0.707106 <
 float nnedi3(vec4 samples[12]) {
 float sum = 0.0, sumsq = 0.0;
 for (int i = 0; i < 12; i++) {
@@ -125,7 +125,7 @@ return ret;
 //!BIND nnedi3_int
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET 0.000000 -0.500000
-//!WHEN HOOKED.h 2 * OUTPUT.h / 1.414213 <
+//!WHEN HOOKED.h OUTPUT.h / 0.707106 <
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.y < 0.0) {
@@ -138,7 +138,7 @@ vec4 hook() {
 //!HOOK LUMA
 //!BIND HOOKED
 //!SAVE nnedi3_int
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 <
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 <
 float nnedi3(vec4 samples[12]) {
 float sum = 0.0, sumsq = 0.0;
 for (int i = 0; i < 12; i++) {
@@ -247,7 +247,7 @@ return ret;
 //!BIND nnedi3_int
 //!WIDTH 2 HOOKED.w *
 //!OFFSET -0.500000 0.000000
-//!WHEN HOOKED.w 2 * OUTPUT.w / 1.414213 <
+//!WHEN HOOKED.w OUTPUT.w / 0.707106 <
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0.0) {
