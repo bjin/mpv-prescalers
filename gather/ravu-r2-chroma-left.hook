@@ -18,7 +18,7 @@
 //!BIND ravu_lut2
 //!BIND LUMA
 //!SAVE ravu_int11
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 0);
 vec4 gathered0_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, -1), 1);
@@ -28,22 +28,22 @@ vec4 gathered2_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec
 vec4 gathered2_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, -1), 1);
 vec4 gathered3_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 0);
 vec4 gathered3_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(1, 1), 1);
-float luma0 = LUMA_texOff(vec2(-1.5,-2.0)).x;
-float luma1 = LUMA_texOff(vec2(-1.5,0.0)).x;
-float luma2 = LUMA_texOff(vec2(-1.5,2.0)).x;
-float luma3 = LUMA_texOff(vec2(-1.5,4.0)).x;
-float luma4 = LUMA_texOff(vec2(0.5,-2.0)).x;
-float luma5 = LUMA_texOff(vec2(0.5,0.0)).x;
-float luma6 = LUMA_texOff(vec2(0.5,2.0)).x;
-float luma7 = LUMA_texOff(vec2(0.5,4.0)).x;
-float luma8 = LUMA_texOff(vec2(2.5,-2.0)).x;
-float luma9 = LUMA_texOff(vec2(2.5,0.0)).x;
-float luma10 = LUMA_texOff(vec2(2.5,2.0)).x;
-float luma11 = LUMA_texOff(vec2(2.5,4.0)).x;
-float luma12 = LUMA_texOff(vec2(4.5,-2.0)).x;
-float luma13 = LUMA_texOff(vec2(4.5,0.0)).x;
-float luma14 = LUMA_texOff(vec2(4.5,2.0)).x;
-float luma15 = LUMA_texOff(vec2(4.5,4.0)).x;
+float luma0 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,-2.0)+tex_offset)).x;
+float luma1 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,0.0)+tex_offset)).x;
+float luma2 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,2.0)+tex_offset)).x;
+float luma3 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,4.0)+tex_offset)).x;
+float luma4 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,-2.0)+tex_offset)).x;
+float luma5 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,0.0)+tex_offset)).x;
+float luma6 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,2.0)+tex_offset)).x;
+float luma7 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,4.0)+tex_offset)).x;
+float luma8 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,-2.0)+tex_offset)).x;
+float luma9 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,0.0)+tex_offset)).x;
+float luma10 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,2.0)+tex_offset)).x;
+float luma11 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,4.0)+tex_offset)).x;
+float luma12 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,-2.0)+tex_offset)).x;
+float luma13 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,0.0)+tex_offset)).x;
+float luma14 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,2.0)+tex_offset)).x;
+float luma15 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,4.0)+tex_offset)).x;
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -128,36 +128,36 @@ return vec4(res, 0.0, 0.0);
 //!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int10
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(0, -1), 0);
 vec4 gathered0_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(0, -1), 1);
 vec4 gathered1_u = ravu_int11_mul * textureGatherOffset(ravu_int11_raw, ravu_int11_pos, ivec2(-1, -1), 0);
 vec4 gathered1_v = ravu_int11_mul * textureGatherOffset(ravu_int11_raw, ravu_int11_pos, ivec2(-1, -1), 1);
 vec2 sample0 = HOOKED_texOff(vec2(-1.0, 0.0)).xy;
-float luma0 = LUMA_texOff(vec2(-1.5,0.0)).x;
-float luma8 = LUMA_texOff(vec2(0.5,-2.0)).x;
-float luma5 = LUMA_texOff(vec2(0.5,0.0)).x;
+float luma0 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,0.0)+tex_offset)).x;
+float luma8 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,-2.0)+tex_offset)).x;
+float luma5 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,0.0)+tex_offset)).x;
 vec2 sample2 = HOOKED_texOff(vec2(0.0, 1.0)).xy;
-float luma2 = LUMA_texOff(vec2(0.5,2.0)).x;
-float luma13 = LUMA_texOff(vec2(2.5,-2.0)).x;
-float luma10 = LUMA_texOff(vec2(2.5,0.0)).x;
+float luma2 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,2.0)+tex_offset)).x;
+float luma13 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,-2.0)+tex_offset)).x;
+float luma10 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,0.0)+tex_offset)).x;
 vec2 sample7 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
-float luma7 = LUMA_texOff(vec2(2.5,2.0)).x;
+float luma7 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,2.0)+tex_offset)).x;
 vec2 sample15 = HOOKED_texOff(vec2(2.0, 0.0)).xy;
-float luma15 = LUMA_texOff(vec2(4.5,0.0)).x;
-float luma4 = LUMA_texOff(vec2(-0.5,-1.0)).x;
-float luma1 = LUMA_texOff(vec2(-0.5,1.0)).x;
+float luma15 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(4.5,0.0)+tex_offset)).x;
+float luma4 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,-1.0)+tex_offset)).x;
+float luma1 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,1.0)+tex_offset)).x;
 vec2 sample12 = ravu_int11_texOff(vec2(0.0, -2.0)).xy;
-float luma12 = LUMA_texOff(vec2(1.5,-3.0)).x;
-float luma9 = LUMA_texOff(vec2(1.5,-1.0)).x;
-float luma6 = LUMA_texOff(vec2(1.5,1.0)).x;
+float luma12 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,-3.0)+tex_offset)).x;
+float luma9 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,-1.0)+tex_offset)).x;
+float luma6 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,1.0)+tex_offset)).x;
 vec2 sample3 = ravu_int11_texOff(vec2(0.0, 1.0)).xy;
-float luma3 = LUMA_texOff(vec2(1.5,3.0)).x;
+float luma3 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,3.0)+tex_offset)).x;
 vec2 sample14 = ravu_int11_texOff(vec2(1.0, -1.0)).xy;
-float luma14 = LUMA_texOff(vec2(3.5,-1.0)).x;
+float luma14 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(3.5,-1.0)+tex_offset)).x;
 vec2 sample11 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
-float luma11 = LUMA_texOff(vec2(3.5,1.0)).x;
+float luma11 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(3.5,1.0)+tex_offset)).x;
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -242,36 +242,36 @@ return vec4(res, 0.0, 0.0);
 //!BIND LUMA
 //!BIND ravu_int11
 //!SAVE ravu_int01
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
 vec4 gathered0_u = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 0), 0);
 vec4 gathered0_v = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(-1, 0), 1);
 vec4 gathered1_u = ravu_int11_mul * textureGatherOffset(ravu_int11_raw, ravu_int11_pos, ivec2(-1, -1), 0);
 vec4 gathered1_v = ravu_int11_mul * textureGatherOffset(ravu_int11_raw, ravu_int11_pos, ivec2(-1, -1), 1);
-float luma4 = LUMA_texOff(vec2(-1.5,0.0)).x;
-float luma1 = LUMA_texOff(vec2(-1.5,2.0)).x;
+float luma4 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,0.0)+tex_offset)).x;
+float luma1 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-1.5,2.0)+tex_offset)).x;
 vec2 sample12 = HOOKED_texOff(vec2(0.0, -1.0)).xy;
-float luma12 = LUMA_texOff(vec2(0.5,-2.0)).x;
-float luma9 = LUMA_texOff(vec2(0.5,0.0)).x;
-float luma6 = LUMA_texOff(vec2(0.5,2.0)).x;
+float luma12 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,-2.0)+tex_offset)).x;
+float luma9 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,0.0)+tex_offset)).x;
+float luma6 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,2.0)+tex_offset)).x;
 vec2 sample3 = HOOKED_texOff(vec2(0.0, 2.0)).xy;
-float luma3 = LUMA_texOff(vec2(0.5,4.0)).x;
+float luma3 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(0.5,4.0)+tex_offset)).x;
 vec2 sample14 = HOOKED_texOff(vec2(1.0, 0.0)).xy;
-float luma14 = LUMA_texOff(vec2(2.5,0.0)).x;
+float luma14 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,0.0)+tex_offset)).x;
 vec2 sample11 = HOOKED_texOff(vec2(1.0, 1.0)).xy;
-float luma11 = LUMA_texOff(vec2(2.5,2.0)).x;
+float luma11 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(2.5,2.0)+tex_offset)).x;
 vec2 sample0 = ravu_int11_texOff(vec2(-2.0, 0.0)).xy;
-float luma0 = LUMA_texOff(vec2(-2.5,1.0)).x;
-float luma8 = LUMA_texOff(vec2(-0.5,-1.0)).x;
-float luma5 = LUMA_texOff(vec2(-0.5,1.0)).x;
+float luma0 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-2.5,1.0)+tex_offset)).x;
+float luma8 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,-1.0)+tex_offset)).x;
+float luma5 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,1.0)+tex_offset)).x;
 vec2 sample2 = ravu_int11_texOff(vec2(-1.0, 1.0)).xy;
-float luma2 = LUMA_texOff(vec2(-0.5,3.0)).x;
-float luma13 = LUMA_texOff(vec2(1.5,-1.0)).x;
-float luma10 = LUMA_texOff(vec2(1.5,1.0)).x;
+float luma2 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(-0.5,3.0)+tex_offset)).x;
+float luma13 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,-1.0)+tex_offset)).x;
+float luma10 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,1.0)+tex_offset)).x;
 vec2 sample7 = ravu_int11_texOff(vec2(0.0, 1.0)).xy;
-float luma7 = LUMA_texOff(vec2(1.5,3.0)).x;
+float luma7 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(1.5,3.0)+tex_offset)).x;
 vec2 sample15 = ravu_int11_texOff(vec2(1.0, 0.0)).xy;
-float luma15 = LUMA_texOff(vec2(3.5,1.0)).x;
+float luma15 = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(3.5,1.0)+tex_offset)).x;
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (luma4-luma0);
@@ -358,7 +358,7 @@ return vec4(res, 0.0, 0.0);
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 vec4 hook() {
     vec2 dir = fract(HOOKED_pos * HOOKED_size) - 0.5;
     if (dir.x < 0.0) {

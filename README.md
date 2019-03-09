@@ -71,18 +71,16 @@ It uses downscaled luma plane to calculate gradient and guide chroma planes upsc
 
 Due to current limitation of `mpv`'s hook system, there are some caveats for using `ravu-chroma`:
 
-1. It works with `YUV 4:2:0` format only, and will disable itself if size is not
-   matched exactly, this includes odd width/height of luma plane.
-2. It will **NOT** work with luma prescalers. However you could use `ravu-rgb`
-   or `ravu-yuv` for further upscaling.
-3. You need to explicitly state the chroma location, by choosing one of those
+1. It won't detect chroma offset introduced by itself. So it's best practice to
+   use this shader at most once.
+2. You need to explicitly state the chroma location, by choosing one of those
    `chroma-left` and `chroma-center` shaders. If you don't know how to/don't
    bother to check chroma location of video, or don't watch ancient videos,
    just choose `chroma-left`. If you are using [auto-profiles.lua](https://github.com/wiiaboo/mpv-scripts/blob/master/auto-profiles.lua),
    you can use `cond:get('video-params/chroma-location','unknown')=='mpeg2/4/h264'`
    for `chroma-left` shader and `cond:get('video-params/chroma-location','unknown')=='mpeg1/jpeg'`
    for `chroma-center` shader.
-4. `cscale` will still be used to correct minor offset.
+3. `cscale` will still be used to correct minor offset.
 
 `ravu-ar` (under [`antiring/` directory](https://github.com/bjin/mpv-prescalers/tree/master/antiring))
 is an experimental implementation of RAVU that utilize smooth functions to combat
