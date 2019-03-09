@@ -18,7 +18,7 @@
 //!BIND ravu_lut4
 //!BIND LUMA
 //!SAVE ravu_int11
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 //!COMPUTE 32 8
 shared vec2 inp0[585];
 shared float inp_luma0[585];
@@ -28,7 +28,7 @@ int local_pos = int(gl_LocalInvocationID.x) * 15 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 585; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 15, y = id % 15;
 inp0[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-2.5), float(group_base.y+y)+(-2.5))).xy;
-inp_luma0[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(-5.0),float(group_base.y+y)*2.0+(-5.5))).x;
+inp_luma0[id] = LUMA_tex(LUMA_pt * (vec2(float(group_base.x+x)*2.0+(-5.0),float(group_base.y+y)*2.0+(-5.5))+tex_offset)).x;
 }
 groupMemoryBarrier();
 barrier();
@@ -270,7 +270,7 @@ imageStore(out_image, ivec2(gl_GlobalInvocationID), vec4(res, 0.0, 0.0));
 //!WIDTH 2 HOOKED.w *
 //!HEIGHT 2 HOOKED.h *
 //!OFFSET -0.500000 -0.500000
-//!WHEN LUMA.w CHROMA.w 2 * > ! LUMA.w CHROMA.w 2 * < ! * LUMA.h CHROMA.h 2 * > ! * LUMA.h CHROMA.h 2 * < ! *
+//!WHEN LUMA.w CHROMA.w 1.8 * > LUMA.h CHROMA.h 1.8 * > *
 //!COMPUTE 64 16 32 8
 shared vec2 inp0[585];
 shared float inp_luma0[585];
@@ -282,12 +282,12 @@ int local_pos = int(gl_LocalInvocationID.x) * 15 + int(gl_LocalInvocationID.y);
 for (int id = int(gl_LocalInvocationIndex); id < 585; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 15, y = id % 15;
 inp0[id] = ravu_int11_tex(ravu_int11_pt * vec2(float(group_base.x+x)+(-3.5), float(group_base.y+y)+(-3.5))).xy;
-inp_luma0[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(-6.0),float(group_base.y+y)*2.0+(-6.5))).x;
+inp_luma0[id] = LUMA_tex(LUMA_pt * (vec2(float(group_base.x+x)*2.0+(-6.0),float(group_base.y+y)*2.0+(-6.5))+tex_offset)).x;
 }
 for (int id = int(gl_LocalInvocationIndex); id < 585; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
 int x = id / 15, y = id % 15;
 inp1[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-2.5), float(group_base.y+y)+(-2.5))).xy;
-inp_luma1[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(-5.0),float(group_base.y+y)*2.0+(-5.5))).x;
+inp_luma1[id] = LUMA_tex(LUMA_pt * (vec2(float(group_base.x+x)*2.0+(-5.0),float(group_base.y+y)*2.0+(-5.5))+tex_offset)).x;
 }
 groupMemoryBarrier();
 barrier();
