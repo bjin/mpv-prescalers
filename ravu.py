@@ -183,14 +183,10 @@ class RAVU(userhook.UserHook):
             # all of them.
             self.set_skippable(2, 2)
         else:
-            # Due to limitation of mpv's hook system, we don't know the
-            # texture offset between luma and chroma planes, as well as chroma
-            # offset and chroma subsampling method. Add condition to process
-            # only YUV 4:2:0 video. Ideally we also want to check that luma was
-            # not prescaled (luma plane will be prescaled first and will
-            # introduce offset), but there is no way to do so.
-            self.add_cond_eq("LUMA.w", "CHROMA.w 2 *")
-            self.add_cond_eq("LUMA.h", "CHROMA.h 2 *")
+            # Check upscaled CHROMA size against LUMA, instead of OUTPUT. Use
+            # a value slightly less than 2 to make inequation hold.
+            self.add_cond("LUMA.w CHROMA.w 1.8 * >")
+            self.add_cond("LUMA.h CHROMA.h 1.8 * >")
 
     def setup_profile(self):
         GLSL = self.add_glsl
@@ -411,7 +407,7 @@ vec4 hook() {""")
                     offset_x = x * 2 + bound_tex_id[0] - chroma_offset[0]
                     offset_y = y * 2 + bound_tex_id[1] - chroma_offset[1]
                     # use bilinear sampling for luma downscaling
-                    GLSL('float %s = LUMA_texOff(vec2(%s,%s)).x;' % (luma(i, j), offset_x, offset_y))
+                    GLSL('float %s = LUMA_tex(HOOKED_pos+LUMA_pt*(vec2(%s,%s)+tex_offset)).x;' % (luma(i, j), offset_x, offset_y))
 
         self.extract_key(luma)
 
@@ -517,7 +513,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
                 # |(group_base+(x,y)+offset_base)*2+bound_tex_id| is the luma texel id
                 offset_x = offset_base[0] * 2 + bound_tex_id[0] + 0.5 - chroma_offset[0]
                 offset_y = offset_base[1] * 2 + bound_tex_id[1] + 0.5 - chroma_offset[1]
-                GLSL('inp_luma%d[id] = LUMA_tex(LUMA_pt * vec2(float(group_base.x+x)*2.0+(%s),float(group_base.y+y)*2.0+(%s))).x;' %
+                GLSL('inp_luma%d[id] = LUMA_tex(LUMA_pt * (vec2(float(group_base.x+x)*2.0+(%s),float(group_base.y+y)*2.0+(%s))+tex_offset)).x;' %
                      (tex_idx, offset_x, offset_y))
 
             GLSL("""
