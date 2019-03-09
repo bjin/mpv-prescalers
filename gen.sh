@@ -19,13 +19,6 @@ for nns in 16 32 64 128 256; do
     done
 done
 
-for target in luma yuv rgb; do
-    suffix="-$target"
-    [ "$target" = "luma" ] && suffix=""
-    file_name="superxbr$suffix.hook"
-    "$DIR/superxbr.py" --target "$target" > "$file_name"
-done
-
 gen_ravu() {
     float_format="$1"
     for target in luma chroma-left chroma-center yuv rgb; do
