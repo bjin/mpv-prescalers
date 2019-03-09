@@ -90,11 +90,15 @@ class UserHook:
         self.add_cond("%s %s > !" % (lhs, rhs))
         self.add_cond("%s %s < !" % (lhs, rhs))
 
+    def add_cond_even(self, sz):
+        # use single precision float overflow to verify even numbers
+        self.add_cond("%s 16777216 + 16777216 - %s - !" % (sz, sz))
+
     def set_transform(self, mul_x, mul_y, offset_x, offset_y):
         if mul_x != 1:
-            self.header[WIDTH] = "%d %s.w *" % (mul_x, HOOKED)
+            self.header[WIDTH] = "%s %s.w *" % (mul_x, HOOKED)
         if mul_y != 1:
-            self.header[HEIGHT] = "%d %s.h *" % (mul_y, HOOKED)
+            self.header[HEIGHT] = "%s %s.h *" % (mul_y, HOOKED)
         if offset_x != 0.0 or offset_y != 0.0:
             self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
 
@@ -102,11 +106,11 @@ class UserHook:
     def set_skippable(self, mul_x=0, mul_y=0, source_tex=HOOKED):
         if self.target_tex and self.max_downscaling_ratio:
             if mul_x:
-                self.add_cond("%s.w %d * %s.w / %f <" %
-                    (source_tex, mul_x, self.target_tex, self.max_downscaling_ratio))
+                self.add_cond("%s.w %s.w / %f <" %
+                    (source_tex, self.target_tex, self.max_downscaling_ratio / mul_x))
             if mul_y:
-                self.add_cond("%s.h %d * %s.h / %f <" %
-                    (source_tex, mul_y, self.target_tex, self.max_downscaling_ratio))
+                self.add_cond("%s.h %s.h / %f <" %
+                    (source_tex, self.target_tex, self.max_downscaling_ratio / mul_y))
 
     def set_description(self, desc):
         self.header[DESC] = desc
