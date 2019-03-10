@@ -140,7 +140,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
 
         GLSL("int x = id / %d, y = id %% %d;" % (array_size[1], array_size[1]))
 
-        GLSL("inp[id] = HOOKED_mul * texelFetch(HOOKED_raw, group_base + ivec2(x - 1, y - 1), 0);")
+        GLSL("inp[id] = %s_tex(%s_pt * vec2(float(group_base.x + x) - 0.5, float(group_base.y + y) - 0.5));" % (input_tex, input_tex))
 
         GLSL("""
 }""")
@@ -218,8 +218,8 @@ class Compare(userhook.UserHook):
         GLSL("float diff = distance(%s_texOff(vec2(0.0)), %s_texOff(vec2(0.0)));" % (input1, input2))
 
         GLSL("""
-if (diff < 0.001) return vec4(1.0, 0.0, 0.0, 0.0);
-if (diff < 0.1) return vec4(0.0, 1.0, 0.0, 0.0);
+if (diff < 0.0001) return vec4(1.0, 0.0, 0.0, 0.0);
+if (diff < 0.01) return vec4(0.0, 1.0, 0.0, 0.0);
 return vec4(0.0, 0.0, 1.0, 0.0);
         """)
 
