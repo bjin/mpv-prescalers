@@ -167,29 +167,30 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
                 GLSL("vec4 %s = %s;" % (res[i, j], res_init if i == 0 and j == 0 else res[0, 0]))
 
         GLSL("vec4 tmp;")
-        for i in range(4):
-            for j in range(4):
-                sample_summed = ""
-                for u in range(4):
-                    for v in range(4):
-                        val = BTiB[i, j, u, v]
-                        if val != 0:
-                            sample_summed += '+' if val > 0 else '-'
-                            sample_summed += samples[u, v]
 
-                sample_summed = sample_summed.lstrip('+')
+        order = [(1, 1), (1, 2), (2, 1), (2, 2), (0, 1), (0, 2), (0, 3), (1, 3), (2, 3), (3, 3), (3, 1), (3, 2), (3, 0), (1, 0), (2, 0), (0, 0)]
+        for (i, j) in order:
+            sample_summed = ""
+            for u in range(4):
+                for v in range(4):
+                    val = BTiB[i, j, u, v]
+                    if val != 0:
+                        sample_summed += '+' if val > 0 else '-'
+                        sample_summed += samples[u, v]
 
-                ma = "mat4(%s)" % ",".join(repr(e) for e in GgGT[i, j].T.ravel())
+            sample_summed = sample_summed.lstrip('+')
 
-                GLSL("tmp = %s * (%s);" % (ma, sample_summed))
+            ma = "mat4(%s)" % ",".join(repr(e) for e in GgGT[i, j].T.ravel())
 
-                lst = []
-                for i0 in range(2):
-                    for j0 in range(2):
-                        val = ATiA[i0, j0, i, j]
-                        if val != 0:
-                            lst.append("%s %s= tmp;" % (res[i0, j0], "+" if val > 0 else "-"))
-                GLSL(" ".join(lst))
+            GLSL("tmp = %s * (%s);" % (ma, sample_summed))
+
+            lst = []
+            for i0 in range(2):
+                for j0 in range(2):
+                    val = ATiA[i0, j0, i, j]
+                    if val != 0:
+                        lst.append("%s %s= tmp;" % (res[i0, j0], "+" if val > 0 else "-"))
+            GLSL(" ".join(lst))
 
 
         for i in range(2):
