@@ -152,18 +152,19 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
         for i in range(4):
             for j in range(4):
                 offset = i * array_size[1] + j
-                samples[i, j] = "inp%d%d" % (i, j)
-                GLSL("vec4 %s = inp[local_pos+%d];" % (samples[i, j], offset))
+                if i in [0, 3] and j in [0, 3]:
+                    samples[i, j] = "inp[local_pos+%d]" % offset
+                else:
+                    samples[i, j] = "inp%d%d" % (i, j)
+                    GLSL("vec4 %s = inp[local_pos+%d];" % (samples[i, j], offset))
 
-        if bias is not None:
-            GLSL("vec4 bias = vec4(%s);" % ",".join(repr(e) for e in bias))
+        res_init = "vec4(%s)" % ",".join(repr(e) for e in bias) if bias is not None else "vec4(0.0)"
 
         res = {}
         for i in range(2):
             for j in range(2):
-                res_name = "res%d%d" % (i, j)
-                res[i, j] = res_name
-                GLSL("vec4 %s = %s;" % (res_name, "bias" if bias is not None else "vec4(0.0)"))
+                res[i, j] = "res%d%d" % (i, j)
+                GLSL("vec4 %s = %s;" % (res[i, j], res_init if i == 0 and j == 0 else res[0, 0]))
 
         GLSL("vec4 tmp;")
         for i in range(4):
