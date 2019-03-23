@@ -100,6 +100,10 @@ class UserHook:
         if offset_x != 0.0 or offset_y != 0.0:
             self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
 
+    def set_output_size(self, output_width, output_height):
+        self.header[WIDTH] = output_width
+        self.header[HEIGHT] = output_height
+
     # Use this with caution. This will skip only current step.
     def set_skippable(self, mul_x=0, mul_y=0, source_tex=HOOKED):
         if self.target_tex and self.max_downscaling_ratio:
