@@ -88,6 +88,8 @@ is an experimental implementation of RAVU that utilize smooth functions to comba
 additional kernel for this purpose, so it will be slower. `ravu-ar2` is more
 aggressive on anti-ringing (compare to `ravu-ar1`), with more loss of details.
 
+`ravu-zoom` is another variant which is able to upscale video to arbitrary ratio.
+
 # Known Issue
 
 1. `ravu-lite` is incompatible with `--fbo-format=rgb10_a2` (default
