@@ -47,16 +47,9 @@ For `ravu` prescaler, `radius` setting is indicated in the filename.
 
 # Which variant of RAVU should I use?
 
-TLDR: Use `ravu-lite-r{2,3}.hook` if you are using integrated GPU or care about
-performance/battery usage, but still want some improvement with minimal cost.
-Use `ravu-r{3,4}-rgb.hook` if you could live with higher GPU usage, and wish to
-find an idiot-proof setting.
-
 `ravu` and `ravu-lite` upscale only luma plane (of a YUV video), which means
-chroma planes will be handled by `--cscale` later. `ravu-lite` should be faster,
-and it introduces no half-pixel offset. The quality (and also performance) of
-`ravu-lite-rN` should roughly be same as `ravu-r(N-0.5)` (so `ravu-lite-r3` could
-be considered `ravu-r2.5`).
+chroma planes will be handled by `--cscale` later. `ravu-lite` is faster and
+sharper. It also introduces no half pixel offset.
 
 `ravu-yuv` and `ravu-rgb` upscale video after all planes are merged. This happens
 after `--cscale` (or other chroma prescaler) is applied. `ravu-yuv` assumes YUV
