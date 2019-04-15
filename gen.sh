@@ -64,7 +64,7 @@ gen_ravu() {
     for target in luma yuv rgb; do
         suffix="-$target"
         [ "$target" = "luma" ] && suffix=""
-        for radius in 2 3; do
+        for radius in 2 3 4; do
             file_name="ravu-zoom-r$radius$suffix.hook"
             weights_file="$DIR/weights/ravu-zoom_weights-r$radius.py"
             "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" > "$file_name"
