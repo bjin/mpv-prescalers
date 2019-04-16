@@ -1,9 +1,7 @@
 This repo contains user shaders for prescaling in [mpv](https://mpv.io/).
 
 For the scripts generating these user shaders, check the [source
-branch](https://github.com/bjin/mpv-prescalers/tree/source). For
-comparison/performance of prescalers, check the [Comparison](https://github.com/bjin/mpv-prescalers/wiki/Comparison)
-and [Performance](https://github.com/bjin/mpv-prescalers/wiki/Performance) wiki.
+branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
 Shaders in [`gather/` directory](https://github.com/bjin/mpv-prescalers/tree/master/gather)
 and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/compute)
