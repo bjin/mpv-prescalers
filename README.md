@@ -73,12 +73,6 @@ Due to current limitation of `mpv`'s hook system, there are some caveats for usi
    for `chroma-center` shader.
 3. `cscale` will still be used to correct minor offset.
 
-`ravu-ar` (under [`antiring/` directory](https://github.com/bjin/mpv-prescalers/tree/master/antiring))
-is an experimental implementation of RAVU that utilize smooth functions to combat
-[ringing artifacts](https://en.wikipedia.org/wiki/Ringing_artifacts). It uses an
-additional kernel for this purpose, so it will be slower. `ravu-ar2` is more
-aggressive on anti-ringing (compare to `ravu-ar1`), with more loss of details.
-
 `ravu-zoom` is another variant which is able to upscale video to arbitrary ratio.
 
 # Known Issue
