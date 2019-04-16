@@ -28,7 +28,7 @@ gen_ravu() {
             file_name="ravu-r$radius$suffix.hook"
             weights_file="$DIR/weights/ravu_weights-r$radius.py"
             "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" > "$file_name"
-            if [ -d gather ]; then
+            if [ -d gather -a \( "$target" = "luma" -o "$target" = "chroma-left" -o "$target" = "chroma-center" \) ]; then
                 "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-gather > "gather/$file_name"
             fi
             if [ -d compute ]; then
