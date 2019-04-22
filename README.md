@@ -43,7 +43,11 @@ filename.
 
 For `ravu` prescaler, `radius` setting is indicated in the filename.
 
-# Which variant of RAVU should I use?
+# About RAVU
+
+RAVU (Rapid and Accurate Video Upscaling) is a set of prescalers inspired by
+[RAISR (Rapid and Accurate Image Super Resolution)](https://ai.googleblog.com/2016/11/enhance-raisr-sharp-images-with-machine.html).
+It comes with different variants to fit different scenarios.
 
 `ravu` and `ravu-lite` upscale only luma plane (of a YUV video), which means
 chroma planes will be handled by `--cscale` later. `ravu-lite` is faster and
@@ -55,7 +59,8 @@ video and will fail on others (for example, PNG picture).
 
 `ravu-3x` is just like its `ravu`/`ravu-yuv`/`ravu-rgb` counterpart. But
 instead of double the size of video, it triple the size. It also requires
-compute shader OpenGL capability, which means decent GPU and driver.
+compute shader OpenGL capability, which means decent GPU and driver (and no
+macOS support).
 
 `ravu-chroma` is a chroma prescaler (could be considered as replacement of `--cscale`).
 It uses downscaled luma plane to calculate gradient and guide chroma planes upscaling.
@@ -73,7 +78,11 @@ Due to current limitation of `mpv`'s hook system, there are some caveats for usi
    for `chroma-center` shader.
 3. `cscale` will still be used to correct minor offset.
 
-`ravu-zoom` is another variant which is able to upscale video to arbitrary ratio.
+`ravu-zoom` is another variant which is able to upscale video to arbitrary ratio
+directly. Its sharpness is close to `ravu-lite`. But it renders at target
+resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
+While `ravu-zoom` was trained to fit 1.5x to 3x upscaling, it works best with
+less than 2x upscaling (faster and fewer amount of ringing artifacts).
 
 # Known Issue
 
