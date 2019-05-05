@@ -81,14 +81,12 @@ Due to current limitation of `mpv`'s hook system, there are some caveats for usi
 `ravu-zoom` is another variant which is able to upscale video to arbitrary ratio
 directly. Its sharpness is close to `ravu-lite`. But it renders at target
 resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
-While `ravu-zoom` was trained to fit 1.5x to 3x upscaling, it works best with
-less than 2x upscaling (faster and fewer amount of ringing artifacts).
 
 # Known Issue
 
 1. `ravu-lite` is incompatible with `--fbo-format=rgb10_a2` (default
    for some OpenGL ES implementation). Use `rgba16f` or `rgba16` if available.
-2. `ravu-r4-{rgb,yuv}` causes distortion with lower-end intel card.
+2. `ravu-[zoom-]r4-{rgb,yuv}` causes distortion with lower-end intel card.
 
 # License
 
