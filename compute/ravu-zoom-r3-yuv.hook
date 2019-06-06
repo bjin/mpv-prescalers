@@ -18,6 +18,7 @@
 //!BIND ravu_zoom_lut3
 //!WIDTH OUTPUT.w
 //!HEIGHT OUTPUT.h
+//!OFFSET ALIGN
 //!WHEN LUMA.w 0 > HOOKED.w OUTPUT.w < * HOOKED.h OUTPUT.h < *
 //!COMPUTE 32 8
 shared vec3 samples[532];

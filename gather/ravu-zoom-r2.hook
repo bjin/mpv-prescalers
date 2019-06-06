@@ -18,6 +18,7 @@
 //!BIND ravu_zoom_lut2
 //!WIDTH OUTPUT.w
 //!HEIGHT OUTPUT.h
+//!OFFSET ALIGN
 //!WHEN HOOKED.w OUTPUT.w < HOOKED.h OUTPUT.h < *
 vec4 hook() {
 vec2 pos = HOOKED_pos * HOOKED_size;
