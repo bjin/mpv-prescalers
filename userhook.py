@@ -98,11 +98,14 @@ class UserHook:
         if mul_y != 1:
             self.header[HEIGHT] = "%s %s.h *" % (mul_y, HOOKED)
         if offset_x != 0.0 or offset_y != 0.0:
-            self.header[OFFSET] = ["%f %f" % (offset_x, offset_y)]
+            self.header[OFFSET] = "%f %f" % (offset_x, offset_y)
 
     def set_output_size(self, output_width, output_height):
         self.header[WIDTH] = output_width
         self.header[HEIGHT] = output_height
+
+    def align_to_reference(self):
+        self.header[OFFSET] = "ALIGN"
 
     # Use this with caution. This will skip only current step.
     def set_skippable(self, mul_x=0, mul_y=0, source_tex=HOOKED):

@@ -140,6 +140,7 @@ class RAVU_Zoom(userhook.UserHook):
         self.add_cond("HOOKED.w OUTPUT.w <")
         self.add_cond("HOOKED.h OUTPUT.h <")
         self.set_output_size("OUTPUT.w", "OUTPUT.h")
+        self.align_to_reference()
 
     def extract_key(self, luma):
         GLSL = self.add_glsl
