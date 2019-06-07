@@ -41,16 +41,15 @@ glsl-shaders-append="~~/shaders/ravu-r3.hook"
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
 
-For `ravu` prescaler, `radius` setting is indicated in the filename.
+For `ravu` prescaler, `radius` setting is indicated in the filename. `r3`
+(with `radius=3` setting) shaders are **generally recommended**, those shaders
+achieve good balance between performance and quality.
 
 # About RAVU
 
 RAVU (Rapid and Accurate Video Upscaling) is a set of prescalers inspired by
 [RAISR (Rapid and Accurate Image Super Resolution)](https://ai.googleblog.com/2016/11/enhance-raisr-sharp-images-with-machine.html).
 It comes with different variants to fit different scenarios.
-
-For RAVU, `r3` (with `radius=3` setting) shaders are generally recommended,
-those shaders achieve good balance between performance and quality.
 
 `ravu` and `ravu-lite` upscale only luma plane (of a YUV video), which means
 chroma planes will be handled by `--cscale` later. `ravu-lite` is faster and
@@ -63,10 +62,11 @@ video and will fail on others (for example, PNG picture).
 `ravu-zoom` is another variant which is able to upscale video to arbitrary ratio
 directly. Its sharpness is close to `ravu-lite`. But it renders at target
 resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
-It also comes with a `-chroma` variant which is mostly a drop-in replacement of
+
+`ravu-zoom` also comes with a `chroma` variant which is mostly a drop-in replacement of
 `--cscale` (except when used with luma prescaler introducing pixel offsets, like
 `nnedi3` and original `ravu`, where `--cscale` will still be used. It will work
-fine with `fsrcnnx` and `ravu-lite`.)
+fine with `fsrcnnx` and `ravu-lite`).
 
 # Known Issue
 
