@@ -49,6 +49,9 @@ RAVU (Rapid and Accurate Video Upscaling) is a set of prescalers inspired by
 [RAISR (Rapid and Accurate Image Super Resolution)](https://ai.googleblog.com/2016/11/enhance-raisr-sharp-images-with-machine.html).
 It comes with different variants to fit different scenarios.
 
+For RAVU, `r3` (with `radius=3` setting) shaders are generally recommended,
+those shaders achieve good balance between performance and quality.
+
 `ravu` and `ravu-lite` upscale only luma plane (of a YUV video), which means
 chroma planes will be handled by `--cscale` later. `ravu-lite` is faster and
 sharper. It also introduces no half pixel offset.
@@ -57,30 +60,13 @@ sharper. It also introduces no half pixel offset.
 after `--cscale` (or other chroma prescaler) is applied. `ravu-yuv` assumes YUV
 video and will fail on others (for example, PNG picture).
 
-`ravu-3x` is just like its `ravu`/`ravu-yuv`/`ravu-rgb` counterpart. But
-instead of double the size of video, it triple the size. It also requires
-compute shader OpenGL capability, which means decent GPU and driver (and no
-macOS support).
-
-`ravu-chroma` is a chroma prescaler (could be considered as replacement of `--cscale`).
-It uses downscaled luma plane to calculate gradient and guide chroma planes upscaling.
-
-Due to current limitation of `mpv`'s hook system, there are some caveats for using `ravu-chroma`:
-
-1. It won't detect chroma offset introduced by itself. So it's best practice to
-   use this shader at most once.
-2. You need to explicitly state the chroma location, by choosing one of those
-   `chroma-left` and `chroma-center` shaders. If you don't know how to/don't
-   bother to check chroma location of video, or don't watch ancient videos,
-   just choose `chroma-left`. If you are using [auto-profiles.lua](https://github.com/wiiaboo/mpv-scripts/blob/master/auto-profiles.lua),
-   you can use `cond:get('video-params/chroma-location','unknown')=='mpeg2/4/h264'`
-   for `chroma-left` shader and `cond:get('video-params/chroma-location','unknown')=='mpeg1/jpeg'`
-   for `chroma-center` shader.
-3. `cscale` will still be used to correct minor offset.
-
 `ravu-zoom` is another variant which is able to upscale video to arbitrary ratio
 directly. Its sharpness is close to `ravu-lite`. But it renders at target
 resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
+It also comes with a `-chroma` variant which is mostly a drop-in replacement of
+`--cscale` (except when used with luma prescaler introducing pixel offsets, like
+`nnedi3` and original `ravu`, where `--cscale` will still be used. It will work
+fine with `fsrcnnx` and `ravu-lite`.)
 
 # Known Issue
 
