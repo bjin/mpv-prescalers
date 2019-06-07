@@ -344,7 +344,7 @@ for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_W
             luma_xy = "LUMA_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0.5,0.5)) + LUMA_pt * tex_offset).x"
             GLSL("samples[x + y * %d] = vec3(%s, %s);" % (stride, sample_xy, luma_xy))
         else:
-            GLSL("samples[x + y * %d] = %s" % (stride, sample_xy))
+            GLSL("samples[x + y * %d] = %s;" % (stride, sample_xy))
 
         GLSL("""
 }""")
