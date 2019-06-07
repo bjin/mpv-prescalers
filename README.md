@@ -26,7 +26,7 @@ Use `glsl-shaders="prescaler.hook"` option to load those shaders. (This will
 override other user shaders, use `glsl-shaders-append` in that case)
 
 ```
-glsl-shaders="~~/shaders/ravu-r3.hook"
+glsl-shaders="~~/shaders/ravu-lite-r3.hook"
 ```
 
 All shaders are for one pass only. If you want to have `4x` upscaling, trigger
@@ -34,8 +34,8 @@ the same shader twice. All the shaders here are generated with
 `max-downscaling-ratio` set to `1.414213`. They will be disabled if upscaling is not necessary.
 
 ```
-glsl-shaders-append="~~/shaders/ravu-r3.hook"
-glsl-shaders-append="~~/shaders/ravu-r3.hook"
+glsl-shaders-append="~~/shaders/ravu-lite-r3.hook"
+glsl-shaders-append="~~/shaders/ravu-lite-r3.hook"
 ```
 
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
