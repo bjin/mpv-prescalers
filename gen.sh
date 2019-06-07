@@ -21,14 +21,14 @@ done
 
 gen_ravu() {
     float_format="$1"
-    for target in luma chroma-left chroma-center yuv rgb; do
+    for target in luma yuv rgb; do
         suffix="-$target"
         [ "$target" = "luma" ] && suffix=""
         for radius in 2 3 4; do
             file_name="ravu-r$radius$suffix.hook"
             weights_file="$DIR/weights/ravu_weights-r$radius.py"
             "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" > "$file_name"
-            if [ -d gather -a \( "$target" = "luma" -o "$target" = "chroma-left" -o "$target" = "chroma-center" \) ]; then
+            if [ -d gather -a "$target" = "luma" ]; then
                 "$DIR/ravu.py" --target "$target" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-gather > "gather/$file_name"
             fi
             if [ -d compute ]; then
@@ -61,7 +61,7 @@ gen_ravu() {
         done
     fi
 
-    for target in luma yuv rgb; do
+    for target in luma yuv rgb chroma; do
         suffix="-$target"
         [ "$target" = "luma" ] && suffix=""
         for radius in 2 3 4; do
