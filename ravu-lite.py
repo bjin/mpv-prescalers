@@ -185,6 +185,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
             self.set_transform(2, 2, 0.0, 0.0)
 
             self.bind_tex(self.int_tex_name)
+            self.set_components(1)
 
             GLSL("""
 vec4 hook() {
