@@ -201,6 +201,27 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
 
         return super().generate()
 
+class Gen4(userhook.UserHook):
+
+    def __init__(self, **args):
+        super().__init__(**args)
+
+    def generate(self):
+        self.reset()
+        GLSL = self.add_glsl
+
+        self.set_description("Generate 4 components")
+        self.set_components(4);
+
+        GLSL("vec4 hook() {")
+
+        GLSL("vec4 c = HOOKED_texOff(vec2(0.0));")
+        GLSL("return vec4(c.xyz, (c.x + c.y + c.z) / 4.0);")
+
+        GLSL("}")
+
+        return super().generate()
+
 class Compare(userhook.UserHook):
 
     def __init__(self, **args):
@@ -238,6 +259,7 @@ if __name__ == "__main__":
         w[:,i,...] /= s
         s = np.sum(w[:,i,...])
     b = (np.random.random((4,)) * 0.1 - 0.05).astype(np.float32)
+    print(Gen4(hook=["MAIN"]).generate())
     print(Conv2D(4, 4, 3, hook=["MAIN"]).generate(w, b, "HOOKED", "MODEL1"))
     print(Conv2D_3x3(4, 4, hook=["MAIN"]).generate(w, b, "HOOKED", "MODEL2"))
     print(Compare(hook=["MAIN"]).generate("MODEL1", "MODEL2"))
