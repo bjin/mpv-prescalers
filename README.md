@@ -54,7 +54,7 @@ find path/to/dataset -name \*.pnm -print0 | xargs -0 -n 1 -P $(nproc) ./ravu pro
 For `ravu` and `ravu-lite` only.
 
 ```sh
-./ravu predict weights.py path/to/dataset/*.pnm
+./ravu predict weights.py path/to/validation/dataset/*.pnm
 ```
 
 ### License
