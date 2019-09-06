@@ -20,17 +20,17 @@ const double min_coherence[quant_coherence - 1];
 
 ### Prepare
 
-High resolusion lossless pictures are preferred for training. PGM format are
+High resolution lossless pictures are preferred for training. PGM format is
 used for input. You can use Imagemagick convert training materials to ASCII or
 binary PGM files.
 
-for `ravu` and `ravu-3x`, ASCII based PGM is used.
+For `ravu` and `ravu-3x`, ASCII based PGM is used.
 
 ```sh
 for i in *.png; do convert -depth 16 "$i" -colorspace gray -compress none "$(basename "$i" .png).pnm"; done
 ```
 
-for `ravu-lite`, binary PGM is used.
+For `ravu-lite`, binary PGM is used.
 
 ```sh
 for i in *.png; do convert -depth 16 "$i" -colorspace gray "$(basename "$i" .png).pnm"; done
@@ -53,7 +53,7 @@ find path/to/pictures -name \*.pnm -print0 | xargs -0 -n 1 -P $(nproc) ./ravu pr
 
 For `ravu` and `ravu-3x` only.
 
-```
+```sh
 ./ravu predict weights.py path/to/pictures/*.pnm
 ```
 
