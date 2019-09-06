@@ -18,11 +18,11 @@ const double min_strength[quant_strength - 1];
 const double min_coherence[quant_coherence - 1];
 ```
 
-### Prepare
+### Dataset
 
-High resolution lossless pictures are preferred for training. PGM format is
-used for input. You can use Imagemagick convert training materials to ASCII or
-binary PGM files.
+High resolution lossless pictures are preferred to be used as training dataset.
+PGM format is used for input. You can use Imagemagick convert the dataset to
+ASCII/binary PGM files.
 
 For `ravu` and `ravu-3x`, ASCII based PGM is used.
 
@@ -39,14 +39,14 @@ for i in *.png; do convert -depth 16 "$i" -colorspace gray "$(basename "$i" .png
 ### Train
 
 ```sh
-./ravu train path/to/pictures/*.pnm > weights.py
+./ravu train path/to/dataset/*.pnm > weights.py
 ```
 
 Alternatively, you can use multiple processes to utilize all CPU cores.
 
 ```sh
-find path/to/pictures -name \*.pnm -print0 | xargs -0 -n 1 -P $(nproc) ./ravu process
-./ravu train path/to/pictures/*.pnm > weights.py
+find path/to/dataset -name \*.pnm -print0 | xargs -0 -n 1 -P $(nproc) ./ravu process
+./ravu train path/to/dataset/*.pnm > weights.py
 ```
 
 ### Evaluation
@@ -54,7 +54,7 @@ find path/to/pictures -name \*.pnm -print0 | xargs -0 -n 1 -P $(nproc) ./ravu pr
 For `ravu` and `ravu-3x` only.
 
 ```sh
-./ravu predict weights.py path/to/pictures/*.pnm
+./ravu predict weights.py path/to/dataset/*.pnm
 ```
 
 ### License
