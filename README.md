@@ -64,9 +64,7 @@ directly. Its sharpness is close to `ravu-lite`. But it renders at target
 resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
 
 `ravu-zoom` also comes with a `chroma` variant which is mostly a drop-in replacement of
-`--cscale` (except when used with luma prescaler introducing pixel offsets, like
-`nnedi3` and original `ravu`, where `--cscale` will still be used. It will work
-fine with `fsrcnnx` and `ravu-lite`).
+`--cscale`.
 
 # Known Issue
 
