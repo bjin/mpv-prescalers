@@ -69,6 +69,8 @@ class RAVU_Zoom(userhook.UserHook):
         self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence * self.lut_size
         self.lut_width = (self.radius * self.radius * 2 + 3) // 4 * self.lut_size
 
+        self.lut_macro ="#define LUTPOS(x, lut_size) mix(0.5 / (lut_size), 1.0 - 0.5 / (lut_size), (x))"
+
     def generate_tex(self, float_format=FloatFormat.float32):
         import struct
 
@@ -235,11 +237,12 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL("vec2 subpix = fract(pos - 0.5);")
         GLSL("pos -= subpix;")
 
-        GLSL("subpix = LUT_POS(subpix, vec2(%s));" % float(self.lut_size))
+        GLSL("subpix = LUTPOS(subpix, vec2(%s));" % float(self.lut_size))
         GLSL("vec2 subpix_inv = 1.0 - subpix;")
         block_factor = float(self.lut_width / self.lut_size), float(self.lut_height / self.lut_size)
         GLSL("subpix /= vec2(%s, %s);" % block_factor)
         GLSL("subpix_inv /= vec2(%s, %s);" % block_factor)
+
 
     def generate(self, use_gather=False):
         self.reset()
@@ -250,6 +253,8 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         self.bind_tex(self.lut_name)
         self.setup_profile()
         self.setup_condition()
+
+        GLSL(self.lut_macro)
 
         if self.profile != Profile.luma:
             # Only use textureGather for luma
@@ -318,6 +323,8 @@ return $hook_return_value;
         self.bind_tex(self.lut_name)
         self.setup_profile()
         self.setup_condition()
+
+        GLSL(self.lut_macro)
 
         block_width, block_height = block_size
         self.set_compute(block_width, block_height)
