@@ -176,7 +176,7 @@ w = texture(ravu_lut3, vec2(0.9, coord_y));
 res += (sample16 + sample19) * w[0];
 res += (sample17 + sample18) * w[1];
 res = clamp(res, 0.0, 1.0);
-return vec4(res, 0.0);
+return vec4(res, 1.0);
 }
 //!DESC RAVU (step2, rgb, r3)
 //!HOOK MAIN
@@ -343,7 +343,7 @@ w = texture(ravu_lut3, vec2(0.9, coord_y));
 res += (sample16 + sample19) * w[0];
 res += (sample17 + sample18) * w[1];
 res = clamp(res, 0.0, 1.0);
-return vec4(res, 0.0);
+return vec4(res, 1.0);
 }
 //!DESC RAVU (step3, rgb, r3)
 //!HOOK MAIN
@@ -510,7 +510,7 @@ w = texture(ravu_lut3, vec2(0.9, coord_y));
 res += (sample16 + sample19) * w[0];
 res += (sample17 + sample18) * w[1];
 res = clamp(res, 0.0, 1.0);
-return vec4(res, 0.0);
+return vec4(res, 1.0);
 }
 //!DESC RAVU (step4, rgb, r3)
 //!HOOK MAIN

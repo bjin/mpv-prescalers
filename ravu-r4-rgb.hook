@@ -309,7 +309,7 @@ res += (sample29 + sample34) * w[1];
 res += (sample30 + sample33) * w[2];
 res += (sample31 + sample32) * w[3];
 res = clamp(res, 0.0, 1.0);
-return vec4(res, 0.0);
+return vec4(res, 1.0);
 }
 //!DESC RAVU (step2, rgb, r4)
 //!HOOK MAIN
@@ -609,7 +609,7 @@ res += (sample29 + sample34) * w[1];
 res += (sample30 + sample33) * w[2];
 res += (sample31 + sample32) * w[3];
 res = clamp(res, 0.0, 1.0);
-return vec4(res, 0.0);
+return vec4(res, 1.0);
 }
 //!DESC RAVU (step3, rgb, r4)
 //!HOOK MAIN
@@ -909,7 +909,7 @@ res += (sample29 + sample34) * w[1];
 res += (sample30 + sample33) * w[2];
 res += (sample31 + sample32) * w[3];
 res = clamp(res, 0.0, 1.0);
-return vec4(res, 0.0);
+return vec4(res, 1.0);
 }
 //!DESC RAVU (step4, rgb, r4)
 //!HOOK MAIN
