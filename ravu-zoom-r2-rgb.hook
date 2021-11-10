@@ -146,7 +146,7 @@ res += sample10 * w[1];
 res += sample9 * w[2];
 res += sample8 * w[3];
 res = clamp(res, 0.0, 1.0);
-return vec4(res, 0.0);
+return vec4(res, 1.0);
 }
 //!TEXTURE ravu_zoom_lut2
 //!SIZE 18 2592
