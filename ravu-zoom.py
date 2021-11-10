@@ -136,7 +136,7 @@ class RAVU_Zoom(userhook.UserHook):
             self.add_mappings(
                 sample_type="vec3",
                 sample_zero="vec3(0.0)",
-                hook_return_value="vec4(res, 0.0)",
+                hook_return_value="vec4(res, 1.0)",
                 comps_swizzle = ".xyz")
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
