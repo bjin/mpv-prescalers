@@ -63,9 +63,6 @@ video and will fail on others (for example, PNG picture).
 directly. Its sharpness is close to `ravu-lite`. But it renders at target
 resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
 
-`ravu-zoom` also comes with a `chroma` variant which is mostly a drop-in replacement of
-`--cscale`.
-
 # Known Issue
 
 1. `ravu-lite` is incompatible with `--fbo-format=rgb10_a2` (default
