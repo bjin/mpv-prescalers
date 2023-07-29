@@ -70,13 +70,17 @@ gen_ravu() {
         [ "$target" = "luma" ] && suffix=""
         for radius in 2 3; do
             file_name="ravu-zoom-r$radius$suffix.hook"
+            file_name_ar="ravu-zoom-ar-r$radius$suffix.hook"
             weights_file="$DIR/weights/ravu-zoom_weights-r$radius.py"
             "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" > "$file_name"
+            "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --anti-ringing > "$file_name_ar"
             if [ -d gather -a "$target" = "luma" ]; then
                 "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-gather > "gather/$file_name"
+                "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-gather --anti-ringing > "gather/$file_name_ar"
             fi
             if [ -d compute ]; then
                 "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-compute-shader > "compute/$file_name"
+                "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-compute-shader --anti-ringing > "compute/$file_name_ar"
             fi
         done
     done

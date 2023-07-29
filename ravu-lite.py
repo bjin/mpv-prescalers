@@ -381,16 +381,16 @@ if __name__ == "__main__":
         action='store_true',
         help="enable use of compute shader (requires OpenGL 4.3)")
     parser.add_argument(
-        '--anti-ringing',
-        action='store_true',
-        help="enable anti-ringing (based on EWA polar anti-ringing from libplacebo)")
-    parser.add_argument(
         '--compute-shader-block-size',
         nargs=2,
         metavar=('block_width', 'block_height'),
         default=[32, 8],
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
+    parser.add_argument(
+        '--anti-ringing',
+        action='store_true',
+        help="enable anti-ringing (based on EWA filter anti-ringing from libplacebo)")
     parser.add_argument(
         '--float-format',
         nargs=1,
@@ -403,8 +403,8 @@ if __name__ == "__main__":
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
-    anti_ringing = args.anti_ringing
     compute_shader_block_size = args.compute_shader_block_size
+    anti_ringing = args.anti_ringing
     float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU_Lite(hook=["LUMA"],

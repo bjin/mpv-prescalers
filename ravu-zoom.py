@@ -44,6 +44,7 @@ class RAVU_Zoom(userhook.UserHook):
                  profile=Profile.luma,
                  weights_file=None,
                  lut_name="ravu_zoom_lut",
+                 anti_ringing=False,
                  **args):
         super().__init__(**args)
 
@@ -70,6 +71,8 @@ class RAVU_Zoom(userhook.UserHook):
         self.lut_width = (self.radius * self.radius * 2 + 3) // 4 * self.lut_size
 
         self.lut_macro ="#define LUTPOS(x, lut_size) mix(0.5 / (lut_size), 1.0 - 0.5 / (lut_size), (x))"
+
+        self.anti_ringing = anti_ringing
 
     def generate_tex(self, float_format=FloatFormat.float32):
         import struct
@@ -125,12 +128,14 @@ class RAVU_Zoom(userhook.UserHook):
             self.add_mappings(
                 sample_type="float",
                 sample_zero="0.0",
+                sample4_type="vec4",
                 hook_return_value="vec4(res, 0.0, 0.0, 0.0)",
                 comps_swizzle = ".x")
         elif self.profile == Profile.chroma:
             self.add_mappings(
                 sample_type="vec2",
                 sample_zero="vec2(0.0)",
+                sample4_type="mat4x2",
                 hook_return_value="vec4(res, 0.0, 0.0)",
                 comps_swizzle = ".xy")
             self.bind_tex("LUMA")
@@ -138,6 +143,7 @@ class RAVU_Zoom(userhook.UserHook):
             self.add_mappings(
                 sample_type="vec3",
                 sample_zero="vec3(0.0)",
+                sample4_type="mat4x3",
                 hook_return_value="vec4(res, 1.0)",
                 comps_swizzle = ".xyz")
             if self.profile == Profile.rgb:
@@ -229,15 +235,59 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                     GLSL("w = texture(%s, vec2(%s, coord_y) + %s);" % (self.lut_name, coord_x, subpix_name))
                 GLSL("res += %s * w[%d];" % (samples_list[[i, ~i][step]], i % 4))
 
-        GLSL("res = clamp(res, 0.0, 1.0);")
+        if self.anti_ringing:
+            ar_list = []
+            for i in range(n):
+                for j in range(n):
+                    x = i - (self.radius - 1)
+                    y = j - (self.radius - 1)
+                    xx = x - 1 if x > 0 else x
+                    yy = y - 1 if y > 0 else y
+                    if xx ** 2 + yy ** 2 <= 1:
+                        ar_list.append((samples_list[i * n + j], x, y))
+
+            GLSL("vec4 wg, x, y, dist;")
+            GLSL("float wgsum = 0.0;")
+            GLSL("$sample4_type sample_ar, cg_lo, cg_hi;")
+            GLSL("$sample_type lo = $sample_zero, hi = $sample_zero;")
+
+            assert len(ar_list) % 4 == 0
+            for i in range(0, len(ar_list), 4):
+                GLSL("x = vec4(subpix0.x) - vec4(%d.0, %d.0, %d.0, %d.0);" % tuple(ar_list[i + j][1] for j in range(4)))
+                GLSL("y = vec4(subpix0.y) - vec4(%d.0, %d.0, %d.0, %d.0);" % tuple(ar_list[i + j][2] for j in range(4)))
+                GLSL("sample_ar = $sample4_type(%s, %s, %s, %s);" % tuple(ar_list[i + j][0] for j in range(4)))
+                GLSL("dist = x * x + y * y;")
+                GLSL("wg = exp(-2.0 * dist);")
+                GLSL("cg_hi = sample_ar;")
+                GLSL("cg_lo = 1.0 - sample_ar;")
+                for _ in range(3):
+                    if self.profile == Profile.luma:
+                        GLSL("cg_hi *= cg_hi;")
+                        GLSL("cg_lo *= cg_lo;")
+                    else:
+                        GLSL("cg_hi = matrixCompMult(cg_hi, cg_hi);")
+                        GLSL("cg_lo = matrixCompMult(cg_lo, cg_lo);")
+                if self.profile == Profile.luma:
+                    GLSL("hi += dot(wg, cg_hi);")
+                    GLSL("lo += dot(wg, cg_lo);")
+                else:
+                    GLSL("hi += cg_hi * wg;")
+                    GLSL("lo += cg_lo * wg;")
+                GLSL("wgsum += dot(wg, vec4(1.0));")
+
+            GLSL("lo = sqrt(sqrt(sqrt(lo / wgsum)));")
+            GLSL("hi = sqrt(sqrt(sqrt(hi / wgsum)));")
+            GLSL("res = clamp(res, 1.0 - lo, hi);")
+        else:
+            GLSL("res = clamp(res, 0.0, 1.0);")
 
     def calculate_subpix(self):
         GLSL = self.add_glsl
 
-        GLSL("vec2 subpix = fract(pos - 0.5);")
-        GLSL("pos -= subpix;")
+        GLSL("vec2 subpix0 = fract(pos - 0.5);")
+        GLSL("pos -= subpix0;")
 
-        GLSL("subpix = LUTPOS(subpix, vec2(%s));" % float(self.lut_size))
+        GLSL("vec2 subpix = LUTPOS(subpix0, vec2(%s));" % float(self.lut_size))
         GLSL("vec2 subpix_inv = 1.0 - subpix;")
         block_factor = float(self.lut_width / self.lut_size), float(self.lut_height / self.lut_size)
         GLSL("subpix /= vec2(%s, %s);" % block_factor)
@@ -248,7 +298,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         self.reset()
         GLSL = self.add_glsl
 
-        self.set_description("RAVU-Zoom (%s, r%d)" % (self.profile.name, self.radius))
+        self.set_description("RAVU-Zoom%s (%s, r%d)" % (["", "-AR"][self.anti_ringing], self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
         self.setup_profile()
@@ -318,7 +368,7 @@ return $hook_return_value;
         self.reset()
         GLSL = self.add_glsl
 
-        self.set_description("RAVU-Zoom (%s, r%d, compute)" % (self.profile.name, self.radius))
+        self.set_description("RAVU-Zoom%s (%s, r%d, compute)" % (["", "-AR"][self.anti_ringing], self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
         self.setup_profile()
@@ -441,6 +491,10 @@ if __name__ == "__main__":
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
     parser.add_argument(
+        '--anti-ringing',
+        action='store_true',
+        help="enable anti-ringing (based on EWA filter anti-ringing from libplacebo)")
+    parser.add_argument(
         '--float-format',
         nargs=1,
         choices=FloatFormat.__members__,
@@ -454,11 +508,13 @@ if __name__ == "__main__":
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
+    anti_ringing = args.anti_ringing
     float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU_Zoom(hook=hook,
                     profile=profile,
-                    weights_file=weights_file)
+                    weights_file=weights_file,
+                    anti_ringing=anti_ringing)
 
     sys.stdout.write(userhook.LICENSE_HEADER)
     if use_compute_shader:
