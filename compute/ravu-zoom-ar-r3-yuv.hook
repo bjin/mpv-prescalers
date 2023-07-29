@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC RAVU-Zoom (yuv, r3)
+//!DESC RAVU-Zoom-AR (yuv, r3, compute)
 //!HOOK NATIVE
 //!BIND HOOKED
 //!BIND ravu_zoom_lut3
@@ -20,51 +20,66 @@
 //!HEIGHT OUTPUT.h
 //!OFFSET ALIGN
 //!WHEN LUMA.w 0 > HOOKED.w OUTPUT.w < * HOOKED.h OUTPUT.h < *
+//!COMPUTE 32 8
 #define LUTPOS(x, lut_size) mix(0.5 / (lut_size), 1.0 - 0.5 / (lut_size), (x))
-vec4 hook() {
-vec2 pos = HOOKED_pos * HOOKED_size;
+shared vec3 samples[532];
+void hook() {
+ivec2 group_begin = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
+ivec2 group_end = group_begin + ivec2(gl_WorkGroupSize) - ivec2(1);
+ivec2 rectl = ivec2(floor(HOOKED_size * HOOKED_map(group_begin) - 0.5)) - 2;
+ivec2 rectr = ivec2(floor(HOOKED_size * HOOKED_map(group_end) - 0.5)) + 3;
+ivec2 rect = rectr - rectl + 1;
+for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
+int y = id / rect.x, x = id % rect.x;
+samples[x + y * 38] = HOOKED_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0.5,0.5) + HOOKED_off)).xyz;
+}
+groupMemoryBarrier();
+barrier();
+vec2 pos = HOOKED_size * HOOKED_map(ivec2(gl_GlobalInvocationID));
 vec2 subpix0 = fract(pos - 0.5);
 pos -= subpix0;
 vec2 subpix = LUTPOS(subpix0, vec2(9.0));
 vec2 subpix_inv = 1.0 - subpix;
 subpix /= vec2(5.0, 288.0);
 subpix_inv /= vec2(5.0, 288.0);
-vec3 sample0 = HOOKED_tex((pos + vec2(-2.0,-2.0)) * HOOKED_pt).xyz;
-vec3 sample1 = HOOKED_tex((pos + vec2(-2.0,-1.0)) * HOOKED_pt).xyz;
-vec3 sample2 = HOOKED_tex((pos + vec2(-2.0,0.0)) * HOOKED_pt).xyz;
-vec3 sample3 = HOOKED_tex((pos + vec2(-2.0,1.0)) * HOOKED_pt).xyz;
-vec3 sample4 = HOOKED_tex((pos + vec2(-2.0,2.0)) * HOOKED_pt).xyz;
-vec3 sample5 = HOOKED_tex((pos + vec2(-2.0,3.0)) * HOOKED_pt).xyz;
-vec3 sample6 = HOOKED_tex((pos + vec2(-1.0,-2.0)) * HOOKED_pt).xyz;
-vec3 sample7 = HOOKED_tex((pos + vec2(-1.0,-1.0)) * HOOKED_pt).xyz;
-vec3 sample8 = HOOKED_tex((pos + vec2(-1.0,0.0)) * HOOKED_pt).xyz;
-vec3 sample9 = HOOKED_tex((pos + vec2(-1.0,1.0)) * HOOKED_pt).xyz;
-vec3 sample10 = HOOKED_tex((pos + vec2(-1.0,2.0)) * HOOKED_pt).xyz;
-vec3 sample11 = HOOKED_tex((pos + vec2(-1.0,3.0)) * HOOKED_pt).xyz;
-vec3 sample12 = HOOKED_tex((pos + vec2(0.0,-2.0)) * HOOKED_pt).xyz;
-vec3 sample13 = HOOKED_tex((pos + vec2(0.0,-1.0)) * HOOKED_pt).xyz;
-vec3 sample14 = HOOKED_tex((pos + vec2(0.0,0.0)) * HOOKED_pt).xyz;
-vec3 sample15 = HOOKED_tex((pos + vec2(0.0,1.0)) * HOOKED_pt).xyz;
-vec3 sample16 = HOOKED_tex((pos + vec2(0.0,2.0)) * HOOKED_pt).xyz;
-vec3 sample17 = HOOKED_tex((pos + vec2(0.0,3.0)) * HOOKED_pt).xyz;
-vec3 sample18 = HOOKED_tex((pos + vec2(1.0,-2.0)) * HOOKED_pt).xyz;
-vec3 sample19 = HOOKED_tex((pos + vec2(1.0,-1.0)) * HOOKED_pt).xyz;
-vec3 sample20 = HOOKED_tex((pos + vec2(1.0,0.0)) * HOOKED_pt).xyz;
-vec3 sample21 = HOOKED_tex((pos + vec2(1.0,1.0)) * HOOKED_pt).xyz;
-vec3 sample22 = HOOKED_tex((pos + vec2(1.0,2.0)) * HOOKED_pt).xyz;
-vec3 sample23 = HOOKED_tex((pos + vec2(1.0,3.0)) * HOOKED_pt).xyz;
-vec3 sample24 = HOOKED_tex((pos + vec2(2.0,-2.0)) * HOOKED_pt).xyz;
-vec3 sample25 = HOOKED_tex((pos + vec2(2.0,-1.0)) * HOOKED_pt).xyz;
-vec3 sample26 = HOOKED_tex((pos + vec2(2.0,0.0)) * HOOKED_pt).xyz;
-vec3 sample27 = HOOKED_tex((pos + vec2(2.0,1.0)) * HOOKED_pt).xyz;
-vec3 sample28 = HOOKED_tex((pos + vec2(2.0,2.0)) * HOOKED_pt).xyz;
-vec3 sample29 = HOOKED_tex((pos + vec2(2.0,3.0)) * HOOKED_pt).xyz;
-vec3 sample30 = HOOKED_tex((pos + vec2(3.0,-2.0)) * HOOKED_pt).xyz;
-vec3 sample31 = HOOKED_tex((pos + vec2(3.0,-1.0)) * HOOKED_pt).xyz;
-vec3 sample32 = HOOKED_tex((pos + vec2(3.0,0.0)) * HOOKED_pt).xyz;
-vec3 sample33 = HOOKED_tex((pos + vec2(3.0,1.0)) * HOOKED_pt).xyz;
-vec3 sample34 = HOOKED_tex((pos + vec2(3.0,2.0)) * HOOKED_pt).xyz;
-vec3 sample35 = HOOKED_tex((pos + vec2(3.0,3.0)) * HOOKED_pt).xyz;
+ivec2 ipos = ivec2(floor(pos)) - rectl;
+int lpos = ipos.x + ipos.y * 38;
+vec3 sample0 = samples[-78 + lpos];
+vec3 sample1 = samples[-40 + lpos];
+vec3 sample2 = samples[-2 + lpos];
+vec3 sample3 = samples[36 + lpos];
+vec3 sample4 = samples[74 + lpos];
+vec3 sample5 = samples[112 + lpos];
+vec3 sample6 = samples[-77 + lpos];
+vec3 sample7 = samples[-39 + lpos];
+vec3 sample8 = samples[-1 + lpos];
+vec3 sample9 = samples[37 + lpos];
+vec3 sample10 = samples[75 + lpos];
+vec3 sample11 = samples[113 + lpos];
+vec3 sample12 = samples[-76 + lpos];
+vec3 sample13 = samples[-38 + lpos];
+vec3 sample14 = samples[0 + lpos];
+vec3 sample15 = samples[38 + lpos];
+vec3 sample16 = samples[76 + lpos];
+vec3 sample17 = samples[114 + lpos];
+vec3 sample18 = samples[-75 + lpos];
+vec3 sample19 = samples[-37 + lpos];
+vec3 sample20 = samples[1 + lpos];
+vec3 sample21 = samples[39 + lpos];
+vec3 sample22 = samples[77 + lpos];
+vec3 sample23 = samples[115 + lpos];
+vec3 sample24 = samples[-74 + lpos];
+vec3 sample25 = samples[-36 + lpos];
+vec3 sample26 = samples[2 + lpos];
+vec3 sample27 = samples[40 + lpos];
+vec3 sample28 = samples[78 + lpos];
+vec3 sample29 = samples[116 + lpos];
+vec3 sample30 = samples[-73 + lpos];
+vec3 sample31 = samples[-35 + lpos];
+vec3 sample32 = samples[3 + lpos];
+vec3 sample33 = samples[41 + lpos];
+vec3 sample34 = samples[79 + lpos];
+vec3 sample35 = samples[117 + lpos];
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (sample13.x-sample1.x)/2.0;
@@ -175,8 +190,62 @@ res += sample20 * w[3];
 w = texture(ravu_zoom_lut3, vec2(0.8, coord_y) + subpix_inv);
 res += sample19 * w[0];
 res += sample18 * w[1];
-res = clamp(res, 0.0, 1.0);
-return vec4(res, 1.0);
+vec4 wg, x, y, dist;
+float wgsum = 0.0;
+mat4x3 sample_ar, cg_lo, cg_hi;
+vec3 lo = vec3(0.0), hi = vec3(0.0);
+x = vec4(subpix0.x) - vec4(-1.0, -1.0, 0.0, 0.0);
+y = vec4(subpix0.y) - vec4(0.0, 1.0, -1.0, 0.0);
+sample_ar = mat4x3(sample8, sample9, sample13, sample14);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+hi += cg_hi * wg;
+lo += cg_lo * wg;
+wgsum += dot(wg, vec4(1.0));
+x = vec4(subpix0.x) - vec4(0.0, 0.0, 1.0, 1.0);
+y = vec4(subpix0.y) - vec4(1.0, 2.0, -1.0, 0.0);
+sample_ar = mat4x3(sample15, sample16, sample19, sample20);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+hi += cg_hi * wg;
+lo += cg_lo * wg;
+wgsum += dot(wg, vec4(1.0));
+x = vec4(subpix0.x) - vec4(1.0, 1.0, 2.0, 2.0);
+y = vec4(subpix0.y) - vec4(1.0, 2.0, 0.0, 1.0);
+sample_ar = mat4x3(sample21, sample22, sample26, sample27);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+hi += cg_hi * wg;
+lo += cg_lo * wg;
+wgsum += dot(wg, vec4(1.0));
+lo = sqrt(sqrt(sqrt(lo / wgsum)));
+hi = sqrt(sqrt(sqrt(hi / wgsum)));
+res = clamp(res, 1.0 - lo, hi);
+imageStore(out_image, ivec2(gl_GlobalInvocationID), vec4(res, 1.0));
 }
 //!TEXTURE ravu_zoom_lut3
 //!SIZE 45 2592
