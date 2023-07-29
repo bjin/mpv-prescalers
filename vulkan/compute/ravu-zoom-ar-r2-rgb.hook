@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC RAVU-Zoom (rgb, r2, compute)
+//!DESC RAVU-Zoom-AR (rgb, r2, compute)
 //!HOOK MAIN
 //!BIND HOOKED
 //!BIND ravu_zoom_lut2
@@ -161,7 +161,61 @@ res += sample11 * w[0];
 res += sample10 * w[1];
 res += sample9 * w[2];
 res += sample8 * w[3];
-res = clamp(res, 0.0, 1.0);
+vec4 wg, x, y, dist;
+float wgsum = 0.0;
+mat4x3 sample_ar, cg_lo, cg_hi;
+vec3 lo = vec3(0.0), hi = vec3(0.0);
+x = vec4(subpix0.x) - vec4(-1.0, -1.0, 0.0, 0.0);
+y = vec4(subpix0.y) - vec4(0.0, 1.0, -1.0, 0.0);
+sample_ar = mat4x3(sample1, sample2, sample4, sample5);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+hi += cg_hi * wg;
+lo += cg_lo * wg;
+wgsum += dot(wg, vec4(1.0));
+x = vec4(subpix0.x) - vec4(0.0, 0.0, 1.0, 1.0);
+y = vec4(subpix0.y) - vec4(1.0, 2.0, -1.0, 0.0);
+sample_ar = mat4x3(sample6, sample7, sample8, sample9);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+hi += cg_hi * wg;
+lo += cg_lo * wg;
+wgsum += dot(wg, vec4(1.0));
+x = vec4(subpix0.x) - vec4(1.0, 1.0, 2.0, 2.0);
+y = vec4(subpix0.y) - vec4(1.0, 2.0, 0.0, 1.0);
+sample_ar = mat4x3(sample10, sample11, sample13, sample14);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+cg_hi = matrixCompMult(cg_hi, cg_hi);
+cg_lo = matrixCompMult(cg_lo, cg_lo);
+hi += cg_hi * wg;
+lo += cg_lo * wg;
+wgsum += dot(wg, vec4(1.0));
+lo = sqrt(sqrt(sqrt(lo / wgsum)));
+hi = sqrt(sqrt(sqrt(hi / wgsum)));
+res = clamp(res, 1.0 - lo, hi);
 imageStore(out_image, ivec2(gl_GlobalInvocationID), vec4(res, 1.0));
 }
 //!TEXTURE ravu_zoom_lut2

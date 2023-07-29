@@ -63,7 +63,7 @@ video and will fail on others (for example, PNG picture).
 directly. Its sharpness is close to `ravu-lite`. But it renders at target
 resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
 
-`ravu-lite-ar` uses anti-ringing filter (of EWA scalers) from libplacebo to reduce
+`ravu-lite-ar` and `ravu-zoom-ar` uses anti-ringing filter (of EWA scalers) from libplacebo to reduce
 [ringing artifacts](https://en.wikipedia.org/wiki/Ringing_artifacts).
 
 # Known Issue

@@ -37,9 +37,9 @@ samples[x + y * 36] = HOOKED_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0
 groupMemoryBarrier();
 barrier();
 vec2 pos = HOOKED_size * HOOKED_map(ivec2(gl_GlobalInvocationID));
-vec2 subpix = fract(pos - 0.5);
-pos -= subpix;
-subpix = LUTPOS(subpix, vec2(9.0));
+vec2 subpix0 = fract(pos - 0.5);
+pos -= subpix0;
+vec2 subpix = LUTPOS(subpix0, vec2(9.0));
 vec2 subpix_inv = 1.0 - subpix;
 subpix /= vec2(2.0, 288.0);
 subpix_inv /= vec2(2.0, 288.0);

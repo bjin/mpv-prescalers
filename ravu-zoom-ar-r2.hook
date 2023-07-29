@@ -12,7 +12,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-//!DESC RAVU-Zoom (luma, r2, compute)
+//!DESC RAVU-Zoom-AR (luma, r2)
 //!HOOK LUMA
 //!BIND HOOKED
 //!BIND ravu_zoom_lut2
@@ -20,46 +20,31 @@
 //!HEIGHT OUTPUT.h
 //!OFFSET ALIGN
 //!WHEN HOOKED.w OUTPUT.w < HOOKED.h OUTPUT.h < *
-//!COMPUTE 32 8
 #define LUTPOS(x, lut_size) mix(0.5 / (lut_size), 1.0 - 0.5 / (lut_size), (x))
-shared float samples[432];
-void hook() {
-ivec2 group_begin = ivec2(gl_WorkGroupID) * ivec2(gl_WorkGroupSize);
-ivec2 group_end = group_begin + ivec2(gl_WorkGroupSize) - ivec2(1);
-ivec2 rectl = ivec2(floor(HOOKED_size * HOOKED_map(group_begin) - 0.5)) - 1;
-ivec2 rectr = ivec2(floor(HOOKED_size * HOOKED_map(group_end) - 0.5)) + 2;
-ivec2 rect = rectr - rectl + 1;
-for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
-int y = id / rect.x, x = id % rect.x;
-samples[x + y * 36] = HOOKED_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0.5,0.5) + HOOKED_off)).x;
-}
-groupMemoryBarrier();
-barrier();
-vec2 pos = HOOKED_size * HOOKED_map(ivec2(gl_GlobalInvocationID));
+vec4 hook() {
+vec2 pos = HOOKED_pos * HOOKED_size;
 vec2 subpix0 = fract(pos - 0.5);
 pos -= subpix0;
 vec2 subpix = LUTPOS(subpix0, vec2(9.0));
 vec2 subpix_inv = 1.0 - subpix;
 subpix /= vec2(2.0, 288.0);
 subpix_inv /= vec2(2.0, 288.0);
-ivec2 ipos = ivec2(floor(pos)) - rectl;
-int lpos = ipos.x + ipos.y * 36;
-float sample0 = samples[-37 + lpos];
-float sample1 = samples[-1 + lpos];
-float sample2 = samples[35 + lpos];
-float sample3 = samples[71 + lpos];
-float sample4 = samples[-36 + lpos];
-float sample5 = samples[0 + lpos];
-float sample6 = samples[36 + lpos];
-float sample7 = samples[72 + lpos];
-float sample8 = samples[-35 + lpos];
-float sample9 = samples[1 + lpos];
-float sample10 = samples[37 + lpos];
-float sample11 = samples[73 + lpos];
-float sample12 = samples[-34 + lpos];
-float sample13 = samples[2 + lpos];
-float sample14 = samples[38 + lpos];
-float sample15 = samples[74 + lpos];
+float sample0 = HOOKED_tex((pos + vec2(-1.0,-1.0)) * HOOKED_pt).x;
+float sample1 = HOOKED_tex((pos + vec2(-1.0,0.0)) * HOOKED_pt).x;
+float sample2 = HOOKED_tex((pos + vec2(-1.0,1.0)) * HOOKED_pt).x;
+float sample3 = HOOKED_tex((pos + vec2(-1.0,2.0)) * HOOKED_pt).x;
+float sample4 = HOOKED_tex((pos + vec2(0.0,-1.0)) * HOOKED_pt).x;
+float sample5 = HOOKED_tex((pos + vec2(0.0,0.0)) * HOOKED_pt).x;
+float sample6 = HOOKED_tex((pos + vec2(0.0,1.0)) * HOOKED_pt).x;
+float sample7 = HOOKED_tex((pos + vec2(0.0,2.0)) * HOOKED_pt).x;
+float sample8 = HOOKED_tex((pos + vec2(1.0,-1.0)) * HOOKED_pt).x;
+float sample9 = HOOKED_tex((pos + vec2(1.0,0.0)) * HOOKED_pt).x;
+float sample10 = HOOKED_tex((pos + vec2(1.0,1.0)) * HOOKED_pt).x;
+float sample11 = HOOKED_tex((pos + vec2(1.0,2.0)) * HOOKED_pt).x;
+float sample12 = HOOKED_tex((pos + vec2(2.0,-1.0)) * HOOKED_pt).x;
+float sample13 = HOOKED_tex((pos + vec2(2.0,0.0)) * HOOKED_pt).x;
+float sample14 = HOOKED_tex((pos + vec2(2.0,1.0)) * HOOKED_pt).x;
+float sample15 = HOOKED_tex((pos + vec2(2.0,2.0)) * HOOKED_pt).x;
 vec3 abd = vec3(0.0);
 float gx, gy;
 gx = (sample4-sample0);
@@ -144,8 +129,62 @@ res += sample11 * w[0];
 res += sample10 * w[1];
 res += sample9 * w[2];
 res += sample8 * w[3];
-res = clamp(res, 0.0, 1.0);
-imageStore(out_image, ivec2(gl_GlobalInvocationID), vec4(res, 0.0, 0.0, 0.0));
+vec4 wg, x, y, dist;
+float wgsum = 0.0;
+vec4 sample_ar, cg_lo, cg_hi;
+float lo = 0.0, hi = 0.0;
+x = vec4(subpix0.x) - vec4(-1.0, -1.0, 0.0, 0.0);
+y = vec4(subpix0.y) - vec4(0.0, 1.0, -1.0, 0.0);
+sample_ar = vec4(sample1, sample2, sample4, sample5);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+hi += dot(wg, cg_hi);
+lo += dot(wg, cg_lo);
+wgsum += dot(wg, vec4(1.0));
+x = vec4(subpix0.x) - vec4(0.0, 0.0, 1.0, 1.0);
+y = vec4(subpix0.y) - vec4(1.0, 2.0, -1.0, 0.0);
+sample_ar = vec4(sample6, sample7, sample8, sample9);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+hi += dot(wg, cg_hi);
+lo += dot(wg, cg_lo);
+wgsum += dot(wg, vec4(1.0));
+x = vec4(subpix0.x) - vec4(1.0, 1.0, 2.0, 2.0);
+y = vec4(subpix0.y) - vec4(1.0, 2.0, 0.0, 1.0);
+sample_ar = vec4(sample10, sample11, sample13, sample14);
+dist = x * x + y * y;
+wg = exp(-2.0 * dist);
+cg_hi = sample_ar;
+cg_lo = 1.0 - sample_ar;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+cg_hi *= cg_hi;
+cg_lo *= cg_lo;
+hi += dot(wg, cg_hi);
+lo += dot(wg, cg_lo);
+wgsum += dot(wg, vec4(1.0));
+lo = sqrt(sqrt(sqrt(lo / wgsum)));
+hi = sqrt(sqrt(sqrt(hi / wgsum)));
+res = clamp(res, 1.0 - lo, hi);
+return vec4(res, 0.0, 0.0, 0.0);
 }
 //!TEXTURE ravu_zoom_lut2
 //!SIZE 18 2592
