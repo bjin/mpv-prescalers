@@ -61,7 +61,7 @@ gen_ravu() {
         done
     fi
 
-    for target in luma yuv rgb chroma; do
+    for target in luma yuv rgb; do
         suffix="-$target"
         [ "$target" = "luma" ] && suffix=""
         for radius in 2 3; do
