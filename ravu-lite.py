@@ -42,6 +42,7 @@ class RAVU_Lite(userhook.UserHook):
                  weights_file=None,
                  lut_name="ravu_lite_lut",
                  int_tex_name="ravu_lite_int",
+                 anti_ringing=False,
                  **args):
         super().__init__(**args)
 
@@ -67,6 +68,8 @@ class RAVU_Lite(userhook.UserHook):
 
         self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence
         self.lut_width = (n * n + 1) // 2
+
+        self.anti_ringing = anti_ringing
 
     def generate_tex(self, float_format=FloatFormat.float32):
         import struct
@@ -161,23 +164,74 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
 
         GLSL("vec4 res = vec4(0.0), w;")
 
+        if self.anti_ringing:
+            GLSL("vec4 lo = vec4(0.0), hi = vec4(0.0), wg, cg4;")
+            w_gauss = [None] * self.lut_width
+            for i in range(self.lut_width):
+                w = []
+                for comp in range(4):
+                    dx = i // n - n // 2 + (comp // 2 - 0.5) * 0.5
+                    dy = i % n - n // 2 + (comp % 2 - 0.5) * 0.5
+                    w.append(math.exp(-2.0 * (dx ** 2 + dy ** 2)))
+                w_gauss[i] = w
+            while True:
+                changed = False
+                wsum = [0.0] * 4
+                for i in range(self.lut_width):
+                    if w_gauss[i]:
+                        for comp in range(4):
+                            wsum[comp] += w_gauss[i][comp]
+                            if i + 1 != self.lut_width:
+                                wsum[comp] += w_gauss[i][3 - comp]
+                for i in range(self.lut_width):
+                    if w_gauss[i]:
+                        max_weight = max(w_gauss[i][comp] / wsum[comp] for comp in range(4))
+                        if max_weight < 0.01:
+                            changed = True
+                            w_gauss[i] = None
+                if not changed:
+                    break
+            for i in range(self.lut_width):
+                if w_gauss[i]:
+                    for comp in range(4):
+                        w_gauss[i][comp] /= wsum[comp]
+
         for i in range(self.lut_width):
+            use_ar = self.anti_ringing and w_gauss[i] is not None
             coord_x = (float(i) + 0.5) / float(self.lut_width)
             GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
             j = n * n - 1 - i
+            if use_ar:
+                GLSL("wg = vec4(%f,%f,%f,%f);" % tuple(w_gauss[i]))
+
             if i < j:
                 GLSL("res += %s * w + %s * w.wzyx;" % (samples_list[i], samples_list[j]))
+                if use_ar:
+                    GLSL("cg4 = vec4(%s, 1.0 - %s, %s, 1.0 - %s);" % (samples_list[i], samples_list[i], samples_list[j], samples_list[j]))
+                    GLSL("cg4 *= cg4; cg4 *= cg4; cg4 *= cg4;")
+                    GLSL("hi += cg4.x * wg + cg4.z * wg.wzyx;")
+                    GLSL("lo += cg4.y * wg + cg4.w * wg.wzyx;")
             elif i == j:
                 GLSL("res += %s * w;" % samples_list[i])
+                if use_ar:
+                    GLSL("vec2 cg2 = vec2(%s, 1.0 - %s);" % (samples_list[i], samples_list[i]))
+                    GLSL("cg2 *= cg2; cg2 *= cg2; cg2 *= cg2;")
+                    GLSL("hi += cg2.x * wg;")
+                    GLSL("lo += cg2.y * wg;")
 
-        GLSL("res = clamp(res, 0.0, 1.0);")
+        if self.anti_ringing:
+            GLSL("lo = sqrt(sqrt(sqrt(lo)));")
+            GLSL("hi = sqrt(sqrt(sqrt(hi)));")
+            GLSL("res = clamp(res, vec4(1.0) - lo, hi);")
+        else:
+            GLSL("res = clamp(res, 0.0, 1.0);")
 
     def generate(self, step, use_gather=False):
         self.reset()
         GLSL = self.add_glsl
         n = self.radius * 2 - 1
 
-        self.set_description("RAVU-Lite (%s, r%d)" % (step.name, self.radius))
+        self.set_description("RAVU-Lite%s (%s, r%d)" % (["", "-AR"][self.anti_ringing], step.name, self.radius))
 
         self.set_skippable(2, 2)
 
@@ -243,7 +297,7 @@ return res;
         GLSL = self.add_glsl
         n = self.radius * 2 - 1
 
-        self.set_description("RAVU-Lite (r%d, compute)" % self.radius)
+        self.set_description("RAVU-Lite%s (r%d, compute)" % (["", "-AR"][self.anti_ringing], self.radius))
 
         block_width, block_height = block_size
 
@@ -289,7 +343,7 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
         self.apply_convolution_kernel(samples_list)
 
         for i in range(4):
-            pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d, %d)" % (i / 2, i % 2)
+            pos = "ivec2(gl_GlobalInvocationID) * 2 + ivec2(%d, %d)" % (i // 2, i % 2)
             GLSL("imageStore(out_image, %s, vec4(res[%d], 0.0, 0.0, 0.0));" % (pos, i))
 
         GLSL("""
@@ -327,6 +381,10 @@ if __name__ == "__main__":
         action='store_true',
         help="enable use of compute shader (requires OpenGL 4.3)")
     parser.add_argument(
+        '--anti-ringing',
+        action='store_true',
+        help="enable anti-ringing (based on EWA polar anti-ringing from libplacebo)")
+    parser.add_argument(
         '--compute-shader-block-size',
         nargs=2,
         metavar=('block_width', 'block_height'),
@@ -345,13 +403,15 @@ if __name__ == "__main__":
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
+    anti_ringing = args.anti_ringing
     compute_shader_block_size = args.compute_shader_block_size
     float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU_Lite(hook=["LUMA"],
                     weights_file=weights_file,
                     target_tex="OUTPUT",
-                    max_downscaling_ratio=max_downscaling_ratio)
+                    max_downscaling_ratio=max_downscaling_ratio,
+                    anti_ringing=anti_ringing)
 
     sys.stdout.write(userhook.LICENSE_HEADER)
     for step in list(Step):

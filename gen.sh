@@ -39,13 +39,17 @@ gen_ravu() {
 
     for radius in 2 3 4; do
         file_name="ravu-lite-r$radius.hook"
+        file_name_ar="ravu-lite-ar-r$radius.hook"
         weights_file="$DIR/weights/ravu-lite_weights-r$radius.py"
         "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" > "$file_name"
+        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --anti-ringing > "$file_name_ar"
         if [ -d gather ]; then
             "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-gather > "gather/$file_name"
+            "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-gather --anti-ringing > "gather/$file_name_ar"
         fi
         if [ -d compute ]; then
             "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-compute-shader > "compute/$file_name"
+            "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-compute-shader --anti-ringing > "compute/$file_name_ar"
         fi
     done
 
