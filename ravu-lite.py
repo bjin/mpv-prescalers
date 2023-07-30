@@ -170,8 +170,8 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
             for i in range(self.lut_width):
                 w = []
                 for comp in range(4):
-                    dx = i // n - n // 2 + (comp // 2 - 0.5) * 0.5
-                    dy = i % n - n // 2 + (comp % 2 - 0.5) * 0.5
+                    dx = i // n - n // 2 - (comp // 2 - 0.5) * 0.5
+                    dy = i % n - n // 2 - (comp % 2 - 0.5) * 0.5
                     w.append(math.exp(-2.0 * (dx ** 2 + dy ** 2)))
                 w_gauss[i] = w
             while True:
