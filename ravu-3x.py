@@ -43,6 +43,7 @@ class RAVU_3x(userhook.UserHook):
                  profile=Profile.luma,
                  weights_file=None,
                  lut_name="ravu_3x_lut",
+                 anti_ringing=None,
                  **args):
         super().__init__(**args)
 
@@ -68,6 +69,8 @@ class RAVU_3x(userhook.UserHook):
 
         self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence
         self.lut_width = n * n + 1
+
+        self.anti_ringing = anti_ringing
 
     def generate_tex(self, float_format=FloatFormat.float32):
         import struct
@@ -115,6 +118,7 @@ class RAVU_3x(userhook.UserHook):
                 sample_zero="0.0",
                 sample4_type="vec4",
                 sample4_zero="vec4(0.0)",
+                sample2_type="vec2",
                 comps_swizzle = ".x")
             self.wrap_sample = lambda res: "vec4(%s, 0.0, 0.0, 0.0)" % res
             self.outer_product = lambda x, y: "%s * %s" % (x, y)
@@ -124,6 +128,7 @@ class RAVU_3x(userhook.UserHook):
                 sample_zero="vec3(0.0)",
                 sample4_type="mat4x3",
                 sample4_zero="mat4x3(0.0)",
+                sample2_type="mat2x3",
                 comps_swizzle = ".xyz")
             self.wrap_sample = lambda res: "vec4(%s, 0.0)" % res
             self.outer_product = lambda x, y: "outerProduct(%s, %s)" % (x, y)
@@ -188,6 +193,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
     def apply_convolution_kernel(self, samples_list):
         GLSL = self.add_glsl
         n = self.radius * 2 - 1
+        sz = self.lut_width // 2
 
         GLSL("float coord_y = ((angle * %d.0 + strength) * %d.0 + coherence + 0.5) / %d.0;" %
              (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
@@ -195,11 +201,51 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL("$sample4_type res0 = $sample4_zero, res1 = $sample4_zero;")
         GLSL("vec4 w0, w1;")
 
-        for i in range(self.lut_width // 2):
+        if self.anti_ringing:
+            GLSL("$sample4_type lo0 = $sample4_zero, lo1 = $sample4_zero;")
+            GLSL("$sample4_type hi0 = $sample4_zero, hi1 = $sample4_zero;")
+            GLSL("$sample4_type cg4;")
+            GLSL("vec4 wg0, wg1;")
+            w_gauss = [None] * sz
+            for i in range(sz):
+                w = []
+                for comp in range(9):
+                    dx = i // n - n // 3 - (comp // 3 - 1.0) / 3.0
+                    dy = i % n - n // 3 - (comp % 3 - 1.0) / 3.0
+                    w.append(math.exp(-1.0 * (dx ** 2 + dy ** 2)))
+                w_gauss[i] = w
+            while True:
+                changed = False
+                wsum = [0.0] * 9
+                for i in range(sz):
+                    if w_gauss[i]:
+                        for comp in range(9):
+                            wsum[comp] += w_gauss[i][comp]
+                            if i + 1 != sz:
+                                wsum[comp] += w_gauss[i][8 - comp]
+                for i in range(sz):
+                    if w_gauss[i]:
+                        max_weight = max(w_gauss[i][comp] / wsum[comp] for comp in range(9))
+                        if max_weight < 0.01:
+                            changed = True
+                            w_gauss[i] = None
+                if not changed:
+                    break
+            for i in range(sz):
+                if w_gauss[i]:
+                    for comp in range(9):
+                        w_gauss[i][comp] /= wsum[comp]
+
+        for i in range(sz):
+            use_ar = self.anti_ringing and w_gauss[i] is not None
             for j in range(2):
                 coord_x = (float(i * 2 + j) + 0.5) / float(self.lut_width)
                 GLSL("w%d = texture(%s, vec2(%s, coord_y));" % (j, self.lut_name, coord_x))
             j = n * n - 1 - i
+            if use_ar:
+                GLSL("wg0 = vec4(%r,%r,%r,%r);" % tuple(w_gauss[i][:4]))
+                GLSL("wg1 = vec4(%r,%r,%r,%r);" % tuple(w_gauss[i][-4:]))
+
             if i < j:
                 GLSL("res0 += %s + %s;" %
                     (self.outer_product(samples_list[i], "w0"),
@@ -207,18 +253,57 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                 GLSL("res1 += %s + %s;" %
                     (self.outer_product(samples_list[i], "w1"),
                      self.outer_product(samples_list[j], "w0.wzyx")))
+                if use_ar:
+                    GLSL("cg4 = $sample4_type(%s, 1.0 - %s, %s, 1.0 - %s);" % (samples_list[i], samples_list[i], samples_list[j], samples_list[j]))
+                    if self.profile == Profile.luma:
+                        GLSL("cg4 *= cg4; cg4 *= cg4; cg4 *= cg4;")
+                    else:
+                        for _ in range(3):
+                            GLSL("cg4 = matrixCompMult(cg4, cg4);")
+
+                    GLSL("hi0 += %s;" % self.outer_product("cg4[0]", "wg0"))
+                    GLSL("hi1 += %s;" % self.outer_product("cg4[0]", "wg1"))
+                    GLSL("lo0 += %s;" % self.outer_product("cg4[1]", "wg0"))
+                    GLSL("lo1 += %s;" % self.outer_product("cg4[1]", "wg1"))
+
+                    GLSL("hi0 += %s;" % self.outer_product("cg4[2]", "wg1.wzyx"))
+                    GLSL("hi1 += %s;" % self.outer_product("cg4[2]", "wg0.wzyx"))
+                    GLSL("lo0 += %s;" % self.outer_product("cg4[3]", "wg1.wzyx"))
+                    GLSL("lo1 += %s;" % self.outer_product("cg4[3]", "wg0.wzyx"))
             elif i == j:
                 GLSL("res0 += %s;" %
                     self.outer_product(samples_list[i], "w0"))
                 GLSL("res1 += %s;" %
                     self.outer_product(samples_list[i], "w1"))
+                if use_ar:
+                    GLSL("$sample2_type cg2 = $sample2_type(%s, 1.0 - %s);" % (samples_list[i], samples_list[i]))
+                    if self.profile == Profile.luma:
+                        GLSL("cg2 *= cg2; cg2 *= cg2; cg2 *= cg2;")
+                    else:
+                        for _ in range(3):
+                            GLSL("cg2 = matrixCompMult(cg2, cg2);")
+
+                    GLSL("hi0 += %s;" % self.outer_product("cg2[0]", "wg0"))
+                    GLSL("hi1 += %s;" % self.outer_product("cg2[0]", "wg1"))
+                    GLSL("lo0 += %s;" % self.outer_product("cg2[1]", "wg0"))
+                    GLSL("lo1 += %s;" % self.outer_product("cg2[1]", "wg1"))
 
         for i in range(2):
             if self.profile == Profile.luma:
-                GLSL("res%d = clamp(res%d, 0.0, 1.0);" % (i, i))
+                if self.anti_ringing:
+                    GLSL("lo%d = sqrt(sqrt(sqrt(lo%d)));" % (i, i))
+                    GLSL("hi%d = sqrt(sqrt(sqrt(hi%d)));" % (i, i))
+                    GLSL("res%d = mix(res%d, clamp(res%d, 1.0 - lo%d, hi%d), %s);" % (i, i, i, i, i, self.anti_ringing))
+                else:
+                    GLSL("res%d = clamp(res%d, 0.0, 1.0);" % (i, i))
             else:
                 for j in range(4):
-                    GLSL("res%d[%d] = clamp(res%d[%d], 0.0, 1.0);" % (i, j, i, j))
+                    if self.anti_ringing:
+                        GLSL("lo%d[%d] = sqrt(sqrt(sqrt(lo%d[%d])));" % (i, j, i, j))
+                        GLSL("hi%d[%d] = sqrt(sqrt(sqrt(hi%d[%d])));" % (i, j, i, j))
+                        GLSL("res%d[%d] = mix(res%d[%d], clamp(res%d[%d], 1.0 - lo%d[%d], hi%d[%d]), %s);" % (i, j, i, j, i, j, i, j, i, j, self.anti_ringing))
+                    else:
+                        GLSL("res%d[%d] = clamp(res%d[%d], 0.0, 1.0);" % (i, j, i, j))
 
     def generate(self, block_size):
         self.reset()
@@ -351,6 +436,12 @@ if __name__ == "__main__":
         type=int,
         help='specify the block size of compute shader (default: 32 8)')
     parser.add_argument(
+        '--anti-ringing',
+        nargs=1,
+        type=float,
+        default=[None],
+        help="enable anti-ringing (based on EWA filter anti-ringing from libplacebo) with specified strength (default: disabled)")
+    parser.add_argument(
         '--float-format',
         nargs=1,
         choices=FloatFormat.__members__,
@@ -363,13 +454,15 @@ if __name__ == "__main__":
     weights_file = args.weights_file[0]
     max_downscaling_ratio = args.max_downscaling_ratio[0]
     compute_shader_block_size = args.compute_shader_block_size
+    anti_ringing = args.anti_ringing[0]
     float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU_3x(hook=hook,
                   profile=profile,
                   weights_file=weights_file,
                   target_tex="OUTPUT",
-                  max_downscaling_ratio=max_downscaling_ratio)
+                  max_downscaling_ratio=max_downscaling_ratio,
+                  anti_ringing=anti_ringing)
 
     sys.stdout.write(userhook.LICENSE_HEADER)
     sys.stdout.write(gen.generate(compute_shader_block_size))
