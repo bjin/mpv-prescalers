@@ -273,6 +273,16 @@ vec4 hook() {""")
                     for k in range(4):
                         ox, oy = gather_offsets[k]
                         samples_list[(i + ox) * n + (j + oy)] = "%s.%s" % (gather_name, "xyzw"[k])
+                elif use_gather and i + 1 < n:
+                    gather_name = "gather%d" % idx
+                    GLSL("vec2 %s = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), 0).wz;" % (gather_name, dx, dy))
+                    samples_list[idx] = "%s.x" % gather_name
+                    samples_list[idx + n] = "%s.y" % gather_name
+                elif use_gather and j + 1 < n:
+                    gather_name = "gather%d" % idx
+                    GLSL("vec2 %s = HOOKED_mul * textureGatherOffset(HOOKED_raw, HOOKED_pos, ivec2(%d, %d), 0).wx;" % (gather_name, dx, dy))
+                    samples_list[idx] = "%s.x" % gather_name
+                    samples_list[idx + 1] = "%s.y" % gather_name
                 else:
                     sample_name = "luma%d" % idx
                     GLSL("float %s = HOOKED_texOff(vec2(%d.0, %d.0)).x;" % (sample_name, dx, dy))
