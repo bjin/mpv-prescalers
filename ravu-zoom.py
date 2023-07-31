@@ -243,7 +243,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                     y = j - (self.radius - 1)
                     xx = x - 1 if x > 0 else x
                     yy = y - 1 if y > 0 else y
-                    if xx ** 2 + yy ** 2 <= 1:
+                    if xx ** 2 + yy ** 2 <= 2:
                         ar_list.append((samples_list[i * n + j], x, y))
 
             GLSL("vec4 wg, x, y, dist;")
@@ -257,7 +257,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                 GLSL("y = vec4(subpix0.y) - vec4(%d.0, %d.0, %d.0, %d.0);" % tuple(ar_list[i + j][2] for j in range(4)))
                 GLSL("sample_ar = $sample4_type(%s, %s, %s, %s);" % tuple(ar_list[i + j][0] for j in range(4)))
                 GLSL("dist = x * x + y * y;")
-                GLSL("wg = exp(-2.0 * dist);")
+                GLSL("wg = exp(-1.0 * dist);")
                 GLSL("cg_hi = sample_ar;")
                 GLSL("cg_lo = 1.0 - sample_ar;")
                 for _ in range(3):
