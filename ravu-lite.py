@@ -42,7 +42,7 @@ class RAVU_Lite(userhook.UserHook):
                  weights_file=None,
                  lut_name="ravu_lite_lut",
                  int_tex_name="ravu_lite_int",
-                 anti_ringing=False,
+                 anti_ringing=None,
                  **args):
         super().__init__(**args)
 
@@ -222,7 +222,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         if self.anti_ringing:
             GLSL("lo = sqrt(sqrt(sqrt(lo)));")
             GLSL("hi = sqrt(sqrt(sqrt(hi)));")
-            GLSL("res = clamp(res, vec4(1.0) - lo, hi);")
+            GLSL("res = mix(res, clamp(res, vec4(1.0) - lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")
 
@@ -231,7 +231,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL = self.add_glsl
         n = self.radius * 2 - 1
 
-        self.set_description("RAVU-Lite%s (%s, r%d)" % (["", "-AR"][self.anti_ringing], step.name, self.radius))
+        self.set_description("RAVU-Lite%s (%s, r%d)" % ("-AR" if self.anti_ringing else "", step.name, self.radius))
 
         self.set_skippable(2, 2)
 
@@ -297,7 +297,7 @@ return res;
         GLSL = self.add_glsl
         n = self.radius * 2 - 1
 
-        self.set_description("RAVU-Lite%s (r%d, compute)" % (["", "-AR"][self.anti_ringing], self.radius))
+        self.set_description("RAVU-Lite%s (r%d, compute)" % ("-AR" if self.anti_ringing else "", self.radius))
 
         block_width, block_height = block_size
 
@@ -389,8 +389,10 @@ if __name__ == "__main__":
         help='specify the block size of compute shader (default: 32 8)')
     parser.add_argument(
         '--anti-ringing',
-        action='store_true',
-        help="enable anti-ringing (based on EWA filter anti-ringing from libplacebo)")
+        nargs=1,
+        type=float,
+        default=[None],
+        help="enable anti-ringing (based on EWA filter anti-ringing from libplacebo) with specified strength (default: disabled)")
     parser.add_argument(
         '--float-format',
         nargs=1,
@@ -404,7 +406,7 @@ if __name__ == "__main__":
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
-    anti_ringing = args.anti_ringing
+    anti_ringing = args.anti_ringing[0]
     float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU_Lite(hook=["LUMA"],

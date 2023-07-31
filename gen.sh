@@ -5,6 +5,7 @@ set -e
 DIR="$(dirname "$0")"
 
 max_downscaling_ratio=1.414213
+anti_ringing_strength=0.75
 
 for nns in 16 32 64 128 256; do
     for win in 8x4 8x6; do
@@ -42,14 +43,14 @@ gen_ravu() {
         file_name_ar="ravu-lite-ar-r$radius.hook"
         weights_file="$DIR/weights/ravu-lite_weights-r$radius.py"
         "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" > "$file_name"
-        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --anti-ringing > "$file_name_ar"
+        "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --anti-ringing "$anti_ringing_strength" > "$file_name_ar"
         if [ -d gather ]; then
             "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-gather > "gather/$file_name"
-            "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-gather --anti-ringing > "gather/$file_name_ar"
+            "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-gather --anti-ringing "$anti_ringing_strength" > "gather/$file_name_ar"
         fi
         if [ -d compute ]; then
             "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-compute-shader > "compute/$file_name"
-            "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-compute-shader --anti-ringing > "compute/$file_name_ar"
+            "$DIR/ravu-lite.py" --weights-file "$weights_file" --max-downscaling-ratio "$max_downscaling_ratio" --float-format "$float_format" --use-compute-shader --anti-ringing "$anti_ringing_strength" > "compute/$file_name_ar"
         fi
     done
 
@@ -73,14 +74,14 @@ gen_ravu() {
             file_name_ar="ravu-zoom-ar-r$radius$suffix.hook"
             weights_file="$DIR/weights/ravu-zoom_weights-r$radius.py"
             "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" > "$file_name"
-            "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --anti-ringing > "$file_name_ar"
+            "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --anti-ringing "$anti_ringing_strength" > "$file_name_ar"
             if [ -d gather -a "$target" = "luma" ]; then
                 "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-gather > "gather/$file_name"
-                "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-gather --anti-ringing > "gather/$file_name_ar"
+                "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-gather --anti-ringing "$anti_ringing_strength" > "gather/$file_name_ar"
             fi
             if [ -d compute ]; then
                 "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-compute-shader > "compute/$file_name"
-                "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-compute-shader --anti-ringing > "compute/$file_name_ar"
+                "$DIR/ravu-zoom.py" --target "$target" --weights-file "$weights_file" --float-format "$float_format" --use-compute-shader --anti-ringing "$anti_ringing_strength" > "compute/$file_name_ar"
             fi
         done
     done

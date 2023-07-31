@@ -44,7 +44,7 @@ class RAVU_Zoom(userhook.UserHook):
                  profile=Profile.luma,
                  weights_file=None,
                  lut_name="ravu_zoom_lut",
-                 anti_ringing=False,
+                 anti_ringing=None,
                  **args):
         super().__init__(**args)
 
@@ -277,7 +277,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
 
             GLSL("lo = sqrt(sqrt(sqrt(lo / wgsum)));")
             GLSL("hi = sqrt(sqrt(sqrt(hi / wgsum)));")
-            GLSL("res = clamp(res, 1.0 - lo, hi);")
+            GLSL("res = mix(res, clamp(res, 1.0 - lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")
 
@@ -298,7 +298,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         self.reset()
         GLSL = self.add_glsl
 
-        self.set_description("RAVU-Zoom%s (%s, r%d)" % (["", "-AR"][self.anti_ringing], self.profile.name, self.radius))
+        self.set_description("RAVU-Zoom%s (%s, r%d)" % ("-AR" if self.anti_ringing else "", self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
         self.setup_profile()
@@ -368,7 +368,7 @@ return $hook_return_value;
         self.reset()
         GLSL = self.add_glsl
 
-        self.set_description("RAVU-Zoom%s (%s, r%d, compute)" % (["", "-AR"][self.anti_ringing], self.profile.name, self.radius))
+        self.set_description("RAVU-Zoom%s (%s, r%d, compute)" % ("-AR" if self.anti_ringing else "", self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
         self.setup_profile()
@@ -492,8 +492,10 @@ if __name__ == "__main__":
         help='specify the block size of compute shader (default: 32 8)')
     parser.add_argument(
         '--anti-ringing',
-        action='store_true',
-        help="enable anti-ringing (based on EWA filter anti-ringing from libplacebo)")
+        nargs=1,
+        type=float,
+        default=[None],
+        help="enable anti-ringing (based on EWA filter anti-ringing from libplacebo) with specified strength (default: disabled)")
     parser.add_argument(
         '--float-format',
         nargs=1,
@@ -508,7 +510,7 @@ if __name__ == "__main__":
     use_gather = args.use_gather
     use_compute_shader = args.use_compute_shader
     compute_shader_block_size = args.compute_shader_block_size
-    anti_ringing = args.anti_ringing
+    anti_ringing = args.anti_ringing[0]
     float_format = FloatFormat[args.float_format[0]]
 
     gen = RAVU_Zoom(hook=hook,
