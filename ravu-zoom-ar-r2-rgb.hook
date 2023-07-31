@@ -200,7 +200,7 @@ lo += cg_lo * wg;
 wgsum += dot(wg, vec4(1.0));
 lo = sqrt(sqrt(sqrt(lo / wgsum)));
 hi = sqrt(sqrt(sqrt(hi / wgsum)));
-res = clamp(res, 1.0 - lo, hi);
+res = mix(res, clamp(res, 1.0 - lo, hi), 0.750000);
 return vec4(res, 1.0);
 }
 //!TEXTURE ravu_zoom_lut2
