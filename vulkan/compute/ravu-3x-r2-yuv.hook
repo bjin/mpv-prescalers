@@ -112,15 +112,15 @@ res1[0] = clamp(res1[0], 0.0, 1.0);
 res1[1] = clamp(res1[1], 0.0, 1.0);
 res1[2] = clamp(res1[2], 0.0, 1.0);
 res1[3] = clamp(res1[3], 0.0, 1.0);
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(0, 0), vec4(res0[0], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(0, 1), vec4(res0[1], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(0, 2), vec4(res0[2], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(1, 0), vec4(res0[3], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(1, 1), vec4(inp[local_pos + 11], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(1, 2), vec4(res1[0], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(2, 0), vec4(res1[1], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(2, 1), vec4(res1[2], 0.0));
-imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(2, 2), vec4(res1[3], 0.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(0, 0), vec4(res0[0], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(0, 1), vec4(res0[1], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(0, 2), vec4(res0[2], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(1, 0), vec4(res0[3], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(1, 1), vec4(inp[local_pos + 11], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(1, 2), vec4(res1[0], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(2, 0), vec4(res1[1], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(2, 1), vec4(res1[2], 1.0));
+imageStore(out_image, ivec2(gl_GlobalInvocationID) * 3 + ivec2(2, 2), vec4(res1[3], 1.0));
 }
 //!TEXTURE ravu_3x_lut2
 //!SIZE 10 216
