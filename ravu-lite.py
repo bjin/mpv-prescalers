@@ -202,7 +202,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
             GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
             j = n * n - 1 - i
             if use_ar:
-                GLSL("wg = vec4(%f,%f,%f,%f);" % tuple(w_gauss[i]))
+                GLSL("wg = vec4(%r,%r,%r,%r);" % tuple(w_gauss[i]))
 
             if i < j:
                 GLSL("res += %s * w + %s * w.wzyx;" % (samples_list[i], samples_list[j]))
