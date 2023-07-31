@@ -125,7 +125,7 @@ class RAVU_3x(userhook.UserHook):
                 sample4_type="mat4x3",
                 sample4_zero="mat4x3(0.0)",
                 comps_swizzle = ".xyz")
-            self.wrap_sample = lambda res: "vec4(%s, 0.0)" % res
+            self.wrap_sample = lambda res: "vec4(%s, 1.0)" % res
             self.outer_product = lambda x, y: "outerProduct(%s, %s)" % (x, y)
             if self.profile == Profile.rgb:
                 # Assumes Rec. 709
