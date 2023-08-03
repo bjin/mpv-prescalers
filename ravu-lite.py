@@ -165,44 +165,20 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL("vec4 res = vec4(0.0), w;")
 
         if self.anti_ringing:
-            GLSL("vec4 lo = vec4(0.0), hi = vec4(0.0), wg, cg4;")
-            w_gauss = [None] * self.lut_width
+            GLSL("vec4 lo = vec4(0.0), hi = vec4(0.0), wg, wgsum = vec4(0.0), cg4;")
+            in_ar_kernel = [None] * self.lut_width
             for i in range(self.lut_width):
-                w = []
-                for comp in range(4):
-                    dx = i // n - n // 2 - (comp // 2 - 0.5) * 0.5
-                    dy = i % n - n // 2 - (comp % 2 - 0.5) * 0.5
-                    w.append(math.exp(-1.0 * (dx ** 2 + dy ** 2)))
-                w_gauss[i] = w
-            while True:
-                changed = False
-                wsum = [0.0] * 4
-                for i in range(self.lut_width):
-                    if w_gauss[i]:
-                        for comp in range(4):
-                            wsum[comp] += w_gauss[i][comp]
-                            if i + 1 != self.lut_width:
-                                wsum[comp] += w_gauss[i][3 - comp]
-                for i in range(self.lut_width):
-                    if w_gauss[i]:
-                        max_weight = max(w_gauss[i][comp] / wsum[comp] for comp in range(4))
-                        if max_weight < 0.01:
-                            changed = True
-                            w_gauss[i] = None
-                if not changed:
-                    break
-            for i in range(self.lut_width):
-                if w_gauss[i]:
-                    for comp in range(4):
-                        w_gauss[i][comp] /= wsum[comp]
+                dx = i // n - n // 2
+                dy = i % n - n // 2
+                in_ar_kernel[i] = abs(dx) <= 1 and abs(dy) <= 1
 
         for i in range(self.lut_width):
-            use_ar = self.anti_ringing and w_gauss[i] is not None
+            use_ar = self.anti_ringing and in_ar_kernel[i]
             coord_x = (float(i) + 0.5) / float(self.lut_width)
             GLSL("w = texture(%s, vec2(%s, coord_y));" % (self.lut_name, coord_x))
             j = n * n - 1 - i
             if use_ar:
-                GLSL("wg = vec4(%r,%r,%r,%r);" % tuple(w_gauss[i]))
+                GLSL("wg = max(vec4(0.0), w);");
 
             if i < j:
                 GLSL("res += %s * w + %s * w.wzyx;" % (samples_list[i], samples_list[j]))
@@ -211,6 +187,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                     GLSL("cg4 *= cg4; cg4 *= cg4; cg4 *= cg4;")
                     GLSL("hi += cg4.x * wg + cg4.z * wg.wzyx;")
                     GLSL("lo += cg4.y * wg + cg4.w * wg.wzyx;")
+                    GLSL("wgsum += wg + wg.wzyx;")
             elif i == j:
                 GLSL("res += %s * w;" % samples_list[i])
                 if use_ar:
@@ -218,10 +195,11 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                     GLSL("cg2 *= cg2; cg2 *= cg2; cg2 *= cg2;")
                     GLSL("hi += cg2.x * wg;")
                     GLSL("lo += cg2.y * wg;")
+                    GLSL("wgsum += wg;")
 
         if self.anti_ringing:
-            GLSL("lo = sqrt(sqrt(sqrt(lo)));")
-            GLSL("hi = sqrt(sqrt(sqrt(hi)));")
+            GLSL("lo = sqrt(sqrt(sqrt(lo / wgsum)));")
+            GLSL("hi = sqrt(sqrt(sqrt(hi / wgsum)));")
             GLSL("res = mix(res, clamp(res, vec4(1.0) - lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")

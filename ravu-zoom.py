@@ -128,14 +128,14 @@ class RAVU_Zoom(userhook.UserHook):
             self.add_mappings(
                 sample_type="float",
                 sample_zero="0.0",
-                sample4_type="vec4",
+                sample2_type="vec2",
                 hook_return_value="vec4(res, 0.0, 0.0, 0.0)",
                 comps_swizzle = ".x")
         elif self.profile == Profile.chroma:
             self.add_mappings(
                 sample_type="vec2",
                 sample_zero="vec2(0.0)",
-                sample4_type="mat4x2",
+                sample2_type="mat2x2",
                 hook_return_value="vec4(res, 0.0, 0.0)",
                 comps_swizzle = ".xy")
             self.bind_tex("LUMA")
@@ -143,7 +143,7 @@ class RAVU_Zoom(userhook.UserHook):
             self.add_mappings(
                 sample_type="vec3",
                 sample_zero="vec3(0.0)",
-                sample4_type="mat4x3",
+                sample2_type="mat2x3",
                 hook_return_value="vec4(res, 1.0)",
                 comps_swizzle = ".xyz")
             if self.profile == Profile.rgb:
@@ -226,57 +226,40 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
              (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
 
         GLSL("$sample_type res = $sample_zero;")
-        GLSL("vec4 w;")
+        if self.anti_ringing:
+            GLSL("$sample2_type sum_cg = $sample2_type(0.0), cg;")
+            GLSL("vec4 w, wg;")
+            GLSL("float wgsum = 0;")
+        else:
+            GLSL("vec4 w;")
         for step in range(2):
             subpix_name = ["subpix", "subpix_inv"][step]
             for i in range(len(samples_list) // 2):
+                dx = i // n - n // 2
+                dy = i % n - n // 2
+                in_ar_kernel = -2 <= dx <= 1 and -2 <= dy <= 1
+                wg_defined = False
                 if i % 4 == 0:
                     coord_x = float(i // 4) / float(self.lut_width // self.lut_size)
                     GLSL("w = texture(%s, vec2(%s, coord_y) + %s);" % (self.lut_name, coord_x, subpix_name))
-                GLSL("res += %s * w[%d];" % (samples_list[[i, ~i][step]], i % 4))
+                sample_i = samples_list[[i, ~i][step]]
+                GLSL("res += %s * w[%d];" % (sample_i, i % 4))
+                if self.anti_ringing and in_ar_kernel:
+                    if not wg_defined:
+                        wg_defined = True
+                        GLSL("wg = max(vec4(0.0), w);")
+                    GLSL("cg = $sample2_type(%s, 1.0 - %s);" % (sample_i, sample_i));
+                    if self.profile == Profile.luma:
+                        GLSL("cg *= cg; cg *= cg; cg *= cg;")
+                    else:
+                        for _ in range(3):
+                            GLSL("cg = matrixCompMult(cg, cg);")
+                    GLSL("sum_cg += cg * wg[%d];" % (i % 4))
+                    GLSL("wgsum += wg[%d];" % (i % 4))
 
         if self.anti_ringing:
-            ar_list = []
-            for i in range(n):
-                for j in range(n):
-                    x = i - (self.radius - 1)
-                    y = j - (self.radius - 1)
-                    xx = x - 1 if x > 0 else x
-                    yy = y - 1 if y > 0 else y
-                    if xx ** 2 + yy ** 2 <= 2:
-                        ar_list.append((samples_list[i * n + j], x, y))
-
-            GLSL("vec4 wg, x, y, dist;")
-            GLSL("float wgsum = 0.0;")
-            GLSL("$sample4_type sample_ar, cg_lo, cg_hi;")
-            GLSL("$sample_type lo = $sample_zero, hi = $sample_zero;")
-
-            assert len(ar_list) % 4 == 0
-            for i in range(0, len(ar_list), 4):
-                GLSL("x = vec4(subpix0.x) - vec4(%d.0, %d.0, %d.0, %d.0);" % tuple(ar_list[i + j][1] for j in range(4)))
-                GLSL("y = vec4(subpix0.y) - vec4(%d.0, %d.0, %d.0, %d.0);" % tuple(ar_list[i + j][2] for j in range(4)))
-                GLSL("sample_ar = $sample4_type(%s, %s, %s, %s);" % tuple(ar_list[i + j][0] for j in range(4)))
-                GLSL("dist = x * x + y * y;")
-                GLSL("wg = exp(-1.0 * dist);")
-                GLSL("cg_hi = sample_ar;")
-                GLSL("cg_lo = 1.0 - sample_ar;")
-                for _ in range(3):
-                    if self.profile == Profile.luma:
-                        GLSL("cg_hi *= cg_hi;")
-                        GLSL("cg_lo *= cg_lo;")
-                    else:
-                        GLSL("cg_hi = matrixCompMult(cg_hi, cg_hi);")
-                        GLSL("cg_lo = matrixCompMult(cg_lo, cg_lo);")
-                if self.profile == Profile.luma:
-                    GLSL("hi += dot(wg, cg_hi);")
-                    GLSL("lo += dot(wg, cg_lo);")
-                else:
-                    GLSL("hi += cg_hi * wg;")
-                    GLSL("lo += cg_lo * wg;")
-                GLSL("wgsum += dot(wg, vec4(1.0));")
-
-            GLSL("lo = sqrt(sqrt(sqrt(lo / wgsum)));")
-            GLSL("hi = sqrt(sqrt(sqrt(hi / wgsum)));")
+            GLSL("$sample_type hi = sqrt(sqrt(sqrt(sum_cg[0] / wgsum)));")
+            GLSL("$sample_type lo = sqrt(sqrt(sqrt(sum_cg[1] / wgsum)));")
             GLSL("res = mix(res, clamp(res, 1.0 - lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")
