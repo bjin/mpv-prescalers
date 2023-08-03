@@ -170,7 +170,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
             for i in range(self.lut_width):
                 dx = i // n - n // 2
                 dy = i % n - n // 2
-                in_ar_kernel[i] = abs(dx) <= 1 and abs(dy) <= 1
+                in_ar_kernel[i] = dx ** 2 + dy ** 2 <= 4
 
         for i in range(self.lut_width):
             use_ar = self.anti_ringing and in_ar_kernel[i]
