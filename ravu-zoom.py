@@ -60,22 +60,30 @@ class RAVU_Zoom(userhook.UserHook):
         self.min_coherence = locals()['min_coherence']
         self.gaussian = locals()['gaussian']
         self.model_weights = locals()['model_weights']
+        self.model_weights_ar = locals()['model_weights_ar']
 
         assert len(self.min_strength) + 1 == self.quant_strength
         assert len(self.min_coherence) + 1 == self.quant_coherence
 
         self.profile = profile
         self.lut_name = "%s%d" % (lut_name, self.radius)
+        self.lut_name_ar = self.lut_name + "_ar"
 
         self.lut_height = self.quant_angle * self.quant_strength * self.quant_coherence * self.lut_size
         self.lut_width = (self.radius * self.radius * 2 + 3) // 4 * self.lut_size
+        self.lut_width_ar = (2 * 2 * 2 + 3) // 4 * self.lut_size
 
         self.lut_macro ="#define LUTPOS(x, lut_size) mix(0.5 / (lut_size), 1.0 - 0.5 / (lut_size), (x))"
 
         self.anti_ringing = anti_ringing
 
-    def generate_tex(self, float_format=FloatFormat.float32):
+    def generate_tex(self, float_format=FloatFormat.float32, ar_kernel=False):
         import struct
+
+        if ar_kernel:
+            lut_name, model_weights, radius, lut_width = self.lut_name_ar, self.model_weights_ar, 2, self.lut_width_ar
+        else:
+            lut_name, model_weights, radius, lut_width = self.lut_name, self.model_weights, self.radius, self.lut_width
 
         tex_format, item_format_str = {
             FloatFormat.float16gl: ("rgba16f", 'f'),
@@ -87,8 +95,8 @@ class RAVU_Zoom(userhook.UserHook):
         for i in range(self.quant_angle):
             for j in range(self.quant_strength):
                 for k in range(self.quant_coherence):
-                    kernel_with_lut = self.model_weights[i][j][k]
-                    kernel_size = self.radius * self.radius * 2
+                    kernel_with_lut = model_weights[i][j][k]
+                    kernel_size = radius * radius * 2
                     assert len(kernel_with_lut) == self.lut_size * self.lut_size * kernel_size
 
                     for u in range(self.lut_size):
@@ -102,12 +110,12 @@ class RAVU_Zoom(userhook.UserHook):
                                         pos = (v * self.lut_size + u) * kernel_size + kernel_pos
                                         weights.append(kernel_with_lut[pos])
 
-        assert len(weights) == self.lut_width * self.lut_height * 4
+        assert len(weights) == lut_width * self.lut_height * 4
         weights_raw = struct.pack('<%d%s' % (len(weights), item_format_str), *weights).hex()
 
         headers = [
-            "//!TEXTURE %s" % self.lut_name,
-            "//!SIZE %d %d" % (self.lut_width, self.lut_height),
+            "//!TEXTURE %s" % lut_name,
+            "//!SIZE %d %d" % (lut_width, self.lut_height),
             "//!FORMAT %s" % tex_format,
             "//!FILTER LINEAR"
         ]
@@ -128,14 +136,14 @@ class RAVU_Zoom(userhook.UserHook):
             self.add_mappings(
                 sample_type="float",
                 sample_zero="0.0",
-                sample2_type="vec2",
+                sample4_type="vec4",
                 hook_return_value="vec4(res, 0.0, 0.0, 0.0)",
                 comps_swizzle = ".x")
         elif self.profile == Profile.chroma:
             self.add_mappings(
                 sample_type="vec2",
                 sample_zero="vec2(0.0)",
-                sample2_type="mat2x2",
+                sample4_type="mat4x2",
                 hook_return_value="vec4(res, 0.0, 0.0)",
                 comps_swizzle = ".xy")
             self.bind_tex("LUMA")
@@ -143,7 +151,7 @@ class RAVU_Zoom(userhook.UserHook):
             self.add_mappings(
                 sample_type="vec3",
                 sample_zero="vec3(0.0)",
-                sample2_type="mat2x3",
+                sample4_type="mat4x3",
                 hook_return_value="vec4(res, 1.0)",
                 comps_swizzle = ".xyz")
             if self.profile == Profile.rgb:
@@ -226,52 +234,72 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
              (self.quant_strength, self.quant_coherence, self.quant_angle * self.quant_strength * self.quant_coherence))
 
         GLSL("$sample_type res = $sample_zero;")
+        GLSL("vec4 w;")
         if self.anti_ringing:
-            GLSL("$sample2_type sum_cg = $sample2_type(0.0), cg;")
-            GLSL("vec4 w, wg;")
-            GLSL("float wgsum = 0;")
-        else:
-            GLSL("vec4 w;")
+            GLSL("$sample4_type cg;")
+            GLSL("$sample_type lo = $sample_zero, hi = $sample_zero;")
+            samples_list_ar = []
+            for i, sample_i in enumerate(samples_list):
+                dx = i // n - n // 2
+                dy = i % n - n // 2
+                if -2 <= dx <= 1 and -2 <= dy <= 1:
+                    samples_list_ar.append(sample_i)
         for step in range(2):
             subpix_name = ["subpix", "subpix_inv"][step]
             for i in range(len(samples_list) // 2):
-                dx = i // n - n // 2
-                dy = i % n - n // 2
-                in_ar_kernel = -2 <= dx <= 1 and -2 <= dy <= 1
-                wg_defined = False
                 if i % 4 == 0:
                     coord_x = float(i // 4) / float(self.lut_width // self.lut_size)
                     GLSL("w = texture(%s, vec2(%s, coord_y) + %s);" % (self.lut_name, coord_x, subpix_name))
                 sample_i = samples_list[[i, ~i][step]]
                 GLSL("res += %s * w[%d];" % (sample_i, i % 4))
-                if self.anti_ringing and in_ar_kernel:
-                    if not wg_defined:
-                        wg_defined = True
-                        GLSL("wg = max(vec4(0.0), w);")
-                    GLSL("cg = $sample2_type(%s, 1.0 - %s);" % (sample_i, sample_i));
-                    if self.profile == Profile.luma:
-                        GLSL("cg *= cg; cg *= cg; cg *= cg;")
-                    else:
-                        for _ in range(3):
-                            GLSL("cg = matrixCompMult(cg, cg);")
-                    GLSL("sum_cg += cg * wg[%d];" % (i % 4))
-                    GLSL("wgsum += wg[%d];" % (i % 4))
 
         if self.anti_ringing:
-            GLSL("$sample_type hi = sqrt(sqrt(sqrt(sum_cg[0] / wgsum)));")
-            GLSL("$sample_type lo = sqrt(sqrt(sqrt(sum_cg[1] / wgsum)));")
-            GLSL("res = mix(res, clamp(res, 1.0 - lo, hi), %f);" % self.anti_ringing)
+            assert len(samples_list_ar) % 4 == 0
+            for step in range(2):
+                subpix_name = [self.subpix_ar, self.subpix_inv_ar][step]
+                last_sample = None
+                for i in range(len(samples_list_ar) // 2):
+                    if i % 4 == 0:
+                        coord_x = float(i // 4) / float(self.lut_width_ar // self.lut_size)
+                        GLSL("w = texture(%s, vec2(%s, coord_y) + %s);" % (self.lut_name_ar, coord_x, subpix_name))
+                    sample_i = samples_list_ar[[i, ~i][step]]
+                    if i % 2 == 0:
+                        last_sample = sample_i
+                    else:
+                        GLSL("cg = $sample4_type(%s, 1.0 - %s, %s, 1.0 - %s);" % (last_sample, last_sample, sample_i, sample_i));
+                        last_sample = None
+                        if self.profile == Profile.luma:
+                            GLSL("cg *= cg;" * 3)
+                        else:
+                            GLSL("cg = matrixCompMult(cg, cg);" * 3)
+                        GLSL("hi += cg[0] * w[%d] + cg[2] * w[%d];" % (i % 4 - 1, i % 4))
+                        GLSL("lo += cg[1] * w[%d] + cg[3] * w[%d];" % (i % 4 - 1, i % 4))
+            GLSL("hi = sqrt(sqrt(sqrt(hi)));")
+            GLSL("lo = 1.0 - sqrt(sqrt(sqrt(lo)));")
+            GLSL("res = mix(res, clamp(res, lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")
 
     def calculate_subpix(self):
         GLSL = self.add_glsl
 
-        GLSL("vec2 subpix0 = fract(pos - 0.5);")
-        GLSL("pos -= subpix0;")
+        GLSL("vec2 subpix = fract(pos - 0.5);")
+        GLSL("pos -= subpix;")
 
-        GLSL("vec2 subpix = LUTPOS(subpix0, vec2(%s));" % float(self.lut_size))
+        GLSL("subpix = LUTPOS(subpix, vec2(%s));" % float(self.lut_size))
         GLSL("vec2 subpix_inv = 1.0 - subpix;")
+
+        if self.anti_ringing:
+            if self.radius == 2:
+                self.subpix_ar = "subpix"
+                self.subpix_inv_ar = "subpix_inv"
+            else:
+                block_factor_ar = float(self.lut_width_ar / self.lut_size), float(self.lut_height / self.lut_size)
+                GLSL("vec2 subpix_ar = subpix / vec2(%s, %s);" % block_factor_ar)
+                GLSL("vec2 subpix_inv_ar = subpix_inv / vec2(%s, %s);" % block_factor_ar)
+                self.subpix_ar = "subpix_ar"
+                self.subpix_inv_ar = "subpix_inv_ar"
+
         block_factor = float(self.lut_width / self.lut_size), float(self.lut_height / self.lut_size)
         GLSL("subpix /= vec2(%s, %s);" % block_factor)
         GLSL("subpix_inv /= vec2(%s, %s);" % block_factor)
@@ -284,6 +312,8 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         self.set_description("RAVU-Zoom%s (%s, r%d)" % ("-AR" if self.anti_ringing else "", self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
+        if self.anti_ringing:
+            self.bind_tex(self.lut_name_ar)
         self.setup_profile()
         self.setup_condition()
 
@@ -354,6 +384,8 @@ return $hook_return_value;
         self.set_description("RAVU-Zoom%s (%s, r%d, compute)" % ("-AR" if self.anti_ringing else "", self.profile.name, self.radius))
 
         self.bind_tex(self.lut_name)
+        if self.anti_ringing:
+            self.bind_tex(self.lut_name_ar)
         self.setup_profile()
         self.setup_condition()
 
@@ -507,3 +539,5 @@ if __name__ == "__main__":
     else:
         sys.stdout.write(gen.generate(use_gather))
     sys.stdout.write(gen.generate_tex(float_format))
+    if anti_ringing:
+        sys.stdout.write(gen.generate_tex(float_format, ar_kernel=True))
