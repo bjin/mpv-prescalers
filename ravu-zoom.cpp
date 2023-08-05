@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cinttypes>
 
 #include <algorithm>
 #include <string>
@@ -26,7 +27,8 @@ const double eps = FLT_EPSILON;
 typedef std::vector<double> vector;
 typedef std::vector<vector> matrix;
 
-const int radius = 3;
+#define AR 1
+const int radius = 2;
 const int gradient_radius = std::max(radius - 1, 2);
 
 const int quant_angle = 24;
@@ -366,6 +368,7 @@ hashkey get_hashkey(const matrix &patch)
 double learning_rate = 0.001;
 int batch_size = 64;
 bool squared_error = false;
+bool keep = false;
 
 struct linear_optimizer {
     vector weights;
@@ -396,7 +399,10 @@ struct linear_optimizer {
             }
         }
 
-        accumulated_grad.assign(feature_count, 0.0);
+        if (keep)
+            accumulated_grad.resize(feature_count, 0.0);
+        else
+            accumulated_grad.assign(feature_count, 0.0);
 
         start_batch();
     }
@@ -512,7 +518,11 @@ struct linear_optimizer {
             double &h = accumulated_grad[i];
 
             h += g * g;
+#if AR == 1
+            weights[i] = std::max(0.0, weights[i] - learning_rate * g / (sqrt(h) + 1e-8));
+#else
             weights[i] -= learning_rate * g / (sqrt(h) + 1e-8);
+#endif
         }
     }
 
@@ -816,6 +826,7 @@ struct ravu_model {
     }
 
     void write_model(FILE *file) {
+#if AR == 0
         fprintf(file, "radius = %d\n", radius);
         fprintf(file, "lut_size = %d\n", lut_size);
         fprintf(file, "gradient_radius = %d\n", gradient_radius);
@@ -826,6 +837,9 @@ struct ravu_model {
         fprintf(file, "min_coherence = %s\n", to_string(vector(min_coherence, min_coherence + quant_coherence - 1)).c_str());
         fprintf(file, "gaussian = %s\n", to_string(gaussian).c_str());
         fprintf(file, "model_weights = %s\n", to_string(get_model_weights()).c_str());
+#else
+        fprintf(file, "model_weights_ar = %s\n", to_string(get_model_weights()).c_str());
+#endif
     }
 
 };
@@ -908,6 +922,9 @@ int main(int argc, char *argv[])
         } else if (strcmp(cur, "--sqerr") == 0) {
             squared_error = true;
             argv_ptr++;
+        } else if (strcmp(cur, "--keep") == 0) {
+            keep = true;
+            argv_ptr++;
         } else if (need4 && strcmp(cur, "--upscale") == 0) {
             upscale = true;
             upscale_from = next;
@@ -924,7 +941,7 @@ int main(int argc, char *argv[])
     }
 
     if (argc == 1 || argv_ptr < argc) {
-        PRINT("Usage: %s [--model model.bin] [--lr lr] [--batch-size bs] [--sqerr]"
+        PRINT("Usage: %s [--model model.bin] [--lr lr] [--batch-size bs] [--sqerr] [--keep]"
               "[--train files..] [--eval files..] [--write] [--vis]"
               "[--upscale low high w h]\n", argv[0]);
         return -1;
@@ -959,20 +976,28 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    PRINT("model=%s, learning_rate=%.9lf, batch_size=%d, method=%s\n",
-          model_filename.c_str(), learning_rate, batch_size, squared_error ? "squared" : "absolute");
+    PRINT("model=%s, learning_rate=%.9lf, batch_size=%d, method=%s, keep=%d, ar=%d\n",
+          model_filename.c_str(), learning_rate, batch_size, squared_error ? "squared" : "absolute", keep, AR);
 
     if (train.size() > 0) {
         double max_psnr = 0.0;
         std::string max_fn = "";
+        if (eval.size() > 0) {
+            double psnr = evaluate(eval, false);
+            if (psnr > max_psnr) {
+                PRINT("initial psnr is %.6lf\n", psnr)
+                max_psnr = psnr;
+                max_fn = remove_suffix(model_filename, ".bin") + "-input.bin";
+                model.write(max_fn);
+            }
+        }
         for (int iteration = 1; ; iteration++) {
             random_shuffle(train.begin(), train.end());
             for (int i = 0; i < (int)train.size(); i++) {
                 matrix image = read_image(train[i]);
                 double ratio = exp2((double)rand() / RAND_MAX) * 1.5;
                 model.train(image, ratio);
-                if ((i + 1) % 100 == 0) {
-                    PRINT("iter %d(%3d/%d)\n", iteration, i + 1, (int)train.size());
+                if ((i + 1) % 10 == 0) {
                     model.write(model_filename);
                     model.write(model_filename + ".bak");
                 }
@@ -980,6 +1005,7 @@ int main(int argc, char *argv[])
             if (eval.size() > 0) {
                 double psnr = evaluate(eval, false);
                 if (psnr > max_psnr) {
+                    PRINT("new best found: %.6lf\n", psnr)
                     max_psnr = psnr;
                     std::string f = remove_suffix(model_filename, ".bin");
                     char buf[100];
@@ -989,8 +1015,12 @@ int main(int argc, char *argv[])
                     f += ".bin";
                     model.write(f);
                     max_fn = f;
-                } else if (iteration % 24 == 0) {
+                    iteration = 0;
+                } else if (iteration >= 10) {
+                    learning_rate *= 0.9;
+                    PRINT("model reverted to %s, set new learning rate to %.6lf\n", max_fn.c_str(), learning_rate);
                     model.read(max_fn);
+                    iteration = 0;
                 }
             }
         }
