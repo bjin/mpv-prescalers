@@ -598,51 +598,59 @@ struct ravu_model {
         fclose(f);
     }
 
-    void visualize(const std::string &bmp_file, int lut_x, int lut_y) {
-        assert(0 <= lut_x && lut_x < lut_size);
-        assert(0 <= lut_y && lut_y < lut_size);
+    void visualize(const std::string &bmp_file) {
+        const int block_size = radius * 2 * (lut_size - 1) + 1;
+        const int border_size = 1;
+        const int width = quant_angle * (block_size + border_size * 2);
+        const int height = quant_coherence * quant_strength * (block_size + border_size * 2);
 
-        const int pixel_size = 3;
-        const int width = quant_angle * radius * 2 * pixel_size;
-        const int height = quant_coherence * quant_strength * radius * 2 * pixel_size;
-
-        unsigned long file_size = bmp_size(width, height);
-
-        std::vector<uint8_t> bmp_buffer(file_size, 0);
-        bmp_init(&bmp_buffer[0], width, height);
+        std::vector<std::vector<double>> img_sum(width, std::vector<double>(height, 0.0));
+        std::vector<std::vector<int>> img_cnt(width, std::vector<int>(height, 0));
 
         for (int angle = 0; angle < quant_angle; angle++) {
             for (int strength = 0; strength < quant_strength; strength++) {
                 for (int coherence = 0; coherence < quant_coherence; coherence++) {
                     for (int x = 0; x < radius * 2; x++) {
                         for (int y = 0; y < radius * 2; y++) {
-                            int var = feature_mapping[lut_x][lut_y][x][y];
-                            double w = 0;
-                            if (var == VAR_CONSTANT_1) {
-                                w = 1;
-                            } else if (var >= 0) {
-                                w = models[angle][strength][coherence].weights[var];
-                            }
-                            w *= radius * radius * 4;
-                            w /= 1 + fabs(w);
-                            unsigned long color;
-                            if (w < 0) {
-                                w = -w;
-                                color = bmp_encode(1, 1-w, 1-w); // red
-                            } else {
-                                color = bmp_encode(1-w, 1-w, 1); // red
-                            }
-                            int nx = angle * (radius * 2) + x;
-                            int ny = (strength + quant_strength * coherence) * (radius * 2) + y;
-
-                            for (int u = 0; u < pixel_size; u++) {
-                                for (int v = 0; v < pixel_size; v++) {
-                                    bmp_set(&bmp_buffer[0], nx * pixel_size + u, ny * pixel_size + v, color);
+                            int nx = angle * (block_size + border_size * 2) + x * (lut_size - 1) + border_size;
+                            int ny = (strength + quant_strength * coherence) * (block_size + border_size * 2) + y * (lut_size - 1) + border_size;
+                            for (int lut_x = 0; lut_x < lut_size; lut_x++) {
+                                for (int lut_y = 0; lut_y < lut_size; lut_y++) {
+                                    int var = feature_mapping[lut_size - 1 - lut_x][lut_size - 1 - lut_y][x][y];
+                                    double w = 0;
+                                    if (var == VAR_CONSTANT_1) {
+                                        w = 1;
+                                    } else if (var >= 0) {
+                                        w = models[angle][strength][coherence].weights[var];
+                                    }
+                                    img_sum[nx + lut_x][ny + lut_y] += w;
+                                    img_cnt[nx + lut_x][ny + lut_y] ++;
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+
+        unsigned long file_size = bmp_size(width, height);
+
+        std::vector<uint8_t> bmp_buffer(file_size, 0);
+        bmp_init(&bmp_buffer[0], width, height);
+
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                double w = img_cnt[x][y] == 0 ? 0.0 : img_sum[x][y] / img_cnt[x][y];
+                w *= 4;
+                w /= 1 + fabs(w);
+                unsigned long color;
+                if (w < 0) {
+                    w = -w;
+                    color = bmp_encode(1, 1-w, 1-w); // red
+                } else {
+                    color = bmp_encode(1-w, 1-w, 1); // blue
+                }
+                bmp_set(&bmp_buffer[0], x, y, color);
             }
         }
 
@@ -963,16 +971,10 @@ int main(int argc, char *argv[])
     }
 
     if (vis) {
-        for (int lut_x = 0; lut_x < lut_size; lut_x ++) {
-            for (int lut_y = 0; lut_y < lut_size; lut_y ++) {
-                std::string f = remove_suffix(model_filename, ".bin");
-                f += ".vis";
-                f += to_string(lut_x);
-                f += to_string(lut_y);
-                f += ".bmp";
-                model.visualize(f, lut_x, lut_y);
-            }
-        }
+        std::string f = remove_suffix(model_filename, ".bin");
+        f += ".vis";
+        f += ".bmp";
+        model.visualize(f);
         return 0;
     }
 
