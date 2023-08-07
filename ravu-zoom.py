@@ -236,8 +236,9 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL("$sample_type res = $sample_zero;")
         GLSL("vec4 w;")
         if self.anti_ringing:
-            GLSL("$sample4_type cg;")
+            GLSL("$sample4_type cg, cg1;")
             GLSL("$sample_type lo = $sample_zero, hi = $sample_zero;")
+            GLSL("$sample_type lo2 = $sample_zero, hi2 = $sample_zero;")
             samples_list_ar = []
             for i, sample_i in enumerate(samples_list):
                 dx = i // n - n // 2
@@ -266,16 +267,23 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                     if i % 2 == 0:
                         last_sample = sample_i
                     else:
-                        GLSL("cg = $sample4_type(%s, 1.0 - %s, %s, 1.0 - %s);" % (last_sample, last_sample, sample_i, sample_i));
+                        GLSL("cg = $sample4_type(0.5 + %s, 1.5 - %s, 0.5 + %s, 1.5 - %s);" % (last_sample, last_sample, sample_i, sample_i));
+                        GLSL("cg1 = cg;")
                         last_sample = None
                         if self.profile == Profile.luma:
-                            GLSL("cg *= cg;" * 3)
+                            GLSL("cg *= cg;" * 5)
                         else:
-                            GLSL("cg = matrixCompMult(cg, cg);" * 3)
+                            GLSL("cg = matrixCompMult(cg, cg);" * 5)
                         GLSL("hi += cg[0] * w[%d] + cg[2] * w[%d];" % (i % 4 - 1, i % 4))
                         GLSL("lo += cg[1] * w[%d] + cg[3] * w[%d];" % (i % 4 - 1, i % 4))
-            GLSL("hi = sqrt(sqrt(sqrt(hi)));")
-            GLSL("lo = 1.0 - sqrt(sqrt(sqrt(lo)));")
+                        if self.profile == Profile.luma:
+                            GLSL("cg *= cg1;")
+                        else:
+                            GLSL("cg = matrixCompMult(cg, cg1);")
+                        GLSL("hi2 += cg[0] * w[%d] + cg[2] * w[%d];" % (i % 4 - 1, i % 4))
+                        GLSL("lo2 += cg[1] * w[%d] + cg[3] * w[%d];" % (i % 4 - 1, i % 4))
+            GLSL("hi = hi2 / hi - 0.5;")
+            GLSL("lo = 1.5 - lo2 / lo;")
             GLSL("res = mix(res, clamp(res, lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")

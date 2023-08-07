@@ -165,7 +165,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
         GLSL("vec4 res = vec4(0.0), w;")
 
         if self.anti_ringing:
-            GLSL("vec4 lo = vec4(0.0), hi = vec4(0.0), wg, wgsum = vec4(0.0), cg4;")
+            GLSL("vec4 lo = vec4(0.0), hi = vec4(0.0), lo2 = vec4(0.0), hi2 = vec4(0.0), wg, cg4, cg4_1;")
             in_ar_kernel = [None] * self.lut_width
             for i in range(self.lut_width):
                 dx = i // n - n // 2
@@ -183,24 +183,30 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
             if i < j:
                 GLSL("res += %s * w + %s * w.wzyx;" % (samples_list[i], samples_list[j]))
                 if use_ar:
-                    GLSL("cg4 = vec4(%s, 1.0 - %s, %s, 1.0 - %s);" % (samples_list[i], samples_list[i], samples_list[j], samples_list[j]))
-                    GLSL("cg4 *= cg4; cg4 *= cg4; cg4 *= cg4;")
+                    GLSL("cg4 = vec4(0.5 + %s, 1.5 - %s, 0.5 + %s, 1.5 - %s);" % (samples_list[i], samples_list[i], samples_list[j], samples_list[j]))
+                    GLSL("cg4_1 = cg4;")
+                    GLSL("cg4 *= cg4;" * 5)
                     GLSL("hi += cg4.x * wg + cg4.z * wg.wzyx;")
                     GLSL("lo += cg4.y * wg + cg4.w * wg.wzyx;")
-                    GLSL("wgsum += wg + wg.wzyx;")
+                    GLSL("cg4 *= cg4_1;")
+                    GLSL("hi2 += cg4.x * wg + cg4.z * wg.wzyx;")
+                    GLSL("lo2 += cg4.y * wg + cg4.w * wg.wzyx;")
             elif i == j:
                 GLSL("res += %s * w;" % samples_list[i])
                 if use_ar:
-                    GLSL("vec2 cg2 = vec2(%s, 1.0 - %s);" % (samples_list[i], samples_list[i]))
-                    GLSL("cg2 *= cg2; cg2 *= cg2; cg2 *= cg2;")
+                    GLSL("vec2 cg2 = vec2(0.5 + %s, 1.5 - %s);" % (samples_list[i], samples_list[i]))
+                    GLSL("vec2 cg2_1 = cg2;")
+                    GLSL("cg2 *= cg2;" * 5)
                     GLSL("hi += cg2.x * wg;")
                     GLSL("lo += cg2.y * wg;")
-                    GLSL("wgsum += wg;")
+                    GLSL("cg2 *= cg2_1;")
+                    GLSL("hi2 += cg2.x * wg;")
+                    GLSL("lo2 += cg2.y * wg;")
 
         if self.anti_ringing:
-            GLSL("lo = sqrt(sqrt(sqrt(lo / wgsum)));")
-            GLSL("hi = sqrt(sqrt(sqrt(hi / wgsum)));")
-            GLSL("res = mix(res, clamp(res, vec4(1.0) - lo, hi), %f);" % self.anti_ringing)
+            GLSL("lo = 1.5 - lo2 / lo;")
+            GLSL("hi = hi2 / hi - 0.5;")
+            GLSL("res = mix(res, clamp(res, lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")
 
