@@ -8,13 +8,15 @@ and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/co
 are **generally faster** but requires recent version of OpenGL.
 Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
 
-Shaders in [`vulkan/` directory](https://github.com/bjin/mpv-prescalers/tree/master/vulkan)
-are using `rgba16hf` LUT, and required by `gpu-api=vulkan` and
-`gpu-api=d3d11`. Use these shaders if you encountered the following error:
+If you are using `--vo=gpu` along with `--gpu-api=vulkan` or `--gpu-api=d3d11`
+and encountered the following error:
 
 ```
 [vo/gpu] Unrecognized/unavailable FORMAT name: 'rgba16f'!
 ```
+
+You can either switch to `--vo=gpu-next` (libplacebo required) or find shaders
+with `rgba16hf` format inside the `vulkan/` folder [here](https://github.com/bjin/mpv-prescalers/tree/b3ed4322cd24b534e7ccc4d4727fced2dfc57c6e/vulkan).
 
 # Usage
 
