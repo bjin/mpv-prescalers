@@ -8,7 +8,7 @@ and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/co
 are **generally faster** but requires recent version of OpenGL.
 Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
 
-If you are using `--vo=gpu` along with `--gpu-api=vulkan` or `--gpu-api=d3d11`
+If you are using `--vo=gpu` along with `--gpu-api=d3d11`
 and encountered the following error:
 
 ```
