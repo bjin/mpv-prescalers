@@ -33,7 +33,6 @@ for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_W
 int y = id / rect.x, x = id % rect.x;
 samples[x + y * 36] = HOOKED_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0.5,0.5) + HOOKED_off)).x;
 }
-groupMemoryBarrier();
 barrier();
 vec2 pos = HOOKED_size * HOOKED_map(ivec2(gl_GlobalInvocationID));
 vec2 subpix = fract(pos - 0.5);

@@ -172,7 +172,6 @@ for (int id = int(gl_LocalInvocationIndex); id < 507; id += int(gl_WorkGroupSize
 int x = id / 13, y = id % 13;
 inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x-(3))+0.5,float(group_base.y+y-(2))+0.5)).x;
 }
-groupMemoryBarrier();
 barrier();
 vec4 ret = vec4(0.0);
 vec4 ret0 = vec4(0.0);
@@ -390,7 +389,6 @@ for (int id = int(gl_LocalInvocationIndex); id < 555; id += int(gl_WorkGroupSize
 int x = id / 15, y = id % 15;
 inp[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x-(2))+0.5,float(group_base.y+y-(3))+0.5)).x;
 }
-groupMemoryBarrier();
 barrier();
 vec4 ret = vec4(0.0);
 vec4 ret0 = vec4(0.0);
