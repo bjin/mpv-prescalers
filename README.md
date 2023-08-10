@@ -5,8 +5,11 @@ branch](https://github.com/bjin/mpv-prescalers/tree/source).
 
 Shaders in [`gather/` directory](https://github.com/bjin/mpv-prescalers/tree/master/gather)
 and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/compute)
-are **generally faster** but requires recent version of OpenGL.
-Use these shaders only if they actually work (i.e. no blue screen and no noticeable distortion).
+are **generally faster**, and are thus recommended to try and use first.
+`gather/` shaders uses `textureGather()` functions, and are usually faster for luma upscalers (`nnedi3`, `ravu`, `ravu-lite` and `ravu-zoom`).
+`compute/` shaders are compute shaders, and are faster for `-yuv` and `-rgb` upscalers.
+If you are using an old graphics card (or somehow broken GPU driver), and shaders in none of above directories works. Shaders in root folder
+are safe fallback option with minimal requirement for GPU driver or OpenGL version.
 
 If you are using `--vo=gpu` along with `--gpu-api=d3d11`
 and encountered the following error:
@@ -43,9 +46,7 @@ glsl-shaders-append="~~/shaders/ravu-lite-r3.hook"
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
 filename.
 
-For `ravu` prescaler, `radius` setting is indicated in the filename. `r3`
-(with `radius=3` setting) shaders are **generally recommended**, those shaders
-achieve good balance between performance and quality.
+For `ravu` prescaler, `radius` setting is indicated in the filename.
 
 # About RAVU
 
@@ -67,12 +68,6 @@ resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
 
 `ravu-lite-ar` and `ravu-zoom-ar` uses [anti-ringing filter (of EWA scalers)](https://github.com/haasn/libplacebo/commit/0581828343ddaafb81d296aa510d4d141e4d9b50) from libplacebo to reduce
 [ringing artifacts](https://en.wikipedia.org/wiki/Ringing_artifacts). The default anti-ringing strength in master branch is set to 0.8.
-
-# Known Issue
-
-1. `ravu-lite` is incompatible with `--fbo-format=rgb10_a2` (default
-   for some OpenGL ES implementation). Use `rgba16f` or `rgba16` if available.
-2. `ravu-[zoom-]r4-{rgb,yuv}` causes distortion with lower-end intel card.
 
 # License
 
