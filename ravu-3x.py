@@ -266,7 +266,6 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
         GLSL("""
 }""")
 
-        GLSL("groupMemoryBarrier();")
         GLSL("barrier();")
 
         samples_list = []

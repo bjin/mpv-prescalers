@@ -429,7 +429,6 @@ for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_W
         GLSL("""
 }""")
 
-        GLSL("groupMemoryBarrier();")
         GLSL("barrier();")
 
         samples = {(x, y): "sample%d" % (x * n + y) for x in range(n) for y in range(n)}

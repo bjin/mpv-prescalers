@@ -315,7 +315,6 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
             GLSL("""
 }""")
 
-            GLSL("groupMemoryBarrier();")
             GLSL("barrier();")
 
         GLSL("vec4 ret = vec4(0.0);")

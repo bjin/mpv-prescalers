@@ -519,7 +519,6 @@ for (int id = int(gl_LocalInvocationIndex); id < %d; id += int(gl_WorkGroupSize.
             GLSL("""
 }""")
 
-        GLSL("groupMemoryBarrier();")
         GLSL("barrier();")
 
         for target_idx, sample_positions in enumerate(sample_positions_by_target):
