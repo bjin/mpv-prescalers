@@ -65,11 +65,13 @@ after `--cscale` (or other chroma prescaler) is applied. `ravu-yuv` assumes YUV
 video and will fail on others (for example, PNG picture).
 
 `ravu-zoom` is another variant which is able to upscale video to arbitrary ratio
-directly. Its sharpness is close to `ravu-lite`. But it renders at target
-resolution, so expect it to be much slower than `ravu` for perfect 2x upscaling.
+directly (i.e. a drop-in replacement of `--scale`). Its sharpness is close to `ravu-lite`.
+But it renders at target resolution, so expect it to be much slower than `ravu` and `ravu-lite`
+for perfect 2x upscaling.
 
 `ravu-lite-ar` and `ravu-zoom-ar` uses [anti-ringing filter (of EWA scalers)](https://github.com/haasn/libplacebo/commit/0581828343ddaafb81d296aa510d4d141e4d9b50) from libplacebo to reduce
 [ringing artifacts](https://en.wikipedia.org/wiki/Ringing_artifacts). The default anti-ringing strength in master branch is set to 0.8.
+These shaders are the **recommended** ones to use, especially for footages with sharp edge and details.
 
 # License
 
