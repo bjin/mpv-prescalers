@@ -6,8 +6,10 @@ branch](https://github.com/bjin/mpv-prescalers/tree/source).
 Shaders in [`gather/` directory](https://github.com/bjin/mpv-prescalers/tree/master/gather)
 and [`compute/` directory](https://github.com/bjin/mpv-prescalers/tree/master/compute)
 are **generally faster**, and are thus recommended to try and use first.
-`gather/` shaders uses `textureGather()` functions, and are usually faster for luma upscalers (`nnedi3`, `ravu`, `ravu-lite` and `ravu-zoom`).
-`compute/` shaders are compute shaders, and are faster for `-yuv` and `-rgb` upscalers.
+
+* `gather/` shaders uses `textureGather()` functions, and are usually faster for luma upscalers (`nnedi3`, `ravu`, `ravu-lite` and `ravu-zoom`).
+* `compute/` shaders are compute shaders, and are faster for `-yuv` and `-rgb` upscalers.
+
 If you are using an old graphics card (or somehow broken GPU driver), and shaders in none of above directories works. Shaders in root folder
 are safe fallback option with minimal requirement for GPU driver or OpenGL version.
 
