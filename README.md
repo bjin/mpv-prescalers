@@ -21,7 +21,7 @@ and encountered the following error:
 ```
 
 You can either switch to `--vo=gpu-next` (libplacebo required) or find shaders
-with `rgba16hf` format inside the `vulkan/` folder [here](https://github.com/bjin/mpv-prescalers/tree/b3ed4322cd24b534e7ccc4d4727fced2dfc57c6e/vulkan).
+with `rgba16hf` format [here](https://github.com/bjin/mpv-prescalers/tree/rgba16hf).
 
 # Usage
 
