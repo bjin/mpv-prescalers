@@ -7,18 +7,20 @@ DIR="$(dirname "$0")"
 max_downscaling_ratio=1.414213
 anti_ringing_strength=0.8
 
-for nns in 16 32 64 128 256; do
-    for win in 8x4 8x6; do
-        file_name="nnedi3-nns$nns-win$win.hook"
-        "$DIR/nnedi3.py" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" > "$file_name"
-        if [ -d gather ]; then
-            "$DIR/nnedi3.py" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
-        fi
-        if [ -d compute ]; then
-            "$DIR/nnedi3.py" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" --use-compute-shader > "compute/$file_name"
-        fi
+gen_nnedi3() {
+    for nns in 16 32 64 128 256; do
+        for win in 8x4 8x6; do
+            file_name="nnedi3-nns$nns-win$win.hook"
+            "$DIR/nnedi3.py" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" > "$file_name"
+            if [ -d gather ]; then
+                "$DIR/nnedi3.py" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" --use-gather > "gather/$file_name"
+            fi
+            if [ -d compute ]; then
+                "$DIR/nnedi3.py" --nns "$nns" --win "$win" --max-downscaling-ratio "$max_downscaling_ratio" --use-compute-shader > "compute/$file_name"
+            fi
+        done
     done
-done
+}
 
 gen_ravu() {
     float_format="$1"
@@ -87,8 +89,9 @@ gen_ravu() {
     done
 }
 
-gen_ravu float16gl
-if [ -d vulkan ]; then
-    cd vulkan
+if [ "$1" = "vulkan" ]; then
     gen_ravu float16vk
+else
+    gen_nnedi3
+    gen_ravu float16gl
 fi
