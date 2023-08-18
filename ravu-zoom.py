@@ -26,7 +26,6 @@ class Profile(enum.Enum):
     luma = 0
     rgb = 1
     yuv = 2
-    chroma = 3
 
 
 class FloatFormat(enum.Enum):
@@ -139,14 +138,6 @@ class RAVU_Zoom(userhook.UserHook):
                 sample4_type="vec4",
                 hook_return_value="vec4(res, 0.0, 0.0, 0.0)",
                 comps_swizzle = ".x")
-        elif self.profile == Profile.chroma:
-            self.add_mappings(
-                sample_type="vec2",
-                sample_zero="vec2(0.0)",
-                sample4_type="mat4x2",
-                hook_return_value="vec4(res, 0.0, 0.0)",
-                comps_swizzle = ".xy")
-            self.bind_tex("LUMA")
         else:
             self.add_mappings(
                 sample_type="vec3",
@@ -161,11 +152,9 @@ class RAVU_Zoom(userhook.UserHook):
                 self.assert_yuv()
 
     def setup_condition(self):
-        self.target_tex = "LUMA" if self.profile == Profile.chroma else "OUTPUT"
-        self.add_cond("HOOKED.w %s.w <" % self.target_tex)
-        self.add_cond("HOOKED.h %s.h <" % self.target_tex)
-        self.set_output_size("%s.w" % self.target_tex,
-                             "%s.h" % self.target_tex)
+        self.add_cond("HOOKED.w OUTPUT.w <")
+        self.add_cond("HOOKED.h OUTPUT.h <")
+        self.set_output_size("OUTPUT.w", "OUTPUT.h")
         self.align_to_reference()
 
     def extract_key(self, luma):
@@ -342,7 +331,6 @@ vec4 hook() {""")
         gather_offsets = [(0, 1), (1, 1), (1, 0), (0, 0)]
 
         samples_list = [None] * (n * n)
-        luma = lambda x, y: "luma%d" % (x * n + y)
         for i in range(n):
             for j in range(n):
                 dx, dy = i - (self.radius - 1), j - (self.radius - 1)
@@ -363,17 +351,17 @@ vec4 hook() {""")
                             % (sample_name, float(dx), float(dy)))
                     samples_list[idx] = sample_name
 
-                if self.is_luma_required(i, j):
-                    if self.profile == Profile.rgb:
-                        GLSL("float %s = dot(%s, color_primary);" % (luma(i, j), samples_list[i * n + j]))
-                    elif self.profile == Profile.chroma:
-                        GLSL("float %s = LUMA_tex(HOOKED_pt * (pos + vec2(%s,%s) - HOOKED_off) + LUMA_pt * tex_offset).x;"
-                                % (luma(i, j), float(dx), float(dy)))
-
         if self.profile == Profile.luma:
             luma = lambda x, y: samples_list[x * n + y]
         elif self.profile == Profile.yuv:
             luma = lambda x, y: "%s.x" % samples_list[x * n + y]
+        else:
+            luma = lambda x, y: "luma%d" % (x * n + y)
+            for i in range(n):
+                for j in range(n):
+                    if not self.is_luma_required(i, j):
+                        continue
+                    GLSL("float %s = dot(%s, color_primary);" % (luma(i, j), samples_list[i * n + j]))
 
         self.extract_key(luma)
 
@@ -403,9 +391,7 @@ return $hook_return_value;
         self.set_compute(block_width, block_height)
 
         n = self.radius * 2
-        store_type = "vec3" if self.profile == Profile.chroma else "$sample_type"
-        store_unwrap = "%s.xy" if self.profile == Profile.chroma else "%s"
-        GLSL("shared %s samples[%d];" % (store_type, (block_height + n) * (block_width + n)))
+        GLSL("shared $sample_type samples[%d];" % ((block_height + n) * (block_width + n)))
         stride = block_width + n
 
         GLSL("""
@@ -417,17 +403,10 @@ void hook() {""")
         GLSL("ivec2 rect = rectr - rectl + 1;")
 
         GLSL("""
-for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {""")
-        GLSL("int y = id / rect.x, x = id % rect.x;")
-        sample_xy = "HOOKED_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0.5,0.5) + HOOKED_off))$comps_swizzle"
-        if self.profile == Profile.chroma:
-            luma_xy = "LUMA_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0.5,0.5)) + LUMA_pt * tex_offset).x"
-            GLSL("samples[x + y * %d] = vec3(%s, %s);" % (stride, sample_xy, luma_xy))
-        else:
-            GLSL("samples[x + y * %d] = %s;" % (stride, sample_xy))
-
-        GLSL("""
-}""")
+for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_WorkGroupSize.x * gl_WorkGroupSize.y)) {
+    int y = id / rect.x, x = id %% rect.x;
+    samples[x + y * %d] = HOOKED_tex(HOOKED_pt * (vec2(rectl + ivec2(x, y)) + vec2(0.5,0.5)))$comps_swizzle;
+}""" % stride)
 
         GLSL("barrier();")
 
@@ -439,24 +418,24 @@ for (int id = int(gl_LocalInvocationIndex); id < rect.x * rect.y; id += int(gl_W
         GLSL("int lpos = ipos.x + ipos.y * %d;" % stride)
 
         samples_list = []
-        luma = lambda x, y: "luma%d" % (x * n + y)
         for i in range(n):
             for j in range(n):
                 x = i - (self.radius - 1)
                 y = j - (self.radius - 1)
-                GLSL("%s %s = samples[%d + lpos];" % (store_type, samples[i, j], x + y * stride))
-                samples_list.append(store_unwrap % samples[i, j])
-
-                if self.is_luma_required(i, j):
-                    if self.profile == profile.rgb:
-                        GLSL("float %s = dot(%s, color_primary);" % (luma(i, j), samples[i, j]))
+                GLSL("$sample_type %s = samples[%d + lpos];" % (samples[i, j], x + y * stride))
+                samples_list.append(samples[i, j])
 
         if self.profile == Profile.luma:
             luma = lambda x, y: samples[x, y]
         elif self.profile == Profile.yuv:
             luma = lambda x, y: "%s.x" % samples[x, y]
-        elif self.profile == profile.chroma:
-            luma = lambda x, y: "%s.z" % samples[x, y]
+        else:
+            luma = lambda x, y: "luma%d" % (x * n + y)
+            for i in range(n):
+                for j in range(n):
+                    if not self.is_luma_required(i, j):
+                        continue
+                    GLSL("float %s = dot(%s, color_primary);" % (luma(i, j), samples[i, j]))
 
         self.extract_key(luma)
 
@@ -478,7 +457,6 @@ if __name__ == "__main__":
         "luma": (["LUMA"], Profile.luma),
         "rgb": (["MAIN"], Profile.rgb),
         "yuv": (["NATIVE"], Profile.yuv),
-        "chroma": (["CHROMA"], Profile.chroma),
     }
 
     parser = argparse.ArgumentParser(
