@@ -29,7 +29,6 @@ int x = id / 13, y = id % 13;
 inp0[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-1.5), float(group_base.y+y)+(-1.5))).xyz;
 inp_luma0[id] = inp0[id].x;
 }
-groupMemoryBarrier();
 barrier();
 {
 float luma6 = inp_luma0[local_pos + 13];
@@ -182,7 +181,6 @@ int x = id / 13, y = id % 13;
 inp1[id] = HOOKED_tex(HOOKED_pt * vec2(float(group_base.x+x)+(-1.5), float(group_base.y+y)+(-1.5))).xyz;
 inp_luma1[id] = inp1[id].x;
 }
-groupMemoryBarrier();
 barrier();
 {
 float luma12 = inp_luma0[local_pos + 15];
