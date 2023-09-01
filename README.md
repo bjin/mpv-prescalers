@@ -26,7 +26,7 @@ with `rgba16hf` format [here](https://github.com/bjin/mpv-prescalers/tree/rgba16
 # Usage
 
 You only need to download shaders you actually use. Shaders should be downloaded in raw text format,
-just click the "Raw" button on the upper right corner for each shader. The following part of this
+just click the "Raw" (or "Download raw file") button on the upper right corner for each shader. The following part of this
 section assumes that they are in `shaders` directory in the `mpv` configure
 folder (usually `~/.config/mpv/shaders` on Linux).
 
