@@ -25,24 +25,15 @@ with `rgba16hf` format [here](https://github.com/bjin/mpv-prescalers/tree/rgba16
 
 # Usage
 
-You only need to download shaders you actually use. The following part of this
+You only need to download shaders you actually use. Shaders should be downloaded in raw text format,
+just click the "Raw" button on the upper right corner for each shader. The following part of this
 section assumes that they are in `shaders` directory in the `mpv` configure
 folder (usually `~/.config/mpv/shaders` on Linux).
 
-Use `glsl-shaders="prescaler.hook"` option to load those shaders. (This will
-override other user shaders, use `glsl-shaders-append` in that case)
+Use [`--glsl-shader` option](https://mpv.io/manual/master/#options-glsl-shader) to load those shaders.
 
 ```
-glsl-shaders="~~/shaders/ravu-lite-r3.hook"
-```
-
-All shaders are for one pass only. If you want to have `4x` upscaling, trigger
-the same shader twice. All the shaders here are generated with
-`max-downscaling-ratio` set to `1.414213`. They will be disabled if upscaling is not necessary.
-
-```
-glsl-shaders-append="~~/shaders/ravu-lite-r3.hook"
-glsl-shaders-append="~~/shaders/ravu-lite-r3.hook"
+glsl-shader="~~/shaders/ravu-lite-ar-r3.hook"
 ```
 
 For `nnedi3` prescaler, `neurons` and `window` settings are indicated in the
