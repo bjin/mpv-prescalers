@@ -256,7 +256,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                     if i % 2 == 0:
                         last_sample = sample_i
                     else:
-                        GLSL("cg = $sample4_type(0.5 + %s, 1.5 - %s, 0.5 + %s, 1.5 - %s);" % (last_sample, last_sample, sample_i, sample_i));
+                        GLSL("cg = $sample4_type(0.1 + %s, 1.1 - %s, 0.1 + %s, 1.1 - %s);" % (last_sample, last_sample, sample_i, sample_i));
                         GLSL("cg1 = cg;")
                         last_sample = None
                         if self.profile == Profile.luma:
@@ -271,8 +271,8 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                             GLSL("cg = matrixCompMult(cg, cg1);")
                         GLSL("hi2 += cg[0] * w[%d] + cg[2] * w[%d];" % (i % 4 - 1, i % 4))
                         GLSL("lo2 += cg[1] * w[%d] + cg[3] * w[%d];" % (i % 4 - 1, i % 4))
-            GLSL("hi = hi2 / hi - 0.5;")
-            GLSL("lo = 1.5 - lo2 / lo;")
+            GLSL("hi = hi2 / hi - 0.1;")
+            GLSL("lo = 1.1 - lo2 / lo;")
             GLSL("res = mix(res, clamp(res, lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")

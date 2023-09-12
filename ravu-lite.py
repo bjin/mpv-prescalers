@@ -183,7 +183,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
             if i < j:
                 GLSL("res += %s * w + %s * w.wzyx;" % (samples_list[i], samples_list[j]))
                 if use_ar:
-                    GLSL("cg4 = vec4(0.5 + %s, 1.5 - %s, 0.5 + %s, 1.5 - %s);" % (samples_list[i], samples_list[i], samples_list[j], samples_list[j]))
+                    GLSL("cg4 = vec4(0.1 + %s, 1.1 - %s, 0.1 + %s, 1.1 - %s);" % (samples_list[i], samples_list[i], samples_list[j], samples_list[j]))
                     GLSL("cg4_1 = cg4;")
                     GLSL("cg4 *= cg4;" * 5)
                     GLSL("hi += cg4.x * wg + cg4.z * wg.wzyx;")
@@ -194,7 +194,7 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
             elif i == j:
                 GLSL("res += %s * w;" % samples_list[i])
                 if use_ar:
-                    GLSL("vec2 cg2 = vec2(0.5 + %s, 1.5 - %s);" % (samples_list[i], samples_list[i]))
+                    GLSL("vec2 cg2 = vec2(0.1 + %s, 1.1 - %s);" % (samples_list[i], samples_list[i]))
                     GLSL("vec2 cg2_1 = cg2;")
                     GLSL("cg2 *= cg2;" * 5)
                     GLSL("hi += cg2.x * wg;")
@@ -204,8 +204,8 @@ float mu = mix((sqrtL1 - sqrtL2) / (sqrtL1 + sqrtL2), 0.0, sqrtL1 + sqrtL2 < %s)
                     GLSL("lo2 += cg2.y * wg;")
 
         if self.anti_ringing:
-            GLSL("lo = 1.5 - lo2 / lo;")
-            GLSL("hi = hi2 / hi - 0.5;")
+            GLSL("lo = 1.1 - lo2 / lo;")
+            GLSL("hi = hi2 / hi - 0.1;")
             GLSL("res = mix(res, clamp(res, lo, hi), %f);" % self.anti_ringing)
         else:
             GLSL("res = clamp(res, 0.0, 1.0);")
